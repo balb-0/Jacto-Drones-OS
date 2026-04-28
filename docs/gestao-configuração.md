@@ -1,171 +1,154 @@
-<Table>
-  <tr>
-    <td><a href= "link"><img src="img/logo.png" alt="Nome" border="0"></td>
-    <td>
-      <a href= "https://www.inteli.edu.br/"><img src="img/logo-Inteli.png" alt="Inteli - Instituto de Tecnologia e Liderança" border="0"></a>
-    </td>
-  </tr>
-</table>
+# Nome do Projeto: Jacto Drones Operating System v0.1
 
-# Nome do Projeto: <nome do projeto>
+## Nome do Grupo: G04 (O Grupo Quatro)
 
-## Nome do Grupo: <nome do grupo>
+## Professores:
+### Orientador(a) 
+- <a href="https://www.linkedin.com/in/reginaldo-arakaki-9574222b/">Reginaldo Arakaki</a>
+### Instrutores
+- <a href="https://www.linkedin.com/in/hermano-peixoto-1091796/">Computação - Hermano</a>
+- <a href="https://www.linkedin.com/in/jose-romualdo/">Computação - José Romualdo</a>
+- <a href="https://www.linkedin.com/in/ovidio-netto/">Computação - Ovídio</a>
+- <a href="https://www.linkedin.com/in/fernando-pizzo-208b526a/">Matemática e Física - Pizzo</a>
+- <a href="https://www.linkedin.com/in/egondaxbacher/?locale=pt">Negócios - Egon</a>
+- <a href="https://www.linkedin.com/in/juliastateri/?locale=pt">Design - Julia</a>
+- <a href="https://www.linkedin.com/in/profclaudioandre/">Liderança - Claudio Andre</a>
 
 ## Integrantes:
 
-- <a href="https://www.linkedin.com/in/username/">Nome</a>
-- <a href="https://www.linkedin.com/in/username/">Nome</a>
-- <a href="https://www.linkedin.com/in/username/">Nome</a>
-- <a href="https://www.linkedin.com/in/username/">Nome</a>
-- <a href="https://www.linkedin.com/in/username/">Nome</a>
-- <a href="https://www.linkedin.com/in/username/">Nome</a>
-- <a href="https://www.linkedin.com/in/username/">Nome</a>
-- <a href="https://www.linkedin.com/in/username/">Nome</a>
-
+- <a href="https://www.linkedin.com/in/calebe-matias/?locale=pt">Calebe Matias</a>
+- <a href="https://www.linkedin.com/in/fernandobertholdo/">Fernando Bertholdo</a>
+- <a href="https://www.linkedin.com/in/kauanmassuia/">Kauan Massuia</a>
+- <a href="https://www.linkedin.com/in/lucca-henrique-pereira/">Lucca Henrique</a>
+- <a href="https://www.linkedin.com/in/marlos-do-carmo-guedes-366987250/">Marlos Guedes</a>
+- <a href="https://www.linkedin.com/in/otavio-vasc/">Otávio Vasconcelos</a>
+- <a href="https://www.linkedin.com/in/vitorbalbo/">Vitor Balbo</a>
 
 # Sumário
 
 - [1. Introdução](#1-introdução)
-  - [1.1 Objetivo do Documento](#11-objetivo-do-documento)
-- [2. Política de Branches](#2-política-de-branches)
-  - [2.1 Visão Geral do Gitflow](#21-visão-geral-do-gitflow)
-  - [2.2 Estrutura de Branches](#22-estrutura-de-branches)
-  - [2.3 Diretrizes de Uso das Branches](#23-diretrizes-de-uso-das-branches)
-- [3. Políticas de Commit](#3-políticas-de-commit)
-- [4. Política de Push e Pull Requests](#4-política-de-push-e-pull-requests)
-- [5. Infraestrutura como Código](#5-infraestrutura-como-código)
-- [6. Gestão de Arquivos Sensíveis](#6-gestao-de-arquivos-sensiveis)
-- [7. Política de Rollback](#7-política-de-rollback)
-- [8. Registro de Variáveis de Ambiente][#8-registro-de-variaveis-de-ambiente]
+- [2. Estratégia de Branching (GitFlow)](#2-estratégia-de-branching-gitflow)
+- [3. Políticas de Commit e Rastreabilidade](#3-políticas-de-commit-e-rastreabilidade)
+- [4. Pipeline de CI/CD e Integração Contínua](#4-pipeline-de-cicd-e-integração-contínua)
+- [5. Quality Gates e Code Review (Malha Fechada)](#5-quality-gates-e-code-review-malha-fechada)
+- [6. Gestão de Artefatos e Infraestrutura](#6-gestão-de-artefatos-e-infraestrutura)
+- [7. Métricas de Engenharia (DORA Metrics)](#7-métricas-de-engenharia-dora-metrics)
+- [8. Política de Rollback](#8-política-de-rollback)
 - [Referências](#referências)
 
+---
+
 # 1. Introdução
-_conteúdo_
+Este documento estabelece as diretrizes de **Gestão de Configuração de Software (SCM)** para o projeto *Jacto Drones OS v0.1*. Como o objetivo do projeto é construir uma esteira ágil de produção (Continuous Delivery), as políticas aqui definidas não são apenas regras de conduta, mas os requisitos técnicos que sustentam a automação, a qualidade e a rastreabilidade entre as frentes de firmware, serviços de plataforma e sistemas de dados.
 
-## 1.1 Objetivo do Documento
-Este documento estabelece diretrizes claras para a utilização de boas práticas no desenvolvimento de software, visando a organização e a qualidade do código. Todos os membros da equipe devem seguir as instruções definidas.
+---
 
-# 2. Política de Branches
-_conteúdo_
+# 2. Estratégia de Branching (GitFlow)
 
-## 2.1 Visão Geral do Gitflow
-Nota: Fornecer uma breve explicação sobre o Gitflow e sua importância para o gerenciamento eficiente do código fonte.
+Para lidar com a complexidade de desenvolvimento de sistemas autônomos (onde firmware exige estabilidade crítica e plataformas web exigem agilidade), adotamos uma variação do **GitFlow**.
 
-## 2.2 Estrutura de Branches
-Padrão de Nomenclatura das Branches:
+## 2.1 Estrutura de Branches
+- **`main`**: Código estável e homologado. Cada commit na main representa uma *Release* pronta para o ambiente de produção da Jacto.
+- **`dev`**: Branch principal de integração. Todos os novos desenvolvimentos são mesclados aqui após aprovação.
+- **`feature/[escopo]/[nome]`**: Para o desenvolvimento de novas funcionalidades. O escopo deve definir a frente técnica (ex: `feature/firmware/px4-update`, `feature/web/dashboard-ui`).
+- **`bugfix/[nome]`**: Correção de erros mapeados durante o desenvolvimento na branch `dev`.
+- **`release/v[X.Y.Z]`**: Branch temporária criada a partir da `dev` para estabilização de uma nova versão antes de ir para a `main`.
+- **`hotfix/[nome]`**: Correções críticas geradas diretamente a partir da `main` e enviadas para produção o mais rápido possível.
 
-> **main**: Contém o código pronto para produção.
-> **dev**: Integração contínua das novas funcionalidades em desenvolvimento.
-> **feature/[nome-da-feature]**: Para desenvolvimento de novas funcionalidades. Exemplo: feature/integracao-api
-> **bugfix/[nome-do-bug]**: Para correção de bugs. Exemplo: bugfix/corrige-login
-> **release/[versao]**: Preparação para lançamento de uma nova versão. Exemplo: release/v1.0.0
-> **hotfix/[nome-do-hotfix]**: Correção urgente diretamente na produção. Exemplo: hotfix/corrige-bug-em-producao
+## 2.2 Proteção de Branches no GitLab
+- Commits diretos nas branches `main` e `dev` são estritamente **proibidos**.
+- Merge requests (MRs) para a `main` e `dev` exigem aprovação de testes automatizados e code review.
 
-## 2.3 Diretrizes de Uso das Branches
-- Cada nova funcionalidade deve ser desenvolvida em uma branch de feature criada a partir da branch develop.
-  - Nomeação das branches de features deve seguir o padrão feature/[nome-da-feature].
-- Todas as novas funcionalidades devem ser desenvolvidas em branches de features e integradas na branch develop através de pull requests.
-- Commits diretos na branch main são proibidos! 
-  - Configurem o Github para proteger de commits direto para a main.
-- Branches de hotfix devem ser criadas a partir da branch main para corrigir problemas críticos em produção.
-  - Nomeação das branches de hotfix deve seguir o padrão hotfix/[nome-do-hotfix].
+---
 
-# 3. Políticas de Commit
-Integrar "Conventional Commits" nas políticas de commit ajuda a manter um histórico de commits claro e estruturado, facilitando a automação de processos como geração de changelogs e versionamento semântico.
+# 3. Políticas de Commit e Rastreabilidade
 
-As mensagens de commit devem seguir o padrão de Conventional Commits para garantir clareza e consistência.
+A rastreabilidade técnica é um requisito fundamental. É necessário conectar cada alteração de código a um requisito de negócio ou tarefa.
 
-Formato: [Tipo][Escopo opcional]: Mensagem clara e descritiva.
+## 3.1 Padrão Conventional Commits
+As mensagens de commit devem seguir o formato estruturado:
+`[tipo]([escopo opcional]): [descrição curta] ([ID da Tarefa])`
 
-Os tipos devem ser:
+**Tipos permitidos:**
+- `feat`: Nova funcionalidade no OS ou nos sistemas gerenciados.
+- `fix`: Correção de falhas ou comportamentos indesejados.
+- `docs`: Modificações restritas a arquivos markdown e documentações.
+- `test`: Adição ou refatoração de testes automatizados.
+- `ci`: Alterações no pipeline do GitLab (`.gitlab-ci.yml`) ou scripts de automação.
+- `chore`: Atualização de dependências ou configurações de build (ex: Dockerfiles).
 
-> **feat**: Uma nova funcionalidade para o usuário.
-> **fix**: Correção de bug.
-> **docs**: Mudanças na documentação.
-> **style**: Mudanças que não afetam o significado do código (espaços em branco, formatação, etc.).
-> **refactor**: Uma mudança de código que não corrige um bug nem adiciona uma funcionalidade.
-> **test**: Adição ou correção de testes.
-> **chore**: Atualizações de tarefas de build ou ferramentas auxiliares e bibliotecas, como a geração de documentação.
+## 3.2 Rastreabilidade Obrigatória
+Para garantir a ligação entre o Item de Configuração (código) e o requisito funcional, todo commit que resolve uma tarefa deve incluir a tag de identificação única gerada pelo sistema de gestão (ex: Notion/Jira).
+**Exemplo válido:** `feat(pipeline): add SAST security scanner (#JACTO-042)`
 
-Exemplo de commit: feat(auth): add login feature with JWT
+---
 
-Proibido:
-- O uso de emojis nas mensagens de commit, e commits com mensagens vagas como "melhorias" ou "atualizações".
+# 4. Pipeline de CI/CD e Integração Contínua
 
-IMPORTANTE!
-- Realizar commits frequentes (diários) para facilitar o rastreamento de mudanças e a colaboração.
+O GitLab CI será utilizado como o motor do *Jacto Drones OS v0.1*. O fluxo de promoção do código ocorre em estágios definidos no `.gitlab-ci.yml`.
 
-# 4. Política de Push e Pull Requests
+## 4.1 Estágios do Pipeline
+1. **Lint e Formatação:** Verificação estática do padrão de código.
+2. **Build:** Construção dos artefatos (ex: compilação de binários de firmware ou construção de imagens Docker).
+3. **Testes Funcionais:** Execução de testes unitários e de integração utilizando simuladores Dronecode (SITL/HITL) para firmware e testes de API para plataformas.
+4. **Segurança (SAST):** Varredura de vulnerabilidades estáticas (ex: SonarQube, Bandit para Python).
+5. **Deploy Simulado:** Promoção automática do código para o ambiente de *Staging* para validação de ponta a ponta.
 
-**Políticas de Push**:
-- Não é permitido fazer push diretamente para a main ou dev.
-- Todas as contribuições devem ser feitas via branches e submetidas por meio de pull requests.
+---
 
-**Regras de Push**:
-- Todo código deve passar por revisão de código por pares antes de ser mergeado.
-- A revisão só deve ser aprovada se os testes automatizados forem bem-sucedidos e os critérios de qualidade (cobertura de testes, análise de código) forem atendidos.
+# 5. Quality Gates e Code Review (Malha Fechada)
 
-**Revisão por Pares - Critério de Aprovação**:
-- O pull request deve ser revisado por, no mínimo, uma pessoa.
-- A revisão de código deve considerar: 
-  - Está funcional e resolve o problema proposto.
-  - Passou em todos os testes automatizados.
-  - Cobertura mínima de testes (60% ou mais). 
-  - Verificação de boas práticas de código.
-  - Não introduz duplicidade de código.
-- Após a aprovação, a branch deve ser mergeada na dev e o pull request pode ser fechado. 
-- O Scrum Master da Sprint é responsável por subir os artefatos para a MAIN ao final da Sprint.
+Para implementar a **Modelagem de Controle em Malha Fechada**, o pipeline atua como um juiz automatizado. O feedback de falhas volta imediatamente para os desenvolvedores, bloqueando avanços indevidos.
 
+## 5.1 Critérios de Aprovação (Quality Gates)
+Um Merge Request só será liberado para merge se atingir 100% dos critérios abaixo:
+- **Testes Automatizados:** O pipeline do GitLab deve passar com sucesso (ícone verde).
+- **Cobertura de Testes:** Não redução da cobertura global de testes (mínimo exigido: 70%).
+- **Segurança:** Zero vulnerabilidades críticas reportadas pelo estágio de SAST.
+- **Revisão Humana (Peer Review):** Aprovação de pelo menos 1 (um) membro da equipe que não seja o autor do código.
 
-## 5. Infraestrutura como Código
-- Uso obrigatório de Docker para padronizar ambientes de desenvolvimento e produção.
-- Incluir na raiz do repositório:
-  - Dockerfile(s) para build de aplicações e serviços.
-  - .dockerignore para excluir arquivos desnecessários do contexto de build.
-  - docker-compose.yml para orquestrar múltiplos serviços/containers localmente.
-- Cada serviço/contêiner deve ter seu próprio Dockerfile customizável, se necessário.
-- O Docker Compose deve funcionar para rodar toda a stack do sistema localmente com um único comando (docker-compose up).
+Qualquer falha nesses "portões de qualidade" impede o merge automaticamente via configurações do repositório, garantindo a integridade do firmware e dos sistemas web.
 
-## 6. Gestão de Arquivos Sensíveis
-- É obrigatório o uso de .gitignore bem configurado para bloquear:
-  - Arquivos contendo senhas, segredos ou informações sensíveis.
-  - Arquivos de configuração individuais (por exemplo, .env, configs locais, etc).
-- Explicação/documentação das diferenças entre arquivos de configuração locais, de desenvolvimento e de produção (ex.: .env.local, .env.dev, .env.prod).
-- Nunca commitar dados sensíveis ou credenciais diretamente no repositório.
+---
 
-## 7. Política de Rollback
-- Documentar o processo básico para rollback de uma release defeituosa.
-- Passos mínimos recomendados:
-  - Identificar rapidamente a versão estável anterior (tag/release/commit).
-  - Criar uma branch/selecione a tag da versão a ser restaurada.
-  - Realizar o deploy dessa versão, conforme procedimento do time.
-  - Comunicar o time e stakeholders sobre a reversão.
-- Deixar esses procedimentos registrados no repositório (ex: docs/rollback.md).
+# 6. Gestão de Artefatos e Infraestrutura
 
-## 8. Registro de Variáveis de Ambiente
-- Obrigatório manter um arquivo .env.example documentando todas as variáveis de ambiente exigidas pela aplicação.
-- O arquivo deve listar todas as keys (sem valores reais/sensíveis) e breve explicação de cada variável.
-- Todos os membros devem usar esse exemplo para criar seus próprios arquivos .env locais.
-- Exemplo:
-  - DB_HOST= # Endereço do banco de dados
-  - DB_USER= # Usuário do banco
-  - DB_PASS= # Senha do banco (NUNCA commitada)
-  - SECRET_KEY= # Chave secreta do sistema
+## 6.1 Infraestrutura como Código (IaC) e Contêineres
+- Todos os ambientes devem ser reprodutíveis. Dependências complexas (ex: stack PX4) devem ser empacotadas em imagens **Docker**.
+- Utilizar o *GitLab Container Registry* para versionamento das imagens geradas na esteira.
+
+## 6.2 Segurança e Dados Sensíveis
+- Arquivos contendo chaves de API, senhas ou tokens estão expressamente proibidos de serem enviados ao repositório via `.gitignore`.
+- O fornecimento de credenciais no ambiente de pipeline deve ser feito exclusivamente pelas **CI/CD Variables** (mascaradas e protegidas) do GitLab.
+- Um arquivo `.env.example` deve existir no repositório com as chaves neutras para instruir o setup local.
+
+---
+
+# 7. Métricas de Engenharia (DORA Metrics)
+
+Para avaliar o desempenho e a saúde da esteira de produção (conforme exigido pelo escopo do OS v0.1), as ferramentas de SCM devem fornecer dados para os dashboards operacionais focados nas métricas DORA:
+
+1. **Deployment Frequency (Frequência de Deploy):** Quantas vezes o código validado é promovido ao ambiente de simulação/produção via CI/CD.
+2. **Lead Time for Changes:** Tempo decorrido entre o commit do desenvolvedor e o sucesso do deploy.
+3. **Change Failure Rate:** Porcentagem de deploys que resultam em falhas (bugfixes/hotfixes subsequentes).
+4. **Time to Restore Service:** Tempo médio para reverter uma versão quebrada ou lançar um hotfix funcional.
+
+Esses indicadores servirão para validar o sucesso do OS v0.1 no longo prazo.
+
+---
+
+# 8. Política de Rollback
+
+Incidentes em produção, especialmente relacionados a software autônomo físico, exigem recuperação imediata.
+- **Firmware:** O processo de rollback envolve fazer o flash da versão estável anterior `release/vX.Y.Z` que possui tag no Git, através de intervenção via estação de controle de solo (QGroundControl).
+- **Serviços Cloud:** Reversão automatizada via CI/CD (re-execução do pipeline de deploy da branch correspondente ao commit anterior estável).
+- É mandatório que toda ação de Rollback gere um post-mortem documentado e uma task do tipo `hotfix`.
+
+---
 
 # Referências
-- Conventional Commits: https://www.conventionalcommits.org/en/v1.0.0/
-- GitFlow: https://nvie.com/posts/a-successful-git-branching-model/
-- Gitihub/iuricode: https://github.com/iuricode/padroes-de-commits
-- Docker (documentação oficial): https://docs.docker.com/
-- Best Practices for Writing Dockerfiles: https://docs.docker.com/develop/develop-images/dockerfile_best-practices/
-- Docker Compose (documentação oficial): https://docs.docker.com/compose/
-- .dockerignore Reference: https://docs.docker.com/engine/reference/builder/#dockerignore-file
-- .gitignore (documentação oficial): https://git-scm.com/docs/gitignore
-- gitignore.io (gerador de .gitignore para diferentes stacks): https://www.toptal.com/developers/gitignore/
-- Handling secrets in Git repos (GitHub Guide): https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-and-storing-encrypted-secrets
-- Creating a pull request template for your repository: https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/creating-a-pull-request-template-for-your-repository
-- Exemplo de Checklists para PRs: https://github.com/othneildrew/Best-README-Template#pull-request-template
-- Best Practices for Rollbacks (Atlassian): https://www.atlassian.com/continuous-delivery/principles/rollback-strategies
-- How to Use Git Revert and Git Reset: https://www.git-tower.com/learn/git/faq/git-reset-vs-revert/
-- 12 Factor App: Config: https://12factor.net/config
-- Dotenv (Exemplo e uso de arquivos .env): https://github.com/motdotla/dotenv#usage
+- **ISO/IEC/IEEE 12207:** Systems and software engineering — Software life cycle processes.
+- **DORA Metrics:** Accelerate State of DevOps Report (Google Cloud).
+- **Dronecode Foundation:** PX4 SITL/HITL Simulation and MAVLink integration standards.
+- **Conventional Commits:** https://www.conventionalcommits.org/
+- **GitLab CI/CD Documentation:** https://docs.gitlab.com/ee/ci/
