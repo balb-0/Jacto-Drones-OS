@@ -7,22 +7,28 @@
   </tr>
 </table>
 
-# Nome do Projeto: <nome do projeto>
+# Nome do Projeto: Jacto Drones Operating System v0.1
 
-## Nome do Grupo: <nome do grupo>
+## Nome do Grupo: G04 (O Grupo Quatro)
 
 ## Integrantes:
 
-- <a href="https://www.linkedin.com/in/username/">Nome</a>
-- <a href="https://www.linkedin.com/in/username/">Nome</a>
-- <a href="https://www.linkedin.com/in/username/">Nome</a>
-- <a href="https://www.linkedin.com/in/username/">Nome</a>
-- <a href="https://www.linkedin.com/in/username/">Nome</a>
-- <a href="https://www.linkedin.com/in/username/">Nome</a>
-- <a href="https://www.linkedin.com/in/username/">Nome</a>
-- <a href="https://www.linkedin.com/in/username/">Nome</a>
+- <a href="https://www.linkedin.com/in/calebe-matias/?locale=pt">Calebe Matias</a>
+- <a href="https://www.linkedin.com/in/fernandobertholdo/">Fernando Bertholdo</a>
+- <a href="https://www.linkedin.com/in/kauanmassuia/">Kauan Massuia</a>
+- <a href="https://www.linkedin.com/in/lucca-henrique-pereira/">Lucca Henrique</a>
+- <a href="https://www.linkedin.com/in/marlos-do-carmo-guedes-366987250/">Marlos Guedes</a>
+- <a href="https://www.linkedin.com/in/otavio-vasc/">Otávio Vasconcelos</a>
+- <a href="https://www.linkedin.com/in/vitorbalbo/">Vitor Balbo</a>
 
 # Sumário
+
+# Histórico de Revisões
+
+| Data | Versão | Descrição | Autor |
+| :--- | :--- | :--- | :--- |
+| 28/04/2026 | 0.1 | Criação do documento e definição de padrões iniciais. | Vitor Balbo |
+| 30/04/2026 | 0.1.0 | Sprint 1 - Entrega Final. | G04 |
 
 
 
@@ -53,6 +59,11 @@ _conteúdo_
 - Constantes: Utilize UPPER_CASE com underscores
   - Exemplo:
     - const MAX_USERS = 100; 
+
+- Arquivos de Teste: Utilize snake_case (nome_do_teste)
+  - Exemplo: 
+    - ```test_calculo_rota.py```
+    - ```test_integracao_mavlink.py```
 
 ## 2.2 Formatação de Código
 
