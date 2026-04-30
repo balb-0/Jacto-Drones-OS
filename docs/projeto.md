@@ -3,7 +3,7 @@
 ## Nome do Grupo: G04 (O Grupo Quatro)
 
 ## Professores:
-### Orientador(a) 
+### Orientador(a)
 - <a href="https://www.linkedin.com/in/reginaldo-arakaki-9574222b/">Reginaldo Arakaki</a>
 ### Instrutores
 - <a href="https://www.linkedin.com/in/hermano-peixoto-1091796/">Computação - Hermano</a>
@@ -31,6 +31,9 @@
 - [3. Objetivos](#3-objetivos)
 - [4. Arquitetura do Produto (ISO 10746)](#4-arquitetura-do-produto-iso-10746)
 - [5. Configuração da Esteira de Sistemas](#5-configuração-da-esteira-de-sistemas)
+  - [5.1 Plano de Testes Funcionais](#51-plano-de-testes-funcionais)
+  - [5.2 Testes Não Funcionais e Quality Gates](#52-testes-não-funcionais-e-quality-gates)
+  - [5.3 Matriz de Rastreabilidade Técnica](#53-matriz-de-rastreabilidade-técnica)
 - [6. Requisitos SCM](#6-requisitos-scm)
 - [7. Referências](#7-referências)
 
@@ -89,7 +92,7 @@ Além do comportamento funcional, a arquitetura do OS v0.1 deve garantir requisi
 
 - **Performance do Pipeline (Time to Feedback):** A execução completa da esteira (do linting até a finalização dos testes SITL no PX4) não deve ultrapassar **15 minutos**. Este limite baseia-se nas práticas e pesquisas reportadas pela DORA (DevOps Research and Assessment) e na literatura de engenharia de software (como o livro *Accelerate*)<a id="ref3-link" href="#ref3"><sup>[3]</sup></a>, que demonstram que pipelines que excedem o intervalo de 10 a 15 minutos forçam a quebra de fluxo de trabalho e a troca de contexto mental (*context switching*) do desenvolvedor, o que degrada drasticamente a produtividade da equipe e a eficiência da resposta da malha fechada.
 - **Disponibilidade (SLA):** A infraestrutura de CI/CD (GitLab e Runners) deve garantir um SLA de **99.9% de uptime** durante o horário comercial, assegurando que gargalos de infraestrutura não travem entregas críticas (como hotfixes de firmware).
-- **Segurança dos Artefatos:** 
+- **Segurança dos Artefatos:**
   - Todo artefato gerado (imagens Docker ou binários de firmware) deve ser escaneado por ferramentas SAST.
   - Vulnerabilidades classificadas como "Críticas" ou "Altas" bloqueiam imediatamente a promoção do artefato.
   - Imagens de contêiner e binários devem ser assinados digitalmente antes de serem disponibilizados no Registry para evitar adulterações (Supply Chain Security).
