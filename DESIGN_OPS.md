@@ -113,10 +113,27 @@ Esse DoD é herdado diretamente do conceito *agreed to and well-understood* do c
 
 ### 4.2 Métricas de Qualidade — Framework REACH adaptado
 
-> 🚧 A ser preenchido pelo **Membro 6** — usar o Prompt 6 do kit do grupo.
-> Cobrir: tabela REACH (Results, Efficiency, Ability, Clarity, Health) com 1 métrica de UI + 1 de software por eixo, e bloco de triangulação Value-Centered Design com objetivos do parceiro.
+Aplicamos o framework REACH (Results, Efficiency, Ability, Clarity, Health) [4] como esqueleto de medição do nosso DesignOps no Jacto Drones OS. Para evitar leitura parcial do desempenho do time, cada eixo foi traduzido em **duas métricas concretas**: uma da camada de UI (dashboard) e outra da camada de design de software (esteira de logs e validação). Essa triangulação é proposital e responde ao alerta da NN/g [4] de que "métricas isoladas não dão imagem precisa". Na prática, medimos resultado percebido, velocidade, capacitação, alinhamento e sustentabilidade do trabalho em dois trilhos que precisam evoluir juntos para cumprir o objetivo do parceiro.
 
-**Responsável: <Membro 6 — substituir>**
+Ao conectar UI e esteira de software no mesmo quadro de medição, reduzimos o risco de otimização local. Um dashboard pode estar visualmente estável e acessível, mas sem critério de voo automatizado o engenheiro ainda perde tempo em análise manual; da mesma forma, automação de log sem clareza de critérios para PO e parceiro gera retrabalho de produto. O REACH adaptado força leitura sistêmica: quando um indicador melhora e seu par piora, sabemos que houve assimetria na entrega. Esse desenho também conversa com a organização da nossa CI/CD na Seção 5, onde os jobs de lint, teste visual e validação de `.ulg` passam a produzir sinais objetivos para acompanhamento por sprint [2].
+
+| Eixo REACH | Pergunta-guia | Métrica UI (dashboard) | Métrica Software (esteira) |
+|---|---|---|---|
+| **R**esults | A experiência melhorou? | Score axe-core: % de telas sem violações *serious/critical*. Meta: 100%. | % de voos com Problem Report gerado automaticamente quando critério falha. Meta Sprint 5: ≥ 95%. |
+| **E**fficiency | Tempo bem investido? | Lead Time for Design Change (issue `design:proposed` → URL em produção). Meta: ≤ 1 sprint. | Tempo do PR ao .ulg validado. Meta: ≤ 8 min. |
+| **A**bility | Time tem skills? | % de membros que abriram pelo menos 1 MR de UI por sprint. Meta: ≥ 70%. | % de membros capazes de adicionar novo critério ao `scripts/log_validation/`. Meta: ≥ 50%. |
+| **C**larity | Stakeholders alinhados? | Validação de critério: PO + parceiro Jacto concordam por escrito (issue resolvida) antes do merge. Meta: 100%. | Cada critério tem ADR mergeado *antes* do código que o implementa. Meta: 100%. |
+| **H**ealth | Time satisfeito? | Pulse de retro: 1 a 5 sobre "consigo entregar UI sem retrabalho". Meta: ≥ 4 média. | Pulse de retro: 1 a 5 sobre "carga de trabalho saudável". Meta: ≥ 4 média. |
+
+O uso dessas métricas em conjunto também melhora governança de decisão. Em vez de discutir percepção subjetiva de "pipeline bom" ou "dashboard pronto", passamos a operar por evidência: artifacts de acessibilidade, tempos de ciclo da esteira, histórico de MRs e checklists de validação com stakeholder. Isso diminui dependência de memória individual do time, facilita handover entre sprints e antecipa gargalos antes de virarem incidente de entrega. Em especial, a métrica de Clarity no trilho de software (ADR antes do código) cria rastreabilidade de decisão técnica, reduzindo mudanças tardias de critério que tipicamente explodem prazo quando o simulador já está no ar [2].
+
+**Triangulação com objetivos de negócio.** Seguindo a abordagem **Value-Centered Design** apresentada em aula [2, slides 31-32], também sobrepomos:
+- **Objetivo de negócio Jacto** (do TAP [7]): reduzir tempo de análise de log de "2-3 dias manuais" para minutos.
+- **Objetivo do usuário (engenheiros Jacto)**: confiar no Problem Report automatizado a ponto de fechar o loop sem releitura manual.
+
+A interseção dessas duas frentes é o que valida se nosso DesignOps está entregando *valor*, não só *eficiência operacional*. Em termos práticos, isso significa que bater meta de tempo de pipeline ou de conformidade visual não é suficiente isoladamente: o sucesso real é observado quando os engenheiros usam o relatório automatizado como base de decisão e o fluxo fim a fim encurta o ciclo de diagnóstico com confiança. Esse é o critério que conecta REACH [4] ao resultado esperado no TAP [7] e à disciplina de medição orientada a valor defendida em aula [2].
+
+**Responsável: Vitor Balbo**
 
 <!-- END SECTION 4.2 -->
 
@@ -264,5 +281,5 @@ A imagem mental é exatamente a do slide 8 da nossa Sprint Review: **uma esteira
 | 3.1 Ferramentas e Padronização | `<Membro 3>` | Stack + Design System + tokens. |
 | 3.2 Fluxo Design-to-Code | `<Membro 4>` | Diagrama dos dois fluxos (UI e software). |
 | 4.1 Definition of Done | **Lucca Pereira** | Checklists por trilho. |
-| 4.2 Métricas REACH | `<Membro 6>` | Triangulação UI + software + valor. |
+| 4.2 Métricas REACH | **Vitor Balbo** | Triangulação UI + software + valor. |
 | 5. Integração com a Esteira de CI/CD | **Fernando Bertholdo** | Linting, regressão visual, Storybook, métricas no pipeline. |
