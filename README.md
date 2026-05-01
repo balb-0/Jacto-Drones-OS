@@ -1,93 +1,91 @@
-# G04
+# Nome do Projeto: Jacto Drones Operating System v0.1
+
+## Nome do Grupo: G04 (O Grupo Quatro)
+
+## Integrantes:
+
+- <a href="https://www.linkedin.com/in/calebe-matias/?locale=pt">Calebe Matias</a>
+- <a href="https://www.linkedin.com/in/fernandobertholdo/">Fernando Bertholdo</a>
+- <a href="https://www.linkedin.com/in/kauanmassuia/">Kauan Massuia</a>
+- <a href="https://www.linkedin.com/in/lucca-henrique-pereira/">Lucca Henrique</a>
+- <a href="https://www.linkedin.com/in/marlos-do-carmo-guedes-366987250/">Marlos Guedes</a>
+- <a href="https://www.linkedin.com/in/otavio-vasc/">Otávio Vasconcelos</a>
+- <a href="https://www.linkedin.com/in/vitorbalbo/">Vitor Balbo</a>
 
 
+## Professores:
+### Orientador(a) 
+- <a href="https://www.linkedin.com/in/reginaldo-arakaki-9574222b/">Reginaldo Arakaki</a>
+### Instrutores
+- <a href="https://www.linkedin.com/in/hermano-peixoto-1091796/">Computação - Hermano</a>
+- <a href="https://www.linkedin.com/in/jose-romualdo/">Computação - José Romualdo</a>
+- <a href="https://www.linkedin.com/in/ovidio-netto/">Computação - Ovídio</a>
+- <a href="https://www.linkedin.com/in/fernando-pizzo-208b526a/">Matemática e Física - Pizzo</a>
+- <a href="https://www.linkedin.com/in/egondaxbacher/?locale=pt">Negócios - Egon</a>
+- <a href="https://www.linkedin.com/in/juliastateri/?locale=pt">Design - Julia</a>
+- <a href="https://www.linkedin.com/in/profclaudioandre/">Liderança - Claudio Andre</a>
 
-## Getting started
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## 📝 Descrição
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+Desenvolvimento de um protótipo funcional de um **Operating System de continuous delivery para software de drones (OS v0.1)**. O sistema visa unificar o workflow de desenvolvimento para firmware, plataformas digitais e sistemas de dados, automatizando atividades recorrentes de gestão de tarefas, rituais de engenharia e estabelecendo critérios padronizados de qualidade e métricas operacionais (DORA Metrics).
 
-## Add your files
+## 📝 LINKS
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+<a href="/docs/projeto.md">Link para a documentação geral</a> do projeto.
+<br>
+<a href="/docs/projeto.pdf">Versão em PDF do documento do projeto (Placement)</a>.
+
+## 📊 Dashboards Implementados (Placement)
+
+O repositório adotará uma camada de visualização para métricas operacionais (Cycle Time, Throughput, Backlog Health):
+
+- **Dashboard Operacional**: Monitoramento de saúde da esteira e cadência de entrega.
+
+## 📁 Estrutura de pastas
 
 ```
-cd existing_repo
-git remote add origin https://git.inteli.edu.br/graduacao/2026-1b/t13/g04.git
-git branch -M main
-git push -uf origin main
+g04/
+├─ docs/
+│  ├─ index.md                          # Índice da documentação
+│  ├─ projeto.md                        # Documento principal do produto (OS v0.1)
+│  ├─ gestao-projeto.md                 # Gestão de sprints e riscos
+│  ├─ gestao-configuração.md            # Políticas de repo e branches
+│  ├─ dev-rules.md                      # Padrões de código e testes
+│  └─ referencias/                      # Normas e evidências do parceiro
+├─ src/
+│  ├─ core/                             # Scripts de automação da esteira
+│  └─ tests/
+│     ├─ unit/                          # Testes unitários (nome_do_teste.py)
+│     └─ integration/                   # Testes de integração (nome_do_teste.py)
+├─ .gitlab-ci.yml                       # Pipeline de CI/CD GitLab
+├─ requirements.txt                     # Dependências do projeto
+└─ README.md
 ```
 
-## Integrate with your tools
+## ✅ Requisitos (Placement)
 
-- [ ] [Set up project integrations](https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/settings/integrations)
+Para executar o projeto localmente, utilize as versões abaixo (ou superiores compatíveis):
 
-## Collaborate with your team
+- **Git**: 2.40+
+- **Python**: 3.12+
+- **Docker Engine**: 24+
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+## 💻 Configuração para desenvolvimento (Placement)
 
-## Test and Deploy
+```bash
+git clone https://git.inteli.edu.br/graduacao/2026-1b/t13/g04
+cd g04
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-Use the built-in continuous integration in GitLab.
+## 🗃 Histórico de lançamentos
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+* 0.1.0 - 30/04/2026
+    * SPRINT 1 - GESTÃO DE CONFIGURAÇÃO E ARQUITETURA (ISO 10746)
 
-***
+## 📋 Licença/License
 
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+<p xmlns:cc="http://creativecommons.org/ns#" xmlns:dct="http://purl.org/dc/terms/"><a property="dct:title" rel="cc:attributionURL" href="https://git.inteli.edu.br/graduacao/2026-1b/t13/g04">Jacto Drones OS v0.1</a> by <a rel="cc:attributionURL dct:creator" property="cc:attributionName" href="https://git.inteli.edu.br/graduacao/2026-1b/t13/g04">INTELI</a>, <a href="https://www.linkedin.com/in/calebe-matias/?locale=pt">Calebe Matias</a>, <a href="https://www.linkedin.com/in/fernandobertholdo/">Fernando Bertholdo</a>, <a href="https://www.linkedin.com/in/kauanmassuia/">Kauan Massuia</a>, <a href="https://www.linkedin.com/in/lucca-henrique-pereira/">Lucca Henrique</a>, <a href="https://www.linkedin.com/in/marlos-do-carmo-guedes-366987250/">Marlos Guedes</a>, <a href="https://www.linkedin.com/in/otavio-vasc/">Otávio Vasconcelos</a>, <a href="https://www.linkedin.com/in/vitorbalbo/">Vitor Balbo</a> is licensed under <a href="http://creativecommons.org/licenses/by/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">Attribution 4.0 International<img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"></a></p>
