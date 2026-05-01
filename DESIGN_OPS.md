@@ -77,12 +77,33 @@ INSTRUÇÕES PARA O GRUPO (apagar antes do MR final)
 
 ## 4. Criação de Impacto (Mensuração e Entrega)
 
+Esta seção responde ao pilar 3 do menu de DesignOps definido pela NN/g [1] — *create impact* — e à pergunta levantada pela professora Julia em aula: *como sabemos que o design está funcionando?* [2]. A própria NN/g reconhece que medir DesignOps é difícil pela subjetividade inerente ao trabalho de design [4]; nossa resposta é triangular múltiplas métricas sob o framework **REACH** (Results, Efficiency, Ability, Clarity, Health) [4], complementadas por uma Definição de Pronto (DoD) que serve de *gate* antes que qualquer mudança chegue à `main`. A Seção 4 está dividida em duas partes: **4.1 (DoD, esta)** e **4.2 (Métricas REACH)**, escrita por outro membro do grupo.
+
 ### 4.1 Definição de Pronto (Definition of Done)
 
-> 🚧 A ser preenchido pelo **Membro 5** — usar o Prompt 5 do kit do grupo.
-> Cobrir: DoD do Dashboard (Sprint 4) e DoD do Design de Software (camada de critérios de log), com checklists.
+Toda alteração que toca a interface do dashboard ou a camada de critérios de log só é considerada *pronta* quando **todos os itens** abaixo são verdadeiros. A maior parte é validada automaticamente pelo pipeline descrito na Seção 5; os itens manuais ficam num checklist preenchido a partir do template `.gitlab/merge_request_templates/design.md`, o que materializa o "guia vivo" recomendado pela NN/g [1] e elimina o vai-e-vem assíncrono de revisão.
 
-**Responsável: <Membro 5 — substituir>**
+**DoD do Dashboard (Sprint 4 e adiante).**
+
+- [ ] Design revisado tecnicamente pelo Dev Lead da sprint.
+- [ ] Assets otimizados (SVG inlined ou comprimido com SVGO; WebP onde aplicável).
+- [ ] Acessibilidade WCAG 2.1 AA validada por axe-core no CI (zero violações *serious* ou *critical*).
+- [ ] Tokens utilizados — proibido cor/spacing literal fora de `tokens.css`. Lint bloqueia.
+- [ ] Componente tem story no Storybook com pelo menos uma variante e estado de erro/empty.
+- [ ] Diff visual aprovado (Chromatic ou alternativa) ou justificado no MR.
+- [ ] Texto/microcopy revisado pelo PO da sprint.
+- [ ] Issue de origem (`design:proposed`) referenciada no MR.
+
+**DoD do Design de Software (camada de critérios de log).**
+
+- [ ] Critério validado com os engenheiros Jacto (Vinícius/Held) antes do merge — alinhado ao slide 10 da Sprint Review [6].
+- [ ] Threshold do critério tem ADR em `docs/adr/`.
+- [ ] Função de extração do `.ulg` [5] tem teste unitário com pelo menos 1 voo de exemplo passando e 1 falhando.
+- [ ] Pipeline executa em < 8 min (limite operacional do PX4 + Gazebo na máquina de CI).
+
+Esse DoD é herdado diretamente do conceito *agreed to and well-understood* do critério **Clarity** do REACH [4]: nenhum dos itens acima foi decidido por uma pessoa só — todos foram acordados pelo grupo e compartilhados com stakeholders, incluindo orientadores e os engenheiros parceiros da Jacto, exatamente para que "pronto" signifique a mesma coisa para Design, Dev e firmware. Isso fecha a fricção operacional que a Julia descreveu em aula como a perda de horas tentando descobrir *de quem* é cada decisão [2] e materializa a recomendação da NN/g [1] de que toda esteira de DesignOps tenha um critério explícito e versionado de aceite.
+
+**Responsável: Lucca Pereira**
 
 <!-- END SECTION 4.1 -->
 
@@ -242,6 +263,6 @@ A imagem mental é exatamente a do slide 8 da nossa Sprint Review: **uma esteira
 | 2. Como Trabalhamos Juntos (Pessoas) | `<Membro 2>` | Papéis, rituais, handover. |
 | 3.1 Ferramentas e Padronização | `<Membro 3>` | Stack + Design System + tokens. |
 | 3.2 Fluxo Design-to-Code | `<Membro 4>` | Diagrama dos dois fluxos (UI e software). |
-| 4.1 Definition of Done | `<Membro 5>` | Checklists por trilho. |
+| 4.1 Definition of Done | **Lucca Pereira** | Checklists por trilho. |
 | 4.2 Métricas REACH | `<Membro 6>` | Triangulação UI + software + valor. |
 | 5. Integração com a Esteira de CI/CD | **Fernando Bertholdo** | Linting, regressão visual, Storybook, métricas no pipeline. |
