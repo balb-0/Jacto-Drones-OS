@@ -36,10 +36,44 @@ INSTRUÇÕES PARA O GRUPO (apagar antes do MR final)
 
 ## 2. Como Trabalhamos Juntos (Pessoas)
 
-> 🚧 A ser preenchido pelo **Membro 2** — usar o Prompt 2 do kit do grupo.
-> Cobrir: 2.1 Papéis e Responsabilidades, 2.2 Rituais de Colaboração, 2.3 Handover Design ↔ Dev.
+Esta seção responde ao pilar 1 do "menu de DesignOps" da NN/g [1] — *como o time se organiza para que o design escale sem virar gargalo*. Nosso time tem 7 integrantes e opera em sprints curtas com a Jacto e os docentes do Inteli como stakeholders externos. Dado o tamanho reduzido do grupo, a estrutura de trabalho foi pensada para ser enxuta, rotativa e documentada, evitando que qualquer função crítica dependa de uma única pessoa.
 
-**Responsável: <Membro 2 — substituir>**
+### 2.1 Papéis e Responsabilidades
+
+Como o grupo é pequeno e cada integrante acumula múltiplos chapéus, adotamos **papéis funcionais rotativos por sprint**, em vez de cargos fixos. Essa escolha se justifica pela observação de que "DesignOps em times pequenos não é centro de operações, é cargo difuso" [2]. A rotação distribui a carga de conhecimento, reduz o risco de gargalos individuais e mantém o time engajado em diferentes frentes do projeto, conectando-se diretamente ao eixo **Health** do framework REACH [4] e combatendo o anti-padrão da NN/g de deixar uma única pessoa como "única fonte de verdade" [1].
+
+| Papel | Responsabilidade central na esteira | Quando é acionado |
+|---|---|---|
+| **UX/UI Lead (rotativo)** | Custódia do Design System, validação de UI antes do merge | Toda MR que toca componentes do dashboard ou identidade Jacto |
+| **Dev Lead (rotativo)** | Garante que tokens/componentes sejam consumíveis pelo código (PX4 toolchain + dashboard React/HTML) | Todo MR de UI ou pipeline |
+| **DevOps/DesignOps Engineer (rotativo)** | Automação de assets, build de Storybook, regressão visual no GitLab CI | Manutenção contínua + setup de nova ferramenta |
+| **Critérios de Voo Owner** | Traduz regras de aceitação de log `.ulg` em código de validação; equivalente ao "DesignOps" da camada de design de software | A cada novo critério proposto pela Jacto |
+| **PO de Sprint** | Ponte com parceiro/orientadores; conduz a Validação de Critério (ver §2.2) | Toda Sprint Planning e Review |
+
+A definição desses papéis é intencionalmente funcional: não há hierarquia fixa, apenas responsabilidades claras que se alternam a cada sprint, garantindo que todos os membros desenvolvam visão tanto de produto quanto de operação.
+
+### 2.2 Rituais de Colaboração
+
+Os rituais do Inteli (Daily, Planning, Review, Retro) [2] são a espinha dorsal da nossa comunicação. Sobre essa base, adicionamos três rituais específicos para reduzir fricção entre Design, Dev e o parceiro:
+
+- **Design-Critério Sync (15 min, semanal)** — UX Lead + Dev Lead + Critério Owner alinham protótipos do dashboard e novos critérios de log. Resolve a fricção Dev↔Design ao forçar um encontro curto e recorrente [3].
+- **Validação de Critério com a Jacto (sob demanda)** — Todo critério novo é validado com Vinícius e Held *antes* de virar PR, conforme a prática apresentada no slide 10 da Sprint Review.
+- **Design Review no MR (assíncrono, gate de merge)** — Toda MR que toca `dashboard/`, `tokens/` ou `scripts/log_validation/` exige aprovação adicional do UX/UI Lead da sprint corrente. Isso transforma o Design Review em parte do pipeline, não em um passo opcional [1].
+
+Esses rituais mantêm o time alinhado sem adicionar sobrecarga burocrática, aproveitando a cadência já existente dos eventos Scrum.
+
+### 2.3 Handover Design ↔ Dev
+
+O handover acontece **dentro do próprio GitLab**, não por links externos efêmeros. Seguimos 4 passos rastreáveis:
+
+1. **Issue com label `design:proposed`** — registra a intenção da mudança e abre o rastreamento.
+2. **Artefato fonte** (Figma frame, mock, ADR) anexado à issue ou linkado em `docs/design/` — materializa o que foi decidido.
+3. **MR referencia a issue** (`Closes #N`) — o Design Review acontece no próprio MR, com comentários contextualizados.
+4. **Para mudanças no dashboard**, o Storybook do branch é publicado automaticamente (ver Seção 5); a URL aparece no comentário do MR como evidência visual.
+
+Essa abordagem segue a recomendação da NN/g de "documentar o handover" [1] e a orientação do template de usar Issues/MRs do GitLab para registrar *o porquê* de uma mudança [3], criando memória institucional acessível a todos os membros e stakeholders.
+
+**Responsável: Marlos Guedes**
 
 <!-- END SECTION 2 -->
 
@@ -277,7 +311,7 @@ A imagem mental é exatamente a do slide 8 da nossa Sprint Review: **uma esteira
 | Seção | Responsável | Foco |
 |---|---|---|
 | 1. Introdução e Objetivo | `<Membro 1>` | Visão geral + justificativa do plano. |
-| 2. Como Trabalhamos Juntos (Pessoas) | `<Membro 2>` | Papéis, rituais, handover. |
+| 2. Como Trabalhamos Juntos (Pessoas) | **Marlos Guedes** | Papéis, rituais, handover. |
 | 3.1 Ferramentas e Padronização | `<Membro 3>` | Stack + Design System + tokens. |
 | 3.2 Fluxo Design-to-Code | `<Membro 4>` | Diagrama dos dois fluxos (UI e software). |
 | 4.1 Definition of Done | **Lucca Pereira** | Checklists por trilho. |
