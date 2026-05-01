@@ -111,31 +111,31 @@ Essa abordagem segue a recomendação da NN/g de "documentar o handover" [1] e a
 
 ## 4. Criação de Impacto (Mensuração e Entrega)
 
-Esta seção responde ao pilar 3 do menu de DesignOps definido pela NN/g [1] — *create impact* — e à pergunta levantada pela professora Julia em aula: *como sabemos que o design está funcionando?* [2]. A própria NN/g reconhece que medir DesignOps é difícil pela subjetividade inerente ao trabalho de design [4]; nossa resposta é triangular múltiplas métricas sob o framework **REACH** (Results, Efficiency, Ability, Clarity, Health) [4], complementadas por uma Definição de Pronto (DoD) que serve de *gate* antes que qualquer mudança chegue à `main`. A Seção 4 está dividida em duas partes: **4.1 (DoD, esta)** e **4.2 (Métricas REACH)**, escrita por outro membro do grupo.
+Esta seção responde ao pilar 3 do menu NN/g [1] e à pergunta da Julia em aula — *como sabemos que o design está funcionando?* [2]. NN/g [4] aponta dificuldade de medir DesignOps por subjetividade, então adotamos triangulação por múltiplas métricas sob o framework REACH [4]. A Seção 4 está dividida em 4.1 (DoD, esta) e 4.2 (Métricas REACH, escrita por outro membro).
 
 ### 4.1 Definição de Pronto (Definition of Done)
 
-Toda alteração que toca a interface do dashboard ou a camada de critérios de log só é considerada *pronta* quando **todos os itens** abaixo são verdadeiros. A maior parte é validada automaticamente pelo pipeline descrito na Seção 5; os itens manuais ficam num checklist preenchido a partir do template `.gitlab/merge_request_templates/design.md`, o que materializa o "guia vivo" recomendado pela NN/g [1] e elimina o vai-e-vem assíncrono de revisão.
+Toda alteração que toca interface do dashboard ou critérios de log só é *pronta* quando os itens abaixo são verdadeiros. Pipeline força a maior parte automaticamente; manuais ficam num checklist no template `.gitlab/merge_request_templates/design.md`.
 
-**DoD do Dashboard (Sprint 4 e adiante).**
+**DoD do Dashboard (Sprint 4 e adiante)**
 
 - [ ] Design revisado tecnicamente pelo Dev Lead da sprint.
 - [ ] Assets otimizados (SVG inlined ou comprimido com SVGO; WebP onde aplicável).
-- [ ] Acessibilidade WCAG 2.1 AA validada por axe-core no CI (zero violações *serious* ou *critical*).
+- [ ] Acessibilidade WCAG 2.1 AA validada por `axe-core` no CI (zero violações *serious* ou *critical*).
 - [ ] Tokens utilizados — proibido cor/spacing literal fora de `tokens.css`. Lint bloqueia.
 - [ ] Componente tem story no Storybook com pelo menos uma variante e estado de erro/empty.
 - [ ] Diff visual aprovado (Chromatic ou alternativa) ou justificado no MR.
 - [ ] Texto/microcopy revisado pelo PO da sprint.
 - [ ] Issue de origem (`design:proposed`) referenciada no MR.
 
-**DoD do Design de Software (camada de critérios de log).**
+**DoD do Design de Software (camada de critérios de log)**
 
-- [ ] Critério validado com os engenheiros Jacto (Vinícius/Held) antes do merge — alinhado ao slide 10 da Sprint Review [6].
+- [ ] Critério validado com engenheiros Jacto (Vinícius/Held) antes do merge — alinhado ao slide 10 da Sprint Review [6].
 - [ ] Threshold do critério tem ADR em `docs/adr/`.
 - [ ] Função de extração do `.ulg` [5] tem teste unitário com pelo menos 1 voo de exemplo passando e 1 falhando.
 - [ ] Pipeline executa em < 8 min (limite operacional do PX4 + Gazebo na máquina de CI).
 
-Esse DoD é herdado diretamente do conceito *agreed to and well-understood* do critério **Clarity** do REACH [4]: nenhum dos itens acima foi decidido por uma pessoa só — todos foram acordados pelo grupo e compartilhados com stakeholders, incluindo orientadores e os engenheiros parceiros da Jacto, exatamente para que "pronto" signifique a mesma coisa para Design, Dev e firmware. Isso fecha a fricção operacional que a Julia descreveu em aula como a perda de horas tentando descobrir *de quem* é cada decisão [2] e materializa a recomendação da NN/g [1] de que toda esteira de DesignOps tenha um critério explícito e versionado de aceite.
+Esse DoD é herdado do conceito "agreed to and well-understood" do critério **Clarity** do REACH [4]: tudo está *acordado* pelo grupo e *compartilhado* com stakeholders, orientadores incluídos. Assim, "pronto" deixa de ser uma interpretação individual e vira contrato operacional entre Design, Dev, PO e parceiro Jacto. A rastreabilidade também reduz a fricção apontada em aula [2], porque cada evidência de aceite fica no MR, no pipeline ou na ADR correspondente. Na prática, o checklist conecta o menu de operações da NN/g [1] à execução diária: cada mudança precisa provar qualidade visual, acessibilidade, rastreabilidade de decisão e viabilidade técnica antes de consumir tempo da esteira principal.
 
 **Responsável: Lucca Pereira**
 
