@@ -23,10 +23,17 @@ INSTRUÇÕES PARA O GRUPO (apagar antes do MR final)
 
 ## 1. Introdução e Objetivo
 
-> 🚧 A ser preenchido pelo **Membro 1** — usar o Prompt 1 do kit do grupo.
-> Substituir este aviso pelo conteúdo gerado e a linha de assinatura abaixo.
+Este documento define o plano de DesignOps do Jacto Drones OS v0.1, articulando pessoas, processos, ferramentas, métricas e pontos de integração com a esteira de CI/CD do projeto. Adotamos a leitura apresentada pela profª Julia Stateri de que **"DesignOps é o DevOps do Design"** [1] [2]: uma infraestrutura cultural, operacional e técnica que permite ao trabalho de design fluir com a mesma rastreabilidade, automação e cadência do código. No nosso contexto, isso vale tanto para o design de **interface UX/UI** quanto para o **design de software** [2], porque a experiência final não depende apenas de telas, mas também de fluxos de engenharia, critérios de validação e artefatos que passam por merge requests, builds, simulações e evidências auditáveis.
 
-**Responsável: <Membro 1 — substituir>**
+O DesignOps se justifica no projeto em três frentes complementares:
+
+1. **Design do software**. O foco do Módulo 10 está na construção de uma esteira confiável para desenvolvimento e validação do firmware. Na Sprint 1, o produto operacional é o fluxo PR → build PX4 → simulação Gazebo → log `.ulg` validado; na Sprint 5, a previsão é evoluir esse caminho para um Problem Report automatizado. Esse desenho não é apenas implementação de pipeline: é design do fluxo de trabalho de engenharia, pois define como uma mudança técnica nasce, é validada, comunica falhas e se torna evidência para decisão [3].
+2. **Dashboard de visibilidade**. A Sprint 4 prevê uma interface real de acompanhamento da saúde por raia e do cycle time da esteira. Essa entrega exige decisões consistentes de UX/UI, tokens, componentes versionados, regressão visual e acessibilidade. Sem DesignOps, o dashboard tenderia a depender de inspeção manual e acordos informais; com DesignOps, cada decisão visual passa a ter fonte, critério e verificação no mesmo ambiente em que o código evolui.
+3. **Identidade visual herdada**. O parceiro já traz uma linguagem institucional que precisa ser preservada: Jacto Blue `#0a5193`, Jacto Orange `#ec6608`, paper `#f5f3ee`, tipografia Archivo e JetBrains Mono. No plano, essa identidade vira fonte de verdade visual, não apenas referência estética. O papel do DesignOps é manter a passagem do mock à produção sem retrabalho manual, garantindo que a marca da Jacto permaneça consistente nos artefatos do projeto.
+
+O objetivo desta seção é estabelecer que decisões de design, sejam visuais, de fluxo ou de critério de aceitação, devem se transformar em **artefatos versionáveis no GitLab** e fluir pela esteira sem fricção operacional [3]. Isso implica responsabilidades claras, métricas de impacto auditáveis pelo framework REACH [4] e portas explícitas de integração com o pipeline já existente da Sprint 1. A intenção é reduzir ambiguidade entre Design, Dev, firmware e parceiro, fazendo com que cada decisão relevante possa ser rastreada, revisada e validada como parte do ciclo de entrega. Esta seção foi redigida com base nos Anexos A.1 e A.4 do TAP [7] e na apresentação de Sprint Review do grupo [6].
+
+**Responsável: Calebe Matias**
 
 <!-- END SECTION 1 -->
 
@@ -310,7 +317,7 @@ A imagem mental é exatamente a do slide 8 da nossa Sprint Review: **uma esteira
 
 | Seção | Responsável | Foco |
 |---|---|---|
-| 1. Introdução e Objetivo | `<Membro 1>` | Visão geral + justificativa do plano. |
+| 1. Introdução e Objetivo | **Calebe Matias** | Visão geral + justificativa do plano. |
 | 2. Como Trabalhamos Juntos (Pessoas) | **Marlos Guedes** | Papéis, rituais, handover. |
 | 3.1 Ferramentas e Padronização | `<Membro 3>` | Stack + Design System + tokens. |
 | 3.2 Fluxo Design-to-Code | `<Membro 4>` | Diagrama dos dois fluxos (UI e software). |
