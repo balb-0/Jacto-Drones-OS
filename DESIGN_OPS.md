@@ -140,10 +140,56 @@ Esta seção responde ao pilar 2 do "menu de DesignOps" [1] — *padronização 
 
 ### 3.2 Fluxo de Integração Design-to-Code
 
-> 🚧 A ser preenchido pelo **Membro 4** — usar o Prompt 4 do kit do grupo.
-> Cobrir: dois fluxos paralelos (UI dashboard via Figma↔Tokens↔Storybook; software embarcado via critério de voo↔script de log↔simulação Gazebo) e a simetria entre eles.
+O fluxo abaixo é a tradução concreta da analogia "DesignOps é o DevOps do Design" [3]: cada etapa é um artefato versionado, com revisão e rastro no GitLab — exatamente como qualquer mudança de código. O projeto opera dois fluxos paralelos, um para a interface (dashboard de Sprint 4) e outro para o design do software embarcado (camada de critérios de validação de log [5]). Apesar de tratarem de objetos diferentes, ambos seguem a mesma anatomia: artefato versionado → gate automatizado → review humano nominal → rastreabilidade no MR.
 
-**Responsável: <Membro 4 — substituir>**
+**Fluxo A — UI (dashboard Sprint 4 e adiante).** Começa no Figma e termina em produção, com gates intermediários no pipeline GitLab CI:
+
+```
+[1] PROTÓTIPO NO FIGMA
+       │  Branch Figma + componente atualizado na biblioteca Jacto Drones OS DS
+       ▼
+[2] EXPORT DE TOKENS (Tokens Studio plugin)
+       │  Plugin abre PR automático em GitLab com diff de design/tokens.json
+       ▼
+[3] REVISÃO DO PR DE TOKENS
+       │  UX/UI Lead aprova; CI gera tokens.css + tokens.ts
+       ▼
+[4] IMPLEMENTAÇÃO DO COMPONENTE / TELA
+       │  Dev consome tokens; commit segue Conventional Commits
+       ▼
+[5] STORYBOOK BUILD + REGRESSÃO VISUAL (CI)
+       │  Snapshot publicado; diff visual > 0.1% bloqueia merge
+       ▼
+[6] DESIGN REVIEW NO MR
+       │  UX/UI Lead aprova visualmente; Dev Lead aprova tecnicamente
+       ▼
+[7] MERGE NA develop
+       │  Storybook publicado em GitLab Pages
+       ▼
+[8] DEPLOY DO DASHBOARD
+```
+
+**Fluxo B — Software embarcado (camada PX4/Gazebo/log).** Começa numa proposta de critério de voo e termina num critério executável que bloqueia merges quando falha:
+
+```
+[A] CRITÉRIO DE VOO PROPOSTO (issue com label `criterio:proposto`)
+       │  Validado com engenheiros Jacto (Vinícius/Held) — slide 10 [6]
+       ▼
+[B] CRITÉRIO VIRA CÓDIGO (scripts/log_validation/<criterio>.py)
+       │  Threshold + função de extração do .ulg [5]
+       ▼
+[C] PR DISPARA BUILD PX4 + SIMULAÇÃO GAZEBO
+       │  .ulg gerado é input do critério
+       ▼
+[D] FALHA DO CRITÉRIO → COMENTÁRIO AUTOMÁTICO NO MR
+       │  Bloqueia merge se for critério crítico
+       ▼
+[E] APROVAÇÃO → MERGE
+```
+
+Os dois fluxos compartilham princípios de operação que justificam tratá-los como variantes do mesmo padrão de DesignOps: **artefato versionado** (token de design ou critério de voo, ambos como diff revisável no Git), **gate automatizado** (Storybook + regressão visual no fluxo A; build PX4 + simulação Gazebo no fluxo B), **review humano nominal** (UX/UI Lead da sprint corrente no fluxo A; Critérios de Voo Owner no fluxo B) e **rastreabilidade integral no MR** (issue de origem, diff e evidência publicada como comentário). É essa simetria que justifica a existência de um plano de DesignOps em um projeto majoritariamente embarcado: o design do fluxo de trabalho de engenharia, descrito em [3] como a frente onde "tarefas repetitivas devem ser operacionalizadas", segue as mesmas leis do design de UI [1]. Se um dos lados melhora e o outro estagna, perdemos o efeito sistêmico — o que conecta este fluxo diretamente às métricas de triangulação da Seção 4.2.
+
+**Responsável: Otavio Vasconcelos**
 
 <!-- END SECTION 3.2 -->
 
@@ -355,7 +401,7 @@ A imagem mental é exatamente a do slide 8 da nossa Sprint Review: **uma esteira
 | 1. Introdução e Objetivo | **Calebe Matias** | Visão geral + justificativa do plano. |
 | 2. Como Trabalhamos Juntos (Pessoas) | **Marlos Guedes** | Papéis, rituais, handover. |
 | 3.1 Ferramentas e Padronização | **Kauan Massuia** | Stack + Design System + tokens. |
-| 3.2 Fluxo Design-to-Code | `<Membro 4>` | Diagrama dos dois fluxos (UI e software). |
+| 3.2 Fluxo Design-to-Code | **Otavio Vasconcelos** | Diagrama dos dois fluxos (UI e software). |
 | 4.1 Definition of Done | **Lucca Pereira** | Checklists por trilho. |
 | 4.2 Métricas REACH | **Vitor Balbo** | Triangulação UI + software + valor. |
 | 5. Integração com a Esteira de CI/CD | **Fernando Bertholdo** | Linting, regressão visual, Storybook, métricas no pipeline. |
