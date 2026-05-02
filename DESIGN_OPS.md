@@ -5,21 +5,7 @@
 > **Documento:** Plano operacional de DesignOps aplicado à nossa esteira de CI/CD.
 > **Entrega:** Atividade Ponderada — Profª Julia Stateri — 01/05/2026.
 
-<!-- ============================================================
-INSTRUÇÕES PARA O GRUPO (apagar antes do MR final)
-
-- Cada seção é editada APENAS entre seus markers BEGIN/END SECTION.
-- Antes de fazer push: git pull --rebase origin docs/design-ops
-- A linha `**Responsável: Nome Completo**` é OBRIGATÓRIA no fim de cada seção.
-- Citações usam os rótulos numerados [1] [2] [3] [4] [5] [6] [7] (definidos
-  na seção Referências, no fim do documento).
-- A Seção 5 já está preenchida e assinada — não editar.
-
-============================================================ -->
-
 ---
-
-<!-- BEGIN SECTION 1 -->
 
 ## 1. Introdução e Objetivo
 
@@ -35,11 +21,7 @@ O objetivo desta seção é estabelecer que decisões de design, sejam visuais, 
 
 **Responsável: Calebe Matias**
 
-<!-- END SECTION 1 -->
-
 ---
-
-<!-- BEGIN SECTION 2 -->
 
 ## 2. Como Trabalhamos Juntos (Pessoas)
 
@@ -82,11 +64,7 @@ Essa abordagem segue a recomendação da NN/g de "documentar o handover" [1] e a
 
 **Responsável: Marlos Guedes**
 
-<!-- END SECTION 2 -->
-
 ---
-
-<!-- BEGIN SECTION 3.1 -->
 
 ## 3. Como o Trabalho é Feito (Processos e Ferramentas)
 
@@ -132,11 +110,7 @@ Esta seção responde ao pilar 2 do "menu de DesignOps" [1] — *padronização 
 
 **Responsável: Kauan Massuia**
 
-<!-- END SECTION 3.1 -->
-
 ---
-
-<!-- BEGIN SECTION 3.2 -->
 
 ### 3.2 Fluxo de Integração Design-to-Code
 
@@ -191,11 +165,7 @@ Os dois fluxos compartilham princípios de operação que justificam tratá-los 
 
 **Responsável: Otavio Vasconcelos**
 
-<!-- END SECTION 3.2 -->
-
 ---
-
-<!-- BEGIN SECTION 4.1 -->
 
 ## 4. Criação de Impacto (Mensuração e Entrega)
 
@@ -227,11 +197,7 @@ Esse DoD é herdado diretamente do conceito *agreed to and well-understood* do c
 
 **Responsável: Lucca Pereira**
 
-<!-- END SECTION 4.1 -->
-
 ---
-
-<!-- BEGIN SECTION 4.2 -->
 
 ### 4.2 Métricas de Qualidade — Framework REACH adaptado
 
@@ -257,11 +223,7 @@ A interseção dessas duas frentes é o que valida se nosso DesignOps está entr
 
 **Responsável: Vitor Balbo**
 
-<!-- END SECTION 4.2 -->
-
 ---
-
-<!-- BEGIN SECTION 5 -->
 
 ## 5. Integração com a Esteira de CI/CD
 
@@ -371,8 +333,6 @@ A imagem mental é exatamente a do slide 8 da nossa Sprint Review: **uma esteira
 **Referências externas usadas nesta seção.** Documentação oficial do Stylelint, Storybook, GitLab CI Pages, Chromatic, axe-core, e a fundamentação teórica de NN/g [1] e Designer Hangout [2] como justificativas de cada gate.
 
 **Responsável: Fernando Bertholdo**
-
-<!-- END SECTION 5 -->
 
 ---
 
