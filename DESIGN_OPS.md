@@ -90,12 +90,47 @@ Essa abordagem segue a recomendação da NN/g de "documentar o handover" [1] e a
 
 ## 3. Como o Trabalho é Feito (Processos e Ferramentas)
 
+Esta seção responde ao pilar 2 do "menu de DesignOps" [1] — *padronização de ferramentas, processos e inteligência compartilhada*. É onde a analogia "DesignOps = DevOps do Design" se materializa em código versionado [2]. A seção tem duas frentes:
+- **3.1** trata das ferramentas e da padronização (fonte de verdade).
+- **3.2** trata do fluxo concreto Design-to-Code dentro da esteira.
+
 ### 3.1 Ferramentas Utilizadas e Padronização
 
-> 🚧 A ser preenchido pelo **Membro 3** — usar o Prompt 3 do kit do grupo.
-> Cobrir: tabela de ferramentas (Figma, Tokens Studio, GitLab, Storybook, PX4/QGC/Gazebo, axe-core), padronização do Design System "Jacto Drones OS DS", tokens iniciais (paleta Jacto Blue/Orange + Archivo/JetBrains Mono).
+#### Ferramentas
 
-**Responsável: <Membro 3 — substituir>**
+| Categoria | Ferramenta | Função no projeto | Por que esta |
+|---|---|---|---|
+| Design (UI) | **Figma** (plano gratuito) | Mock-ups do dashboard de Sprint 4, biblioteca Jacto | Recomendado pela profª como "versão gratuita ampla que vocês podem usar" [2] |
+| Tokens | **Tokens Studio (plugin Figma)** + `design/tokens.json` | Sync Figma↔Git via PR automático | Repositório como fonte de verdade |
+| Repositório | **GitLab da Inteli** | Único home de código, docs e tokens | "Tudo focado no GitLab" [2] |
+| Documentação viva | **Storybook** | Publicado em GitLab Pages a cada merge | Atende "inteligência compartilhada" do pilar 2 [1] |
+| Modelagem do firmware | **PX4 Autopilot** + **QGroundControl (QGC)** + **Gazebo** | Design do software embarcado | Em uso desde a Sprint 1 |
+| Logs | Formato **`.ulg`** (PX4) [5] + scripts Python | Costura Dev↔Validação↔Backlog | Slide 8 da Sprint Review |
+| Acessibilidade | **axe-core** integrado ao CI | WCAG 2.1 AA | Critério em 4.1 |
+
+#### Padronização e Harmonização
+
+- **Design System "Jacto Drones OS DS"** vive em dois lugares espelhados: (i) biblioteca Figma versionada com SemVer; (ii) pacote interno `@jacto-drones/ui` no GitLab Package Registry. Releases anunciados via `CHANGELOG.md` no monorepo.
+- **Tokens de Design** ficam em `design/tokens.json` (cores, spacing, tipografia, raios). Job de CI gera `src/styles/tokens.css` e `src/styles/tokens.ts` em cada merge na `develop`. Inclua o JSON inicial em bloco markdown:
+
+```json
+{
+  "color": {
+    "ink":    "#1f2227",
+    "paper":  "#f5f3ee",
+    "blue":   "#0a5193",
+    "orange": "#ec6608"
+  },
+  "type": {
+    "display": "Archivo",
+    "mono":    "JetBrains Mono"
+  }
+}
+```
+
+- **Inteligência compartilhada** [1] (pilar 2 NN/g): além do Storybook, manter `docs/adr/` (Architecture Decision Records) tanto para decisões de software quanto de design. Resposta ao alerta da Julia em [2]: "cada um cuida de uma coisa, e não existe um momento de alinhamento geral".
+
+**Responsável: Kauan Massuia**
 
 <!-- END SECTION 3.1 -->
 
@@ -319,7 +354,7 @@ A imagem mental é exatamente a do slide 8 da nossa Sprint Review: **uma esteira
 |---|---|---|
 | 1. Introdução e Objetivo | **Calebe Matias** | Visão geral + justificativa do plano. |
 | 2. Como Trabalhamos Juntos (Pessoas) | **Marlos Guedes** | Papéis, rituais, handover. |
-| 3.1 Ferramentas e Padronização | `<Membro 3>` | Stack + Design System + tokens. |
+| 3.1 Ferramentas e Padronização | **Kauan Massuia** | Stack + Design System + tokens. |
 | 3.2 Fluxo Design-to-Code | `<Membro 4>` | Diagrama dos dois fluxos (UI e software). |
 | 4.1 Definition of Done | **Lucca Pereira** | Checklists por trilho. |
 | 4.2 Métricas REACH | **Vitor Balbo** | Triangulação UI + software + valor. |
