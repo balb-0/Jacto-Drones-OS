@@ -1,0 +1,57 @@
+image: ubuntu:latest
+
+stages:
+  - lint
+  - build
+  - test
+  - sast
+  - deploy
+
+variables:
+  # Exemplo de variável global
+  DOCKER_DRIVER: overlay2
+
+before_script:
+  - echo "Iniciando Job do GitLab CI..."
+
+# 1. Feedback Automatizado: Lint
+lint_job:
+  stage: lint
+  script:
+    - echo "Executando verificação de código (ex: ESLint, clang-tidy)..."
+    # Se o script de lint falhar (exit > 0), o pipeline quebra aqui e bloqueia o Merge Request.
+  allow_failure: false
+
+# 2. Feedback Automatizado: Build
+build_job:
+  stage: build
+  script:
+    - echo "Compilando firmware e construindo imagens Docker..."
+  allow_failure: false
+
+# 3. Feedback Automatizado: Quality Gate (Testes)
+test_job:
+  stage: test
+  script:
+    - echo "Executando testes unitários e simulações SITL..."
+    # A falha neste job notifica imediatamente o autor do MR
+  allow_failure: false
+
+# 4. Feedback Automatizado: SAST
+sast_job:
+  stage: sast
+  script:
+    - echo "Rodando varredura de segurança estática no código..."
+    # Falhas críticas de segurança barram a integração
+  allow_failure: false
+
+# 5. Implantação e Fechamento (Deploy)
+deploy_staging:
+  stage: deploy
+  script:
+    - echo "Fazendo o deploy do artefato gerado para staging..."
+  environment:
+    name: staging
+  only:
+    - develop
+    - main
