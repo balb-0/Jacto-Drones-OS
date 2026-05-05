@@ -47,8 +47,7 @@ A fragmentação entre as frentes de firmware, serviços e dados na Jacto Drones
 - **Geral:** Desenvolver um protótipo funcional de um sistema de CD (Continuous Delivery) para software de drones.
 - **Específicos:**
   - Padronizar o workflow de desenvolvimento.
-  - Implementar automação de tarefas de gestão.
-  - Configurar pipeline de CI/CD via GitHub/GitLab.
+  - Configurar pipeline de CI/CD via GitLab.
   - Monitorar métricas operacionais (DORA).
 
 # 4. Arquitetura do Produto (ISO 10746)
@@ -134,16 +133,16 @@ A rastreabilidade end-to-end é um diferencial crítico do Jacto Drones OS v0.1,
 
 1. **Notion (Requisitos e Contexto):** A necessidade de negócio é documentada no Notion, vinculada a uma demanda estratégica.
 2. **Jira (Épicos e Histórias):** O requisito é convertido em uma história no Jira, recebendo uma chave identificadora única (ex.: `JACTO-456`).
-3. **GitHub (Código e Pull Requests):** O desenvolvedor cria uma branch e abre um PR contendo a chave `JACTO-456` no título. Cada commit também carrega essa chave.
-4. **GitLab CI/CD (Build, Teste e Deploy):** O espelhamento do repositório dispara o pipeline. O status de cada job é reportado ao GitHub.
+3. **GitLab (Código e Merge Requests):** O desenvolvedor cria uma branch e abre um MR contendo a chave `JACTO-456` no título. Cada commit também carrega essa chave.
+4. **GitLab CI/CD (Build, Teste e Deploy):** O push dispara o pipeline. O status de cada job é reportado ao MR.
 5. **Jira (Deploy e Releases):** Ao concluir um deploy, o pipeline atualiza a issue no Jira, registrando a versão implantada e o ambiente.
 6. **Notion (Documentação e Artefatos):** O artefato gerado é catalogado no Notion, fechando o ciclo.
 
 Para viabilizar essa cadeia, adota-se:
 
 - **Smart Commits:** Mensagens de commit que incluem a chave do Jira são automaticamente vinculadas à respectiva história. Comandos adicionais permitem transicionar o status da issue (ex.: `JACTO-123 #close #comment Implementado controle de PID`).
-- **Política de Branching:** Todo pull request deve conter a chave da issue do Jira no título ou na descrição. Commits sem chave de rastreamento são sinalizados em revisão.
-- **App GitHub for Atlassian:** Sincroniza commits, pull requests e deployments para o Jira, criando abas de "Desenvolvimento" dentro de cada issue.
+- **Política de Branching:** Todo merge request deve conter a chave da issue do Jira no título ou na descrição. Commits sem chave de rastreamento são sinalizados em revisão.
+- **GitLab Jira Integration:** Sincroniza commits, merge requests e deployments para o Jira, criando abas de "Desenvolvimento" dentro de cada issue.
 
 ## 5.5 Infraestrutura de Execução
 A execução do pipeline depende de uma infraestrutura escalável e segura de runners e registro de artefatos.
@@ -168,17 +167,17 @@ As branches principais são:
 
 As seguintes proteções são obrigatórias em todas as branches persistentes (`main` e `develop`):
 
-- **Revisão de Código Obrigatória:** Todo pull request exige aprovação de pelo menos um revisor que não seja o autor. Revisões devem verificar lógica, testes, documentação e conformidade com os padrões do projeto.
+- **Revisão de Código Obrigatória:** Todo merge request exige aprovação de pelo menos um revisor que não seja o autor. Revisões devem verificar lógica, testes, documentação e conformidade com os padrões do projeto.
 - **CI Passing:** O pipeline GitLab CI/CD deve concluir com sucesso antes que o merge seja permitido. Falhas em qualquer stage bloqueiam o botão de merge.
-- **Sem Conflitos:** O branch de origem deve estar atualizado em relação ao destino. Conflitos de merge devem ser resolvidos localmente antes da abertura ou atualização do PR.
+- **Sem Conflitos:** O branch de origem deve estar atualizado em relação ao destino. Conflitos de merge devem ser resolvidos localmente antes da abertura ou atualização do MR.
 - **Assinatura de Commits:** Recomenda-se o uso de commits assinados com GPG para garantir a autoria e integridade do histórico.
 
 ## 6.2 Fluxo de Promoção
 O fluxo de promoção de código define o caminho que uma alteração percorre desde o desenvolvimento local até a produção, com gates de qualidade em cada estágio.
 
 1. **Desenvolvimento em Feature Branch:** O desenvolvedor cria um branch `feature/*` a partir da `develop`, vinculado a uma história do Jira. Commits seguem a especificação Conventional Commits.
-2. **Pull Request para `develop`:** Ao concluir a implementação, abre-se um PR para a `develop`. O PR dispara o pipeline de CI/CD (lint, build, testes unitários, SAST).
-3. **Validação de CI e Revisão:** O pipeline deve passar e o PR deve receber aprovação de pelo menos um revisor. Somente então o merge é permitido.
+2. **Merge Request para `develop`:** Ao concluir a implementação, abre-se um MR para a `develop`. O MR dispara o pipeline de CI/CD (lint, build, testes unitários, SAST).
+3. **Validação de CI e Revisão:** O pipeline deve passar e o MR deve receber aprovação de pelo menos um revisor. Somente então o merge é permitido.
 4. **Integração na `develop`:** Após o merge, o pipeline de integração executa testes de regressão completos, incluindo SITL. A `develop` reflete o estado mais atual do sistema.
 5. **Branch de Release:** Quando o conjunto de funcionalidades está estável, cria-se um branch `release/vX.Y.Z` a partir da `develop`. Nesse branch, são executados testes HITL e validações de aceitação final.
 6. **Deploy para Staging:** O artefato gerado no branch de release é automaticamente implantado no ambiente de staging. Testes de smoke e validação de missão são executados.
@@ -196,15 +195,15 @@ O versionamento de artefatos do Jacto Drones OS v0.1 segue o padrão **SemVer** 
 - **MINOR:** Incrementado quando novas funcionalidades são adicionadas de forma compatível. Inclui novos modos de voo, melhorias de telemetria ou novos endpoints de API.
 - **PATCH:** Incrementado para correções de bugs, ajustes de parâmetros de voo ou atualizações de segurança que não alteram a API.
 
-O versionamento é disparado automaticamente pelo pipeline a partir da análise de mensagens de commit no formato **Conventional Commits**. Commits do tipo `feat:` geram incremento de MINOR; `fix:` geram incremento de PATCH; e a presença de `BREAKING CHANGE:` no corpo da mensagem gera incremento de MAJOR. A ferramenta `semantic-release` ou equivalente é configurada no pipeline para calcular a nova versão, gerar o changelog e criar a tag no GitHub.
+O versionamento é disparado automaticamente pelo pipeline a partir da análise de mensagens de commit no formato **Conventional Commits**. Commits do tipo `feat:` geram incremento de MINOR; `fix:` geram incremento de PATCH; e a presença de `BREAKING CHANGE:` no corpo da mensagem gera incremento de MAJOR. A ferramenta `semantic-release` ou equivalente é configurada no pipeline para calcular a nova versão, gerar o changelog e criar a tag no GitLab.
 
 ## 6.4 Indicadores de Performance
 A medição contínua da performance de entrega é essencial para identificar gargalos e orientar melhorias na esteira. O Jacto Drones OS v0.1 adota um conjunto integrado de métricas que combinam indicadores de fluxo (Cycle Time e Lead Time) com as métricas DORA (*DevOps Research and Assessment*)<a id="ref3-link" href="#ref3"><sup>[3]</sup></a><a id="ref6-link" href="#ref6"><sup>[6]</sup></a>.
 
-- **Cycle Time:** Tempo decorrido entre o início do trabalho em uma história (quando o card entra em progresso no Jira) e a conclusão do PR mergeado na `develop`. Indica a eficiência do processo de desenvolvimento e revisão.
+- **Cycle Time:** Tempo decorrido entre o início do trabalho em uma história (quando o card entra em progresso no Jira) e a conclusão do MR mergeado na `develop`. Indica a eficiência do processo de desenvolvimento e revisão.
 - **Lead Time:** Tempo total entre a criação da demanda no Jira (ou Notion) e a disponibilização da funcionalidade em produção. Engloba não apenas o desenvolvimento, mas também os estágios de teste, homologação e deploy.
 - **Deployment Frequency (Frequência de Deploy):** Número de deploys para produção por semana ou por mês. Medido a partir dos eventos de deploy registrados no GitLab CI/CD. Alta frequência indica capacidade de entregar valor de forma contínua.
-- **Lead Time for Changes (Tempo de Espera de Mudanças):** Tempo entre o primeiro commit de uma funcionalidade e seu deploy em produção. Calculado a partir dos timestamps de commits no GitHub e dos eventos de deploy no GitLab.
+- **Lead Time for Changes (Tempo de Espera de Mudanças):** Tempo entre o primeiro commit de uma funcionalidade e seu deploy em produção. Calculado a partir dos timestamps de commits no GitLab e dos eventos de deploy no GitLab.
 - **Change Failure Rate (Taxa de Falha de Mudança):** Percentual de deploys que resultam em incidentes, bugs críticos ou rollback. Requer correlação entre deploys e tickets de bug abertos no Jira nas 24 horas seguintes à entrega.
 - **Mean Time To Recovery (MTTR - Tempo Médio de Recuperação):** Tempo médio para restaurar o serviço ou corrigir um firmware defeituoso após uma falha em produção. Medido a partir da abertura de um incidente no Jira até o registro de sua resolução.
 
@@ -213,13 +212,13 @@ A coleta dessas métricas é realizada de forma manual inicialmente (via planilh
 ## 6.5 Definição de Pronto (Definition of Done)
 Uma funcionalidade só é considerada concluída no Jacto Drones OS v0.1 quando atende a todos os critérios da **Definição de Pronto** (DoD). Essa lista garante que o trabalho entregue possa ser rastreado, auditado e implantado com confiança:
 
-- **Código Revisado:** O pull request foi aprovado por pelo menos um revisor, com todos os comentários resolvidos.
+- **Código Revisado:** O merge request foi aprovado por pelo menos um revisor, com todos os comentários resolvidos.
 - **Testes Passando:** Todos os testes unitários, de integração, SITL e SAST do pipeline concluíram com sucesso.
 - **SAST Limpo:** Nenhuma vulnerabilidade Crítica ou Alta permanece sem tratamento ou exceção documentada.
 - **Documentação Atualizada:** O README do repositório, a documentação técnica no Confluence e as notas de release foram atualizados para refletir a mudança.
-- **Issue do Jira Fechada:** A história ou tarefa do Jira vinculada foi movida para o status "Concluído" ou equivalente, com links para o PR e o pipeline.
+- **Issue do Jira Fechada:** A história ou tarefa do Jira vinculada foi movida para o status "Concluído" ou equivalente, com links para o MR e o pipeline.
 - **Deploy em Staging:** O artefato foi implantado com sucesso no ambiente de staging e passou nos testes de smoke.
-- **Rastreabilidade Completa:** A cadeia Notion → Jira → GitHub → GitLab está intacta e verificável, com a chave da issue presente em commits e PRs.
+- **Rastreabilidade Completa:** A cadeia Notion → Jira → GitLab está intacta e verificável, com a chave da issue presente em commits e MRs.
 
 Somente após o cumprimento integral desses critérios a funcionalidade é elegível para promoção à produção.
 
