@@ -1,0 +1,13 @@
+{
+  "name": "jacto-drones-os",
+  "version": "0.1.0",
+  "description": "Continuous Delivery Pipeline e Scripts de Automação para o Jacto Drones OS v0.1",
+  "scripts": {
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^18.0.0",
+    "@commitlint/config-conventional": "^18.0.0",
+    "husky": "^8.0.3"
+  }
+}
