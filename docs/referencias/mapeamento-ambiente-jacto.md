@@ -84,23 +84,20 @@ Esse mapeamento evidencia que cada frente já possui ferramentas adequadas para 
 
 # 4. Estratégia de Integração com o OS v0.1
 
-O pipeline de CI/CD do OS v0.1 é implementado no GitLab. A estratégia de integração preserva o GitHub como fonte de verdade para código-fonte e utiliza o GitLab como motor de execução da esteira. As demais ferramentas são integradas por meio de APIs nativas, webhooks e automações de dados.
+O pipeline de CI/CD do OS v0.1 é implementado no GitLab. A estratégia de integração consolida o GitLab como fonte de verdade para o código-fonte e como motor de execução da esteira. As demais ferramentas são integradas por meio de APIs nativas, webhooks e automações de dados.
 
-## 4.1 GitLab e GitHub (Mirror Strategy)
-
-O GitHub continua sendo o repositório primário onde os desenvolvedores abrem pull requests, revisam código e fazem merges. O GitLab atua como executor do pipeline através de um espelhamento (mirror):
-
-- Cada repositório ativo no GitHub possui um projeto correspondente no GitLab configurado para sincronização unidirecional (push mirror).
-- Ao detectar um novo commit na branch principal ou em branches de feature, o GitLab dispara automaticamente o pipeline de CI/CD associado.
-- O resultado do pipeline (sucesso ou falha) é reportado de volta ao GitHub por meio de status checks na API de Commit Status.
-- Essa abordagem permite que a Jacto mantenha seu ecossistema de colaboração no GitHub enquanto aproveita as capacidades avançadas de runners, registro de contêineres e orquestração de jobs do GitLab.<a id="ref2-link" href="#ref2"><sup>[2]</sup></a>
+## 4.1 GitLab como Repositório Central
+O GitLab atua como o repositório primário e executor do pipeline. Todos os desenvolvedores realizam o push diretamente para o GitLab, onde os Merge Requests são revisados e integrados.
+- Ao detectar um novo commit na branch principal ou em branches de feature, o GitLab dispara automaticamente o pipeline de CI/CD associado através dos GitLab Runners.
+- O uso do GitLab de ponta a ponta elimina a necessidade de espelhamento e reduz a latência entre o commit e o início da execução dos testes.
+- Essa abordagem centraliza a gestão de código, registro de contêineres e orquestração de jobs em uma única ferramenta robusta.
 
 ## 4.2 GitLab e Jira
 
 A integração entre GitLab e Jira é fundamental para garantir rastreabilidade entre código e demandas de negócio. A estratégia adota dois mecanismos complementares:
 
 - **Smart Commits:** Mensagens de commit que incluem a chave da issue do Jira (por exemplo, `JACTO-123`) são automaticamente vinculadas à respectiva história no Jira. Comandos adicionais no corpo da mensagem permitem transicionar o status da issue (ex.: `JACTO-123 #close #comment Implementado controle de PID`).
-- **App GitHub for Atlassian:** Instalado nos repositórios GitHub, esse app gratuito sincroniza commits, pull requests e deployments para o Jira, criando abas de "Desenvolvimento" dentro de cada issue. Dessa forma, o time de gestão visualiza o progresso técnico sem sair do Jira.
+- **Integração Nativa GitLab-Jira:** O GitLab possui uma integração nativa com o Jira Cloud que sincroniza commits, merge requests e deployments, permitindo que o time de gestão visualize o progresso técnico diretamente nas issues do Jira.
 - **Transição automática via CI:** Jobs do pipeline GitLab podem executar chamadas à API do Jira para atualizar o status de issues quando um deploy é concluído em determinado ambiente, fechando o ciclo de entrega.
 
 Recomenda-se ainda a adoção de uma política de branching que exija a chave do Jira no título de todo pull request, garantindo que nenhuma alteração de código entre no repositório sem rastreabilidade.<a id="ref3-link" href="#ref3"><sup>[3]</sup></a>
@@ -134,12 +131,9 @@ Documentos formais em Word continuam sendo necessários para entregáveis regula
 A rastreabilidade end-to-end é o principal ganho qualitativo da integração proposta. A cadeia completa opera da seguinte forma:
 
 1. **Notion (Requisitos e Contexto):** A necessidade de negócio ou o requisito técnico é documentado no Notion, vinculado a uma demanda estratégica ou a uma especificação de sistema.
-
 2. **Jira (Épicos, Histórias e Tarefas):** O requisito do Notion é convertido em um épico ou história no Jira, recebendo uma chave identificadora única (ex.: `JACTO-456`). Essa chave será a âncora de todo o rastro subsequente.
-
-3. **GitHub (Código, Commits e Pull Requests):** O desenvolvedor cria uma branch a partir da história do Jira e abre um pull request contendo a chave `JACTO-456` no título ou na descrição. Cada commit também carrega essa chave. O GitHub for Atlassian app vincula automaticamente o PR e os commits à issue no Jira.
-
-4. **GitLab CI/CD (Build, Teste e Deploy):** O espelhamento do repositório dispara o pipeline no GitLab. O pipeline executa linting, compilação, testes unitários, testes SITL/HITL (para firmware), análise estática de segurança (SAST) e empacotamento de artefatos. O status de cada job é reportado ao GitHub.
+3. **GitLab (Código, Commits e Merge Requests):** O desenvolvedor cria uma branch a partir da história do Jira e abre um merge request contendo a chave `JACTO-456` no título ou na descrição. Cada commit também carrega essa chave. O GitLab sincroniza automaticamente o MR e os commits à issue no Jira.
+4. **GitLab CI/CD (Build, Teste e Deploy):** O push dispara o pipeline no GitLab. O pipeline executa linting, compilação, testes unitários, testes SITL/HITL (para firmware), análise estática de segurança (SAST) e empacotamento de artefatos.
 
 5. **Jira (Deploy e Releases):** Ao concluir com sucesso um deploy em ambiente de staging ou produção, o pipeline GitLab atualiza a issue `JACTO-456` no Jira, registrando a versão implantada, o ambiente de destino e o link para os logs de execução.
 
@@ -152,13 +146,13 @@ Essa malha fechada garante que qualquer auditor possa partir de um requisito no 
 As métricas DORA (DevOps Research and Assessment) são o conjunto de indicadores mais robusto para avaliar a performance de entrega de software. O OS v0.1 adota as quatro métricas principais:<a id="ref4-link" href="#ref4"><sup>[4]</sup></a>
 
 - **Deployment Frequency (Frequência de Deploy):** Número de deploys para produção por unidade de tempo. Medido a partir dos eventos de deploy registrados no GitLab CI/CD.
-- **Lead Time for Changes (Tempo de Espera de Mudanças):** Tempo decorrido entre o primeiro commit de uma funcionalidade e o momento em que essa funcionalidade entra em produção. Calculado a partir dos timestamps de commits no GitHub e dos eventos de deploy no GitLab.
+- **Lead Time for Changes (Tempo de Espera de Mudanças):** Tempo decorrido entre o primeiro commit de uma funcionalidade e o momento em que essa funcionalidade entra em produção. Calculado a partir dos timestamps de commits e dos eventos de deploy registrados no GitLab.
 - **Change Failure Rate (Taxa de Falha de Mudança):** Percentual de deploys que resultam em incidentes ou rollback. Requer correlação entre deploys e tickets de bug crítico abertos no Jira após a entrega.
 - **Mean Time To Recovery (MTTR - Tempo Médio de Recuperação):** Tempo médio para restaurar o serviço após uma falha em produção. Medido a partir da abertura de um incidente no Jira até o registro de sua resolução.
 
 ## Coleta nativa versus ferramentas dedicadas
 
-A combinação nativa Jira + GitHub oferece visibilidade parcial dessas métricas, principalmente para Lead Time e Change Failure Rate. No entanto, a precisão e a granularidade necessárias para uma análise contínua de performance exigem ferramentas especializadas:
+A integração nativa GitLab + Jira oferece visibilidade completa dessas métricas, permitindo uma análise contínua de performance através de ferramentas integradas:
 
 - **GitLab DORA:** O próprio GitLab oferece dashboards DORA nativos para projetos que utilizam seus pipelines, fornecendo Deployment Frequency e Lead Time com base nos dados do runner.
 - **Datadog:** Permite correlacionar eventos de deploy (enviados via API pelo GitLab) com métricas de infraestrutura e logs de aplicação, possibilitando o cálculo automático de Change Failure Rate e MTTR.
@@ -172,7 +166,7 @@ O desenvolvimento de software para sistemas aéreos não tripulados (drones) ope
 
 Para atender a esses padrões, a cadeia de ferramentas integrada do OS v0.1 deve garantir:
 
-- **Rastreabilidade total de requisitos:** Todo requisito de software deve ser rastreável até o código-fonte que o implementa, aos testes que o validam e ao artefato de deploy que o entrega. A cadeia Notion → Jira → GitHub → GitLab → Jira atende a esse requisito desde que a chave de rastreamento seja obrigatória em todo commit e pull request.
+- **Rastreabilidade total de requisitos:** Todo requisito de software deve ser rastreável até o código-fonte que o implementa, aos testes que o validam e ao artefato de deploy que o entrega. A cadeia Notion → Jira → GitLab → Jira atende a esse requisito desde que a chave de rastreamento seja obrigatória em todo commit e merge request.
 - **Registro imutável de eventos:** Deploys, testes e aprovações devem ser registrados de forma auditável e não editável. O GitLab CI/CD mantém logs de execução e artefatos versionados que satisfazem essa condição.
 - **Documentação formal versionada:** Relatórios de testes, evidências de cobertura e notas de release devem ser gerados automaticamente e armazenados com referência inequívoca à versão do software. A geração via Pandoc e o armazenamento no GitLab Registry ou Confluence cumprem esse papel.
 - **Separação de ambientes:** A esteira deve garantir que artefatos homologados em ambiente de testes sejam exatamente os mesmos promovidos para produção, sem reconstrução. O uso de imagens de contêiner imutáveis e binários assinados digitalmente no pipeline atende a essa exigência.
