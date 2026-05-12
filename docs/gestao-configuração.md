@@ -81,11 +81,12 @@ As mensagens de commit devem seguir o formato estruturado:
 Para garantir a ligação entre o Item de Configuração (código) e o requisito funcional, todo commit que resolve uma tarefa deve incluir a tag de identificação única gerada pelo sistema de gestão (ex: Notion/Jira).
 **Exemplo válido:** `feat(pipeline): add SAST security scanner (#JACTO-042)`
 
-## 3.3 Automação de Feedback Local (Husky + Commitlint)
+## 3.3 Automação de Feedback Local (Husky, Lint e Segurança)
 
-Para garantir que as políticas de *Conventional Commits* e rastreabilidade obrigatória sejam respeitadas, o projeto utiliza **Husky** e **Commitlint** como mecanismos de feedback local automatizado.
-- **Hook de `commit-msg`**: O Husky intercepta todas as tentativas de commit na máquina do desenvolvedor.
-- **Validação Automática**: O Commitlint analisa a mensagem e a rejeita imediatamente se não estiver no padrão exigido ou se faltar o ID da tarefa. Isso atua como o primeiro "Quality Gate" da malha fechada, poupando tempo de pipeline e mantendo o histórico do GitLab impecável.
+Para antecipar a descoberta de erros (estratégia de *Shift-left*), o projeto utiliza **Husky** para orquestrar hooks locais no Git. Isso poupa tempo de CI/CD e evita retrabalho.
+- **Hook de `commit-msg` (Commitlint):** Intercepta todas as tentativas de commit. O Commitlint rejeita a mensagem imediatamente se não estiver no formato *Conventional Commits* ou se faltar o ID da tarefa.
+- **Hook de `pre-commit` (Lint e TruffleHog):** Antes de gerar o commit, roda o `lint-staged` (ESLint e Prettier) apenas nos arquivos modificados e aciona o **TruffleHog** via Docker para escanear se alguma chave ou secret está sendo vazada.
+- **Hook de `pre-push` (Build e Trivy):** Antes de enviar para o GitLab, aciona o build da imagem Docker para garantir que nada foi quebrado localmente, e em seguida roda o **Trivy** para escanear a imagem em busca de vulnerabilidades (CVEs) críticas.
 
 ---
 
