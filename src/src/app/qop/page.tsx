@@ -6,20 +6,20 @@ import { Card, MetricCard } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrendLineChart } from '@/components/charts';
 import { motion } from 'framer-motion';
-import { 
-  fetchCycleTimeMetrics, 
-  fetchThroughputMetrics, 
-  fetchBacklogHealthMetrics 
+import {
+  fetchCycleTimeMetrics,
+  fetchThroughputMetrics,
+  fetchBacklogHealthMetrics
 } from '@/services/metrics';
-import type { 
-  CycleTimeMetrics, 
-  ThroughputMetrics, 
-  BacklogHealthMetrics 
+import type {
+  CycleTimeMetrics,
+  ThroughputMetrics,
+  BacklogHealthMetrics
 } from '@/types/metrics';
 import { DORA_LEVELS } from '@/lib/config';
-import { 
-  Clock, 
-  TrendingUp, 
+import {
+  Clock,
+  TrendingUp,
   ListTodo,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -70,11 +70,11 @@ export default function QOPPage() {
   }
 
   return (
-    <DashboardLayout 
-      title="QUALITY OF PROCESS" 
+    <DashboardLayout
+      title="QUALITY OF PROCESS"
       description="INDICADORES DE EFICIÊNCIA, VAZÃO E SAÚDE DO BACKLOG"
     >
-      <motion.div 
+      <motion.div
         variants={container}
         initial="hidden"
         animate="show"
@@ -101,7 +101,7 @@ export default function QOPPage() {
             </div>
             <h3 className="text-3xl font-black text-black uppercase italic">CICLO DE ENTREGA</h3>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <MetricCard
               title="MÉDIA TOTAL"
@@ -150,7 +150,7 @@ export default function QOPPage() {
                       </span>
                     </div>
                     <div className="h-4 bg-[#f0f0f0] border-[2px] border-black overflow-hidden shadow-[2px_2px_0px_000000]">
-                      <motion.div 
+                      <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${(stage.averageTime / (cycleTimeMetrics?.averageCycleTime || 1)) * 100}%` }}
                         className="h-full bg-secondary border-r-[2px] border-black"
@@ -163,8 +163,8 @@ export default function QOPPage() {
 
             <Card title="TENDÊNCIA DE ENTREGA" className="border-black">
               <div className="h-[350px] w-full bg-white p-4">
-                <TrendLineChart 
-                  data={cycleTimeMetrics?.trend || []} 
+                <TrendLineChart
+                  data={cycleTimeMetrics?.trend || []}
                   color="#F472B6"
                   showArea
                   yAxisFormatter={(v) => `${v.toFixed(1)}d`}
@@ -215,8 +215,8 @@ export default function QOPPage() {
 
             <Card title="VAZÃO DE ENTREGA" className="lg:col-span-2 border-black">
               <div className="h-[300px] w-full bg-white p-4">
-                <TrendLineChart 
-                  data={throughputMetrics?.trend || []} 
+                <TrendLineChart
+                  data={throughputMetrics?.trend || []}
                   color="#A3E635"
                   yAxisFormatter={(v) => `${v.toFixed(0)}`}
                 />
@@ -268,14 +268,14 @@ export default function QOPPage() {
                     <span className="text-3xl font-black italic">{backlogMetrics?.sprintHealth.completionRate.toFixed(1)}%</span>
                   </div>
                   <div className="h-6 bg-[#f0f0f0] border-[3px] border-black shadow-[4px_4px_0px_000000] overflow-hidden">
-                    <motion.div 
+                    <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${backlogMetrics?.sprintHealth.completionRate}%` }}
                       className="h-full bg-primary border-r-[3px] border-black"
                     />
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-6">
                   <div className="p-4 border-[2px] border-black bg-white shadow-[4px_4px_0px_000000]">
                     <p className="text-[10px] font-black text-gray-400 uppercase">VELOCITY</p>
@@ -286,7 +286,7 @@ export default function QOPPage() {
                     <p className="text-2xl font-black italic">{backlogMetrics?.sprintHealth.capacity}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between p-4 bg-black text-white italic font-black uppercase">
                   <span>SCOPE CHANGE</span>
                   <span className={cn(
@@ -306,19 +306,10 @@ export default function QOPPage() {
                     <div className="h-[3px] w-12 bg-black my-1" />
                     <span className="text-xl font-black text-gray-500 italic leading-none">{backlogMetrics?.wipLimitStatus.limit}</span>
                   </div>
-                  
-                  {/* Decorative tick marks */}
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <div 
-                      key={i} 
-                      className="absolute w-1 h-3 bg-black" 
-                      style={{ transform: `rotate(${i * 45}deg) translateY(-18px)` }} 
-                    />
-                  ))}
                 </div>
                 <div className="mt-8">
-                  <Badge 
-                    variant={backlogMetrics && backlogMetrics.wipLimitStatus.utilization > 90 ? 'error' : 'primary'} 
+                  <Badge
+                    variant={backlogMetrics && backlogMetrics.wipLimitStatus.utilization > 90 ? 'error' : 'primary'}
                     size="lg"
                     className="text-lg px-6 py-2"
                   >
@@ -350,12 +341,12 @@ export default function QOPPage() {
                         <Badge variant="default" size="sm">{item.status.toUpperCase()}</Badge>
                       </td>
                       <td className="py-5 px-6">
-                        <Badge 
+                        <Badge
                           variant={
                             item.priority === 'critical' ? 'error' :
                             item.priority === 'high' ? 'warning' :
                             item.priority === 'medium' ? 'secondary' : 'default'
-                          } 
+                          }
                           size="sm"
                         >
                           {item.priority.toUpperCase()}
