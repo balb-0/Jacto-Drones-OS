@@ -44,7 +44,7 @@ interface LineChartProps {
 
 export function TrendLineChart({ 
   data, 
-  color = '#0a5193',
+  color = '#000000',
   showArea = false,
   yAxisFormatter = (v) => `${v}`
 }: LineChartProps) {
@@ -60,41 +60,52 @@ export function TrendLineChart({
             <stop offset="95%" stopColor={color} stopOpacity={0}/>
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+        <CartesianGrid strokeDasharray="0" stroke="#00000010" vertical={false} />
         <XAxis 
           dataKey="date" 
-          tick={{ fontSize: 12 }}
+          tick={{ fontSize: 10, fontWeight: 900, fontFamily: 'var(--font-space-mono)', fill: '#000' }}
           tickFormatter={(value) => {
             const date = new Date(value);
             return `${date.getDate()}/${date.getMonth() + 1}`;
           }}
-          stroke="#9ca3af"
+          stroke="#000000"
+          strokeWidth={2}
+          axisLine={true}
         />
         <YAxis 
-          tick={{ fontSize: 12 }}
+          tick={{ fontSize: 10, fontWeight: 900, fontFamily: 'var(--font-space-mono)', fill: '#000' }}
           tickFormatter={yAxisFormatter}
-          stroke="#9ca3af"
+          stroke="#000000"
+          strokeWidth={2}
+          axisLine={true}
         />
         <Tooltip 
           contentStyle={{ 
             backgroundColor: 'white', 
-            border: '1px solid #e5e7eb',
-            borderRadius: '6px',
-            fontSize: '12px'
+            border: '3px solid #000',
+            borderRadius: '0',
+            boxShadow: '4px 4px 0px #000',
+            fontSize: '12px',
+            fontFamily: 'var(--font-space-mono)',
+            fontWeight: 700,
+            textTransform: 'uppercase'
           }}
-          formatter={(value) => [yAxisFormatter(Number(value)), 'Valor']}
+          itemStyle={{ color: '#000' }}
+          cursor={{ stroke: '#000', strokeWidth: 2, strokeDasharray: '4 4' }}
+          formatter={(value) => [yAxisFormatter(Number(value)), 'VALOR']}
           labelFormatter={(label) => {
             const date = new Date(label);
-            return date.toLocaleDateString('pt-BR');
+            return `DATA: ${date.toLocaleDateString('pt-BR')}`;
           }}
         />
         <DataComponent
-          type="monotone"
+          type="stepAfter"
           dataKey="value"
           stroke={color}
-          strokeWidth={2}
-          fill={showArea ? 'url(#colorGradient)' : undefined}
-          dot={false}
+          strokeWidth={4}
+          fill={showArea ? 'url(#colorGradient)' : 'none'}
+          dot={{ r: 4, fill: '#fff', stroke: color, strokeWidth: 3 }}
+          activeDot={{ r: 6, fill: color, stroke: '#000', strokeWidth: 2 }}
         />
       </ChartComponent>
     </ChartContainer>
@@ -115,33 +126,51 @@ export function ComparisonBarChart({
   return (
     <ChartContainer>
       <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+        <CartesianGrid strokeDasharray="0" stroke="#00000010" vertical={false} />
         <XAxis 
           dataKey="name" 
-          tick={{ fontSize: 12 }}
-          stroke="#9ca3af"
+          tick={{ fontSize: 10, fontWeight: 900, fontFamily: 'var(--font-space-mono)', fill: '#000' }}
+          stroke="#000"
+          strokeWidth={2}
         />
         <YAxis 
-          tick={{ fontSize: 12 }}
+          tick={{ fontSize: 10, fontWeight: 900, fontFamily: 'var(--font-space-mono)', fill: '#000' }}
           tickFormatter={yAxisFormatter}
-          stroke="#9ca3af"
+          stroke="#000"
+          strokeWidth={2}
         />
         <Tooltip 
           contentStyle={{ 
             backgroundColor: 'white', 
-            border: '1px solid #e5e7eb',
-            borderRadius: '6px',
-            fontSize: '12px'
+            border: '3px solid #000',
+            borderRadius: '0',
+            boxShadow: '4px 4px 0px #000',
+            fontSize: '12px',
+            fontFamily: 'var(--font-space-mono)',
+            fontWeight: 700,
+            textTransform: 'uppercase'
+          }}
+          itemStyle={{ color: '#000' }}
+          cursor={{ fill: '#00000010' }}
+        />
+        <Legend 
+          wrapperStyle={{ 
+            paddingTop: '20px', 
+            fontFamily: 'var(--font-space-mono)', 
+            fontWeight: 900, 
+            fontSize: '10px',
+            textTransform: 'uppercase'
           }}
         />
-        <Legend />
         {bars.map((bar) => (
           <Bar 
             key={bar.key}
             dataKey={bar.key} 
-            name={bar.name}
+            name={bar.name.toUpperCase()}
             fill={bar.color}
-            radius={[4, 4, 0, 0]}
+            stroke="#000"
+            strokeWidth={3}
+            radius={0}
           />
         ))}
       </BarChart>
@@ -156,7 +185,7 @@ interface PieChartProps {
 
 export function DistributionPieChart({ 
   data,
-  colors = ['#0a5193', '#ec6608', '#22c55e', '#f59e0b', '#ef4444']
+  colors = ['#A3E635', '#F472B6', '#3B82F6', '#FBBF24', '#EF4444']
 }: PieChartProps) {
   return (
     <ChartContainer height={250}>
@@ -167,8 +196,10 @@ export function DistributionPieChart({
           cy="50%"
           innerRadius={60}
           outerRadius={80}
-          paddingAngle={5}
+          paddingAngle={0}
           dataKey="value"
+          stroke="#000"
+          strokeWidth={3}
         >
           {data.map((_, index) => (
             <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
@@ -177,13 +208,27 @@ export function DistributionPieChart({
         <Tooltip 
           contentStyle={{ 
             backgroundColor: 'white', 
-            border: '1px solid #e5e7eb',
-            borderRadius: '6px',
-            fontSize: '12px'
+            border: '3px solid #000',
+            borderRadius: '0',
+            boxShadow: '4px 4px 0px #000',
+            fontSize: '12px',
+            fontFamily: 'var(--font-space-mono)',
+            fontWeight: 700,
+            textTransform: 'uppercase'
           }}
+          itemStyle={{ color: '#000' }}
           formatter={(value, name) => [`${value}`, name]}
         />
-        <Legend verticalAlign="bottom" height={36}/>
+        <Legend 
+          verticalAlign="bottom" 
+          height={36}
+          wrapperStyle={{ 
+            fontFamily: 'var(--font-space-mono)', 
+            fontWeight: 900, 
+            fontSize: '10px',
+            textTransform: 'uppercase'
+          }}
+        />
       </PieChart>
     </ChartContainer>
   );

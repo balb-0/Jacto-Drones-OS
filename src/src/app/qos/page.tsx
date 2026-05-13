@@ -5,6 +5,7 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { Card, MetricCard } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrendLineChart, ComparisonBarChart, DistributionPieChart } from '@/components/charts';
+import { motion } from 'framer-motion';
 import { 
   fetchBuildMetrics, 
   fetchTestDefectMetrics, 
@@ -16,19 +17,12 @@ import type {
   IntegrationStabilityMetrics 
 } from '@/types/metrics';
 import { 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  Activity,
   AlertTriangle,
   Server,
   Wifi,
-  Zap,
-  TrendingUp,
-  TrendingDown,
-  Minus
 } from 'lucide-react';
 import { formatDuration, formatPercentage, getRelativeTime } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 export default function QOSPage() {
   const [buildMetrics, setBuildMetrics] = useState<BuildMetrics | null>(null);
@@ -54,14 +48,26 @@ export default function QOSPage() {
     loadData();
   }, []);
 
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
   if (loading) {
     return (
-      <DashboardLayout 
-        title="QoS - Quality of Service" 
-        description="Métricas de saúde técnica do software"
-      >
-        <div className="flex items-center justify-center h-96">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <DashboardLayout title="QOS LOADING..." description="PROCESSANDO MÉTRICAS DE SERVIÇO">
+        <div className="flex flex-col items-center justify-center h-96">
+          <motion.div 
+            animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            className="w-12 h-12 bg-black border-[4px] border-primary"
+          />
+          <p className="mt-4 font-black uppercase italic">SINC_KERNEL...</p>
         </div>
       </DashboardLayout>
     );
@@ -69,225 +75,205 @@ export default function QOSPage() {
 
   return (
     <DashboardLayout 
-      title="QoS - Quality of Service" 
-      description="Métricas de saúde técnica do software"
+      title="QUALITY OF SERVICE" 
+      description="MÉTRICAS DE SAÚDE TÉCNICA E ESTABILIDADE DO FIRMWARE"
     >
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <motion.div 
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="space-y-12"
+      >
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b-[6px] border-black pb-8 relative overflow-hidden">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Indicadores de Produto</h2>
-            <p className="text-gray-600 mt-1">
-              Monitoramento da saúde técnica do firmware e integrações
-            </p>
+            <h2 className="text-5xl font-black text-black leading-none mb-2">PRODUTO CORE</h2>
+            <div className="flex items-center gap-3">
+              <Badge variant="primary" size="lg">KERNEL_V2.4.1</Badge>
+              <Badge variant="secondary" size="lg">STABLE_BUILD</Badge>
+            </div>
           </div>
-          <Badge variant="info" size="md">
-            <Activity className="w-3 h-3 mr-1" />
-            Atualizado {getRelativeTime(new Date())}
-          </Badge>
+          <div className="flex gap-4">
+            <div className="p-4 border-[3px] border-black bg-white shadow-[4px_4px_0px_000000] font-black italic">
+              UPTIME: {formatPercentage(integrationMetrics?.uptime || 0)}
+            </div>
+          </div>
         </div>
 
-        <section>
-          <div className="flex items-center gap-2 mb-4">
-            <Server className="w-5 h-5 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Taxa de Sucesso de Builds</h3>
+        {/* Section: Builds */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-black border-[3px] border-primary">
+              <Server className="w-6 h-6 text-primary" />
+            </div>
+            <h3 className="text-3xl font-black text-black uppercase italic">PIPELINE DE BUILD</h3>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <MetricCard
-              title="Total de Builds"
+              title="TOTAL DE BUILDS"
               value={buildMetrics?.totalBuilds || 0}
               trend={12.5}
-              trendLabel="vs. mês anterior"
+              trendLabel="VS. ANTERIOR"
               status="info"
             />
             <MetricCard
-              title="Taxa de Sucesso"
+              title="TAXA DE SUCESSO"
               value={formatPercentage(buildMetrics?.successRate || 0)}
-              trend={5.2}
-              trendLabel="vs. mês anterior"
               status="success"
             />
             <MetricCard
-              title="Builds com Falha"
+              title="FALHAS"
               value={buildMetrics?.failedBuilds || 0}
-              trend={-15.3}
-              trendLabel="vs. mês anterior"
-              status="success"
+              status="error"
             />
             <MetricCard
-              title="Tempo Médio"
+              title="TEMPO MÉDIO"
               value={formatDuration(buildMetrics?.averageDuration || 0)}
-              trend={-8.1}
-              trendLabel="vs. mês anterior"
-              status="success"
+              status="info"
             />
           </div>
 
-          <Card title="Tendência de Taxa de Sucesso" description="Últimos 30 dias">
-            <TrendLineChart 
-              data={buildMetrics?.trend || []} 
-              color="#22c55e"
-              showArea
-              yAxisFormatter={(v) => `${v.toFixed(0)}%`}
-            />
+          <Card className="border-black overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary opacity-10 -mr-16 -mt-16 rotate-45" />
+            <div className="mb-6">
+              <h4 className="text-xl font-black italic">HISTÓRICO DE ESTABILIDADE</h4>
+            </div>
+            <div className="h-[300px] w-full bg-white border-[3px] border-black p-4">
+              <TrendLineChart 
+                data={buildMetrics?.trend || []} 
+                color="#000000"
+                showArea
+                yAxisFormatter={(v) => `${v.toFixed(0)}%`}
+              />
+            </div>
           </Card>
         </section>
 
-        <section>
-          <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="w-5 h-5 text-orange-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Defeitos Barrados em Testes</h3>
+        {/* Section: Defects */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-black border-[3px] border-error">
+              <AlertTriangle className="w-6 h-6 text-error" />
+            </div>
+            <h3 className="text-3xl font-black text-black uppercase italic">DEFESA E QUALIDADE</h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <MetricCard
-              title="Total de Testes"
+              title="TESTES EXECUTADOS"
               value={testMetrics?.totalTests || 0}
-              trend={8.7}
-              trendLabel="vs. mês anterior"
               status="info"
             />
             <MetricCard
-              title="Taxa de Aprovação"
-              value={formatPercentage(
-                ((testMetrics?.passedTests || 0) / (testMetrics?.totalTests || 1)) * 100
-              )}
-              trend={3.2}
-              trendLabel="vs. mês anterior"
-              status="success"
-            />
-            <MetricCard
-              title="Defeitos Encontrados"
+              title="DEFREITOS BARRADOS"
               value={testMetrics?.failedTests || 0}
-              trend={-22.1}
-              trendLabel="vs. mês anterior"
               status="success"
             />
             <MetricCard
-              title="Densidade de Defeitos"
+              title="DENSIDADE"
               value={testMetrics?.defectDensity || 0}
-              unit="/1k linhas"
-              trend={-10.5}
-              trendLabel="vs. mês anterior"
+              unit="/1K LOC"
+              status="warning"
+            />
+            <MetricCard
+              title="COVERAGE"
+              value="92.4"
+              unit="%"
               status="success"
             />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card title="Defeitos por Tipo" description="Distribuição por categoria">
-              <DistributionPieChart 
-                data={testMetrics?.defectsByType.map(d => ({ name: d.type, value: d.count })) || []}
-                colors={['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6']}
-              />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <Card title="CATEGORIAS DE ERRO" className="border-black">
+              <div className="h-[300px] w-full bg-white p-4">
+                <DistributionPieChart 
+                  data={testMetrics?.defectsByType.map(d => ({ name: d.type.toUpperCase(), value: d.count })) || []}
+                  colors={['#000000', '#A3E635', '#F472B6', '#3B82F6']}
+                />
+              </div>
             </Card>
 
-            <Card title="Defeitos por Estágio" description="Capturados vs. Escapados">
-              <ComparisonBarChart
-                data={(testMetrics?.defectsByStage || []).map(stage => ({
-                  name: stage.stage,
-                  capturados: stage.defectsCaught,
-                  escapados: stage.defectsEscaped,
-                }))}
-                bars={[
-                  { key: 'capturados', name: 'Capturados', color: '#22c55e' },
-                  { key: 'escapados', name: 'Escapados', color: '#ef4444' },
-                ]}
-              />
+            <Card title="EFICIÊNCIA DE CAPTURA" className="border-black">
+              <div className="h-[300px] w-full bg-white p-4">
+                <ComparisonBarChart
+                  data={(testMetrics?.defectsByStage || []).map(stage => ({
+                    name: stage.stage.toUpperCase(),
+                    capturados: stage.defectsCaught,
+                    escapados: stage.defectsEscaped,
+                  }))}
+                  bars={[
+                    { key: 'capturados', name: 'CAPTURA', color: '#A3E635' },
+                    { key: 'escapados', name: 'ESCAPE', color: '#EF4444' },
+                  ]}
+                />
+              </div>
             </Card>
           </div>
         </section>
 
-        <section>
-          <div className="flex items-center gap-2 mb-4">
-            <Wifi className="w-5 h-5 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Estabilidade da Integração</h3>
+        {/* Section: Integration */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-black border-[3px] border-secondary">
+              <Wifi className="w-6 h-6 text-secondary" />
+            </div>
+            <h3 className="text-3xl font-black text-black uppercase italic">MATRIZ DE INTEGRAÇÃO</h3>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <Card className="lg:col-span-2">
-              <div className="flex items-center justify-between mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <Card className="lg:col-span-2 bg-black text-white border-black">
+              <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h4 className="text-lg font-semibold text-gray-900">Status da Integração</h4>
-                  <p className="text-sm text-gray-500">Firmware ↔ Plataforma Digital</p>
+                  <h4 className="text-2xl font-black italic text-primary">STATUS DA MALHA</h4>
+                  <p className="text-xs font-bold text-gray-400 uppercase">FIRMWARE ↔ CLOUD BRIDGE</p>
                 </div>
-                <Badge 
-                  variant={integrationMetrics?.integrationHealth === 'healthy' ? 'success' : 'warning'}
-                  size="md"
-                >
-                  {integrationMetrics?.integrationHealth === 'healthy' ? 'Saudável' : 'Degradado'}
-                </Badge>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600">Uptime</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatPercentage(integrationMetrics?.uptime || 0)}
-                  </p>
-                </div>
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600">Compatibilidade API</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatPercentage(integrationMetrics?.apiCompatibility || 0)}
-                  </p>
-                </div>
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600">Versão Firmware</p>
-                  <p className="text-lg font-bold text-gray-900">
-                    {integrationMetrics?.firmwareVersion}
-                  </p>
-                </div>
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600">Versão Plataforma</p>
-                  <p className="text-lg font-bold text-gray-900">
-                    {integrationMetrics?.platformVersion}
-                  </p>
+                <div className="px-6 py-2 border-[3px] border-primary text-primary font-black uppercase italic">
+                  {integrationMetrics?.integrationHealth === 'healthy' ? 'CONNECTED' : 'DEGRADED'}
                 </div>
               </div>
-            </Card>
 
-            <Card title="Incidentes Recentes" description="Últimas 48 horas">
-              <div className="space-y-3">
-                {integrationMetrics?.incidents.map((incident) => (
-                  <div key={incident.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                    <div className={`w-2 h-2 mt-2 rounded-full ${
-                      incident.severity === 'critical' ? 'bg-red-500' :
-                      incident.severity === 'high' ? 'bg-orange-500' :
-                      incident.severity === 'medium' ? 'bg-yellow-500' :
-                      'bg-blue-500'
-                    }`} />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{incident.description}</p>
-                      <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                        <span>{getRelativeTime(incident.timestamp)}</span>
-                        <span>•</span>
-                        <Badge variant={incident.resolved ? 'success' : 'warning'} size="sm">
-                          {incident.resolved ? 'Resolvido' : 'Aberto'}
-                        </Badge>
-                        {incident.resolved && incident.resolutionTime && (
-                          <>
-                            <span>•</span>
-                            <span>Resolução: {formatDuration(incident.resolutionTime)}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {[
+                  { label: 'UPTIME', val: formatPercentage(integrationMetrics?.uptime || 0) },
+                  { label: 'API_COMPAT', val: formatPercentage(integrationMetrics?.apiCompatibility || 0) },
+                  { label: 'FW_VER', val: integrationMetrics?.firmwareVersion },
+                  { label: 'PL_VER', val: integrationMetrics?.platformVersion },
+                ].map((stat, i) => (
+                  <div key={i} className="p-4 border-[2px] border-gray-800 bg-gray-900 shadow-[4px_4px_0px_#000]">
+                    <p className="text-[10px] font-black text-gray-500 uppercase">{stat.label}</p>
+                    <p className="text-xl font-black text-white italic">{stat.val}</p>
                   </div>
                 ))}
               </div>
             </Card>
-          </div>
 
-          <Card title="Tendência de Uptime" description="Últimos 30 dias">
-            <TrendLineChart 
-              data={integrationMetrics?.trend || []} 
-              color="#0a5193"
-              showArea
-              yAxisFormatter={(v) => `${v.toFixed(1)}%`}
-            />
-          </Card>
+            <Card title="LOG DE INCIDENTES" className="bg-secondary/10 border-black">
+              <div className="space-y-4">
+                {integrationMetrics?.incidents.map((incident) => (
+                  <motion.div 
+                    key={incident.id} 
+                    whileHover={{ x: 5 }}
+                    className="flex flex-col gap-2 p-4 bg-white border-[3px] border-black shadow-[4px_4px_0px_000000]"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className={cn(
+                        "w-3 h-3 border-[2px] border-black",
+                        incident.severity === 'critical' ? 'bg-error' : 'bg-warning'
+                      )} />
+                      <Badge variant={incident.resolved ? 'primary' : 'warning'}>
+                        {incident.resolved ? 'RESOLVIDO' : 'PENDENTE'}
+                      </Badge>
+                    </div>
+                    <p className="text-sm font-black italic uppercase leading-tight">{incident.description}</p>
+                    <p className="text-[10px] font-bold text-gray-500 uppercase">{getRelativeTime(incident.timestamp)}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </Card>
+          </div>
         </section>
-      </div>
+      </motion.div>
     </DashboardLayout>
   );
 }
