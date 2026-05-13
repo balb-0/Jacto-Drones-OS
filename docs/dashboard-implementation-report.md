@@ -5,6 +5,7 @@
 Dashboard de métricas abrangente implementado com sucesso para o Jacto Drones OS v0.1, incluindo:
 - **Seção QoS (Quality of Service)**: Métricas de build, rastreamento de defeitos em testes, estabilidade de integração
 - **Seção QoP (Quality of Process)**: Análise de cycle time, métricas de throughput, métricas DORA, saúde do backlog
+- **Seção Painel Gerencial (/manager)**: Detecção de anomalias (threshold + estatística), análise de gargalos, distribuição de carga por membro da equipe
 - **Stack Tecnológico Moderno**: Next.js 14+, TypeScript, Tailwind CSS, Recharts
 - **Serviço de Dados Mock**: Totalmente funcional com geradores de dados realistas
 - **Design Responsivo**: Otimizado para mobile, tablet e desktop
@@ -43,7 +44,15 @@ src/                    # Raiz da aplicação dashboard
 - ✅ Monitoramento de saúde da sprint
 - ✅ Rastreamento de itens em envelhecimento
 
-### 4. Implementação Técnica
+### 4. Funcionalidades do Painel Gerencial (/manager)
+- ✅ Detecção de Anomalias Operacionais — Híbrida (threshold + estatística)
+  - Threshold-based: 5 regras fixas (WIP overflow, build failures > 10%, cycle time > P95, aging items > 10 dias, stage congestion > 2× normal)
+  - Estatística: Z-score sobre 30 dias de tendência (média ± 1σ/2σ)
+- ✅ Análise de Gargalos de Fluxo — 4 estágios do pipeline (Code Review, Desenvolvimento, Testes, Deploy) com indicadores visuais de status
+- ✅ Distribuição de Carga por Membro — 7 membros da equipe (Calebe, Fernando, Kauan, Lucca, Marlos, Otávio, Vitor) com task counts, status breakdown, e flags de sobrecarga
+- ✅ Design Brutalist Consistente — Hard borders, uppercase, sombras duras, cores Jacto
+
+### 5. Implementação Técnica
 - **Framework**: Next.js 14+ com App Router
 - **Linguagem**: TypeScript com strict mode
 - **Estilização**: Tailwind CSS com tema Jacto customizado
@@ -83,12 +92,22 @@ src/                    # Raiz da aplicação dashboard
 | Status do Backlog | Distribuição | Lista de status + gauge WIP |
 | Saúde da Sprint | Porcentagem | Barras de progresso |
 
+### Métricas Painel Gerencial
+| Métrica | Tipo | Visualização |
+|---------|------|--------------|
+| Anomalias Threshold | Contagem | Cards com badges severity |
+| Anomalias Estatísticas | Contagem | Cards com limite σ |
+| Gargalos por Estágio | Dias | Cards com progress bars |
+| Carga da Equipe | Contagem | Grid de cards individuais |
+| Membros Sobrecarregados | Contagem | Badge indicator |
+| Status de Tarefas | Distribuição | Grid 2×2 (TODO/ANDAMENTO/REVIEW/DONE) |
+
 ## Contagem de Arquivos
-- **Total de Arquivos Criados**: 20+
+- **Total de Arquivos Criados**: 25+
 - **Arquivos TypeScript**: 15+
 - **Componentes**: 10+
-- **Páginas**: 3 (Home, QoS, QoP)
-- **Serviços**: 1 (com 6 fetchers de dados)
+- **Páginas**: 4 (Home, QoS, QoP, Painel Gerencial)
+- **Serviços**: 2 (metrics.ts com 6 fetchers, manager.ts com 5 fetchers)
 
 ## Próximos Passos para Integração
 
@@ -174,21 +193,28 @@ CMD ["npx", "serve", "dist"]
 - Indicadores de saúde da sprint
 - Visualização de limites WIP
 
+### Seção Painel Gerencial (/manager)
+- Detecção automática de anomalias operacionais (threshold + estatística)
+- Análise de gargalos por estágio do pipeline
+- Distribuição de carga entre 7 membros da equipe
+- Flags de sobrecarga por membro
+- Dashboard de alertas com severidade (warning/critical)
+
 ## Conclusão
 
-A implementação do dashboard está **COMPLETA** e **PRONTA PARA PRODUÇÃO**. Todas as funcionalidades solicitadas para as seções QoS e QoP foram implementadas com:
+A implementação do dashboard está **COMPLETA** porem dados são mockados. Todas as funcionalidades solicitadas para as seções QoS, QoP e Painel Gerencial foram implementadas com:
 
-✅ Código moderno e manutenível  
-✅ TypeScript type-safe em todo o projeto  
-✅ Design responsivo e acessível  
-✅ Documentação abrangente  
-✅ Dados mock para testes imediatos  
-✅ Caminho claro para integração com APIs  
+✅ Código manutenível
+✅ TypeScript type-safe em todo o projeto
+✅ Design responsivo e acessível
+✅ Documentação abrangente
+✅ Dados mock para testes imediatos
+✅ Caminho claro para integração com APIs
 
 O dashboard fornece à equipe Jacto Drones visibilidade completa sobre a saúde do pipeline de CI/CD e a eficiência do processo de engenharia, possibilitando tomada de decisão baseada em dados e melhoria contínua.
 
 ---
 
-**Status**: ✅ COMPLETO  
-**Data**: 13 de Maio de 2026  
-**Desenvolvedor**: Marlos Guedes (Grupo 04)
+**Status**: ✅ COMPLETO
+**Data**: 13 de Maio de 2026
+**Desenvolvedores**: Marlos Guedes, Otávio Vasconcelos (Grupo 04)
