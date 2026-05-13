@@ -67,15 +67,19 @@ _conteúdo_
 
 ## 2.2 Formatação de Código
 
-- Indentação: Utilize 2 espaços para indentação.
-- Linhas: Mantenha o comprimento das linhas em até 80 caracteres.
-- Chaves: Coloque chaves de abertura na mesma linha.
-  - Exemplo:
-    ```
-    if (condition) {
-        // código
-    }
-    ```
+A formatação do projeto é garantida de forma automatizada através do **Prettier** e do **ESLint**, acionados localmente pelo Husky antes de cada commit.
+- **Indentação:** Utilize 2 espaços para indentação (configurado no `.prettierrc`).
+- **Linhas:** Mantenha o comprimento das linhas em até 80 caracteres.
+- **Chaves:** Coloque chaves de abertura na mesma linha.
+- **Ponto e Vírgula:** Uso obrigatório ao final das instruções.
+- **Aspas:** Uso de aspas simples para strings.
+
+  *Exemplo:*
+  ```javascript
+  if (condition) {
+    // código
+  }
+  ```
 
 ## 2.3 Comentários e Documentação
 
@@ -132,11 +136,14 @@ _conteúdo_
 - Testes end-to-end: Como sugestão, utilizar o Cypress para testes end-to-end. 
   - Exemplo: Testar um RF de ponta a ponta.
 
-## 4.2 Controle de Qualidade
+## 4.2 Controle de Qualidade e Containers
 
-- Revisão de Código: Todos os commits devem ser revisados por pelo menos um outro desenvolvedor.
-
-- Sugestão: Utilizar ESLint para análise estática de código JavaScript/TypeScript.
+- **Revisão de Código:** Todos os MRs devem ser revisados por pelo menos um outro desenvolvedor.
+- **Análise Estática Local (Shift-left):** O uso de **ESLint** e **Prettier** é obrigatório e automatizado via Husky (`pre-commit` com `lint-staged`). Além disso, o **TruffleHog** escaneia o código localmente em busca de credenciais vazadas antes de permitir o commit.
+- **Boas Práticas de Docker (Reprodutibilidade):**
+  - Todo `Dockerfile` deve adotar o padrão **multi-stage build** para separar as dependências de desenvolvimento do artefato final em produção.
+  - O uso do arquivo `.dockerignore` é obrigatório para evitar que arquivos de configuração, credenciais locais e pastas como `node_modules` inflem a imagem.
+  - O hook de `pre-push` aciona o build da imagem local e roda o **Trivy** para varredura de vulnerabilidades antes de enviar o código para o GitLab.
 
 # 5. Ferramentas e Tecnologias
 

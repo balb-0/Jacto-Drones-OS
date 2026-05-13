@@ -81,6 +81,13 @@ As mensagens de commit devem seguir o formato estruturado:
 Para garantir a ligação entre o Item de Configuração (código) e o requisito funcional, todo commit que resolve uma tarefa deve incluir a tag de identificação única gerada pelo sistema de gestão (ex: Notion/Jira).
 **Exemplo válido:** `feat(pipeline): add SAST security scanner (#JACTO-042)`
 
+## 3.3 Automação de Feedback Local (Husky, Lint e Segurança)
+
+Para antecipar a descoberta de erros (estratégia de *Shift-left*), o projeto utiliza **Husky** para orquestrar hooks locais no Git. Isso poupa tempo de CI/CD e evita retrabalho.
+- **Hook de `commit-msg` (Commitlint):** Intercepta todas as tentativas de commit. O Commitlint rejeita a mensagem imediatamente se não estiver no formato *Conventional Commits* ou se faltar o ID da tarefa.
+- **Hook de `pre-commit` (Lint e TruffleHog):** Antes de gerar o commit, roda o `lint-staged` (ESLint e Prettier) apenas nos arquivos modificados e aciona o **TruffleHog** via Docker para escanear se alguma chave ou secret está sendo vazada.
+- **Hook de `pre-push` (Build e Trivy):** Antes de enviar para o GitLab, aciona o build da imagem Docker para garantir que nada foi quebrado localmente, e em seguida roda o **Trivy** para escanear a imagem em busca de vulnerabilidades (CVEs) críticas.
+
 ---
 
 # 4. Pipeline de CI/CD e Integração Contínua
@@ -107,7 +114,16 @@ Um Merge Request só será liberado para merge se atingir 100% dos critérios ab
 - **Segurança:** Zero vulnerabilidades críticas reportadas pelo estágio de SAST.
 - **Revisão Humana (Peer Review):** Aprovação de pelo menos 1 (um) membro da equipe que não seja o autor do código.
 
-Qualquer falha nesses "portões de qualidade" impede o merge automaticamente via configurações do repositório, garantindo a integridade do firmware e dos sistemas web.
+Qualquer falha nesses "portões de qualidade" impede o merge automaticamente via configurações do repositório, garantindo a integridade do firmware e dos sistemas web. O arquivo `.gitlab-ci.yml` contém a regra `allow_failure: false` em todos os jobs para impor este bloqueio remotamente.
+
+## 5.2 Checklists de Validação de Entregas (MR Templates)
+Para garantir que o *Definition of Done (DoD)* seja ativamente verificado pela equipe, implementamos uma automação de template de Merge Request.
+- O arquivo `.gitlab/merge_request_templates/Default.md` injeta automaticamente um checklist de validação na descrição de todo novo MR aberto.
+- O autor e o revisor devem obrigatoriamente validar itens como testes, documentação e ausência de *secrets* antes de aprovar a integração.
+
+## 5.3 Automação de Estado das Tarefas (GitLab Issues)
+Para eliminar overhead operacional, o controle de estado das tarefas do projeto é integrado aos eventos do repositório:
+- **Vinculação e Fechamento:** A inclusão de palavras-chave como `Closes #123` nos commits e descrições de MR automatiza o fluxo. Quando o MR é mesclado e o pipeline concluído, a Issue correspondente no GitLab transita automaticamente de "Em Desenvolvimento/Validação" para "Concluída" (Closed).
 
 ---
 
