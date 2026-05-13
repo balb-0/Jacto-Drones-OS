@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { Card, MetricCard } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendLineChart, ComparisonBarChart } from '@/components/charts';
+import { TrendLineChart } from '@/components/charts';
+import { motion } from 'framer-motion';
 import { 
   fetchCycleTimeMetrics, 
   fetchThroughputMetrics, 
@@ -19,17 +20,9 @@ import { DORA_LEVELS } from '@/lib/config';
 import { 
   Clock, 
   TrendingUp, 
-  Package, 
   ListTodo,
-  CheckCircle2,
-  AlertCircle,
-  Timer,
-  Zap,
-  Target,
-  Activity,
-  ArrowRight
 } from 'lucide-react';
-import { formatDuration, getRelativeTime } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 export default function QOPPage() {
   const [cycleTimeMetrics, setCycleTimeMetrics] = useState<CycleTimeMetrics | null>(null);
@@ -55,14 +48,22 @@ export default function QOPPage() {
     loadData();
   }, []);
 
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
   if (loading) {
     return (
-      <DashboardLayout 
-        title="QoP - Quality of Process" 
-        description="Métricas do processo de engenharia ágil"
-      >
-        <div className="flex items-center justify-center h-96">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <DashboardLayout title="QOP LOADING..." description="REPROCESSANDO FLUXO DE ENGENHARIA">
+        <div className="flex flex-col items-center justify-center h-96">
+          <div className="w-16 h-16 border-[6px] border-black bg-secondary animate-bounce" />
+          <p className="mt-6 font-black uppercase italic animate-pulse">CALIBRANDO VELOCITY...</p>
         </div>
       </DashboardLayout>
     );
@@ -70,89 +71,89 @@ export default function QOPPage() {
 
   return (
     <DashboardLayout 
-      title="QoP - Quality of Process" 
-      description="Métricas do processo de engenharia ágil"
+      title="QUALITY OF PROCESS" 
+      description="INDICADORES DE EFICIÊNCIA, VAZÃO E SAÚDE DO BACKLOG"
     >
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <motion.div 
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="space-y-12"
+      >
+        {/* Hero Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-end border-b-[6px] border-black pb-10 relative overflow-hidden">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Indicadores de Processo</h2>
-            <p className="text-gray-600 mt-1">
-              Cycle time, throughput e saúde do backlog
-            </p>
+            <h2 className="text-6xl font-black text-black leading-[0.8] mb-4 uppercase italic">VELOCITY<br/>CONTROL</h2>
+            <p className="text-sm font-bold text-gray-500 uppercase italic tracking-widest">OTIMIZAÇÃO DE FLUXO DE TRABALHO G4</p>
           </div>
-          <Badge variant="info" size="md">
-            <Activity className="w-3 h-3 mr-1" />
-            Atualizado {getRelativeTime(new Date())}
-          </Badge>
+          <div className="flex flex-wrap gap-4 justify-end">
+            <div className="px-8 py-4 bg-black text-primary border-[4px] border-black shadow-[6px_6px_0px_var(--color-secondary)] font-black italic text-2xl uppercase">
+              DORA: ELITE
+            </div>
+          </div>
         </div>
 
-        <section>
-          <div className="flex items-center gap-2 mb-4">
-            <Clock className="w-5 h-5 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Cycle Time</h3>
+        {/* Section: Cycle Time */}
+        <section className="space-y-8">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-black border-[3px] border-secondary">
+              <Clock className="w-6 h-6 text-secondary" />
+            </div>
+            <h3 className="text-3xl font-black text-black uppercase italic">CICLO DE ENTREGA</h3>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <MetricCard
-              title="Cycle Time Médio"
+              title="MÉDIA TOTAL"
               value={cycleTimeMetrics?.averageCycleTime || 0}
-              unit="dias"
+              unit="DIAS"
+              status="success"
               trend={-12.5}
-              trendLabel="vs. mês anterior"
-              status="success"
             />
             <MetricCard
-              title="Cycle Time Mediano"
+              title="MEDIANA"
               value={cycleTimeMetrics?.medianCycleTime || 0}
-              unit="dias"
-              trend={-8.3}
-              trendLabel="vs. mês anterior"
+              unit="DIAS"
               status="success"
             />
             <MetricCard
-              title="P85 Cycle Time"
+              title="P85"
               value={cycleTimeMetrics?.p85CycleTime || 0}
-              unit="dias"
-              trend={-5.2}
-              trendLabel="vs. mês anterior"
-              status="success"
+              unit="DIAS"
+              status="warning"
             />
             <MetricCard
-              title="P95 Cycle Time"
+              title="P95"
               value={cycleTimeMetrics?.p95CycleTime || 0}
-              unit="dias"
-              trend={-3.1}
-              trendLabel="vs. mês anterior"
-              status="success"
+              unit="DIAS"
+              status="error"
             />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card title="Cycle Time por Estágio" description="Tempo médio em cada fase">
-              <div className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <Card title="GARGALOS POR ESTÁGIO" className="border-black bg-white">
+              <div className="space-y-6 mt-4">
                 {cycleTimeMetrics?.byStage.map((stage, index) => (
-                  <div key={stage.stage} className="relative">
+                  <div key={stage.stage} className="group">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
-                          {index + 1}
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 border-[3px] border-black bg-secondary flex items-center justify-center font-black italic group-hover:bg-black group-hover:text-white transition-colors">
+                          0{index + 1}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{stage.stage}</p>
-                          <p className="text-xs text-gray-500">{stage.description}</p>
+                          <p className="font-black text-black uppercase italic leading-none">{stage.stage}</p>
+                          <p className="text-[10px] font-bold text-gray-500 uppercase mt-1">{stage.description}</p>
                         </div>
                       </div>
-                      <span className="text-lg font-semibold text-gray-900">
-                        {stage.averageTime} dias
+                      <span className="text-2xl font-black italic text-black">
+                        {stage.averageTime}D
                       </span>
                     </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-blue-500 rounded-full transition-all"
-                        style={{ 
-                          width: `${(stage.averageTime / (cycleTimeMetrics?.averageCycleTime || 1)) * 100}%` 
-                        }}
+                    <div className="h-4 bg-[#f0f0f0] border-[2px] border-black overflow-hidden shadow-[2px_2px_0px_000000]">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(stage.averageTime / (cycleTimeMetrics?.averageCycleTime || 1)) * 100}%` }}
+                        className="h-full bg-secondary border-r-[2px] border-black"
                       />
                     </div>
                   </div>
@@ -160,236 +161,209 @@ export default function QOPPage() {
               </div>
             </Card>
 
-            <Card title="Tendência de Cycle Time" description="Evolução ao longo do tempo">
-              <TrendLineChart 
-                data={cycleTimeMetrics?.trend || []} 
-                color="#0a5193"
-                showArea
-                yAxisFormatter={(v) => `${v.toFixed(1)}d`}
-              />
+            <Card title="TENDÊNCIA DE ENTREGA" className="border-black">
+              <div className="h-[350px] w-full bg-white p-4">
+                <TrendLineChart 
+                  data={cycleTimeMetrics?.trend || []} 
+                  color="#F472B6"
+                  showArea
+                  yAxisFormatter={(v) => `${v.toFixed(1)}d`}
+                />
+              </div>
             </Card>
           </div>
         </section>
 
-        <section>
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-5 h-5 text-orange-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Throughput e Métricas DORA</h3>
+        {/* Section: Throughput */}
+        <section className="space-y-8">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-black border-[3px] border-primary">
+              <TrendingUp className="w-6 h-6 text-primary" />
+            </div>
+            <h3 className="text-3xl font-black text-black uppercase italic">THROUGHPUT & DORA</h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <MetricCard
-              title="Deploys por Semana"
-              value={throughputMetrics?.deploymentsPerWeek || 0}
-              trend={15.3}
-              trendLabel="vs. mês anterior"
-              status="success"
-            />
-            <MetricCard
-              title="Deploys por Mês"
-              value={throughputMetrics?.deploymentsPerMonth || 0}
-              trend={8.7}
-              trendLabel="vs. mês anterior"
-              status="success"
-            />
-            <MetricCard
-              title="Story Points Entregues"
-              value={throughputMetrics?.storyPointsDelivered || 0}
-              trend={22.1}
-              trendLabel="vs. mês anterior"
-              status="success"
-            />
-            <MetricCard
-              title="Lead Time"
-              value={throughputMetrics?.leadTime || 0}
-              unit="dias"
-              trend={-10.2}
-              trendLabel="vs. mês anterior"
-              status="success"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <MetricCard title="DEPLOYS / SEMANA" value={throughputMetrics?.deploymentsPerWeek || 0} status="success" />
+            <MetricCard title="DEPLOYS / MÊS" value={throughputMetrics?.deploymentsPerMonth || 0} status="success" />
+            <MetricCard title="STORY POINTS" value={throughputMetrics?.storyPointsDelivered || 0} status="success" />
+            <MetricCard title="LEAD TIME" value={throughputMetrics?.leadTime || 0} unit="DIAS" status="success" />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card title="Métricas DORA" description="Performance de entrega de software">
-              <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <Card title="MÉTRICAS DORA" className="bg-black text-white border-black col-span-1">
+              <div className="grid grid-cols-1 gap-4 mt-4">
                 {throughputMetrics?.doraMetrics && Object.entries(throughputMetrics.doraMetrics).map(([key, value]) => {
                   const config = DORA_LEVELS[value as keyof typeof DORA_LEVELS];
                   const labels: Record<string, string> = {
-                    deploymentFrequency: 'Frequência de Deploy',
-                    leadTimeForChanges: 'Lead Time for Changes',
-                    changeFailureRate: 'Change Failure Rate',
+                    deploymentFrequency: 'DEPLOY FREQ',
+                    leadTimeForChanges: 'LEAD TIME',
+                    changeFailureRate: 'FAILURE RATE',
                     mttr: 'MTTR',
                   };
                   return (
-                    <div key={key} className="p-4 bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-600 mb-1">{labels[key]}</p>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={config.color as 'success' | 'info' | 'warning' | 'error'} size="md">
-                          {config.label}
-                        </Badge>
-                      </div>
+                    <div key={key} className="p-4 border-[2px] border-gray-800 bg-gray-900 flex justify-between items-center shadow-[4px_4px_0px_#000]">
+                      <p className="text-xs font-black text-gray-500 uppercase">{labels[key]}</p>
+                      <Badge variant={config.color === 'success' ? 'primary' : config.color === 'info' ? 'secondary' : 'warning'}>
+                        {config.label.toUpperCase()}
+                      </Badge>
                     </div>
                   );
                 })}
               </div>
             </Card>
 
-            <Card title="Tendência de Throughput" description="Vazão de entregas">
-              <TrendLineChart 
-                data={throughputMetrics?.trend || []} 
-                color="#ec6608"
-                yAxisFormatter={(v) => `${v.toFixed(0)}`}
-              />
+            <Card title="VAZÃO DE ENTREGA" className="lg:col-span-2 border-black">
+              <div className="h-[300px] w-full bg-white p-4">
+                <TrendLineChart 
+                  data={throughputMetrics?.trend || []} 
+                  color="#A3E635"
+                  yAxisFormatter={(v) => `${v.toFixed(0)}`}
+                />
+              </div>
             </Card>
           </div>
         </section>
 
-        <section>
-          <div className="flex items-center gap-2 mb-4">
-            <ListTodo className="w-5 h-5 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Saúde do Backlog</h3>
+        {/* Section: Backlog */}
+        <section className="space-y-8">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-black border-[3px] border-warning">
+              <ListTodo className="w-6 h-6 text-warning" />
+            </div>
+            <h3 className="text-3xl font-black text-black uppercase italic">SAÚDE DO BACKLOG</h3>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <Card title="Distribuição por Status">
-              <div className="space-y-3">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <Card title="STATUS DO INVENTÁRIO" className="border-black">
+              <div className="space-y-4 mt-4">
                 {backlogMetrics?.itemsByStatus.map((status) => (
-                  <div key={status.status} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${
-                        status.status === 'Concluído' ? 'bg-green-500' :
-                        status.status === 'Em Progresso' ? 'bg-blue-500' :
-                        status.status === 'Em Revisão' ? 'bg-yellow-500' :
-                        'bg-gray-400'
-                      }`} />
-                      <span className="text-sm text-gray-700">{status.status}</span>
+                  <div key={status.status} className="flex items-center justify-between p-3 border-[2px] border-black bg-[#f9f9f9]">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "w-4 h-4 border-[2px] border-black",
+                        status.status === 'Concluído' ? 'bg-primary' :
+                        status.status === 'Em Progresso' ? 'bg-secondary' :
+                        status.status === 'Em Revisão' ? 'bg-warning' : 'bg-gray-400'
+                      )} />
+                      <span className="text-sm font-black italic uppercase">{status.status}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-gray-900">{status.count}</span>
-                      <span className="text-xs text-gray-500">({status.percentage.toFixed(1)}%)</span>
+                      <span className="text-lg font-black">{status.count}</span>
+                      <Badge variant="default" size="sm">{status.percentage.toFixed(0)}%</Badge>
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Total de Itens</span>
-                  <span className="font-semibold text-gray-900">{backlogMetrics?.totalItems}</span>
-                </div>
+              <div className="mt-8 p-4 bg-black text-white font-black italic uppercase text-center border-[2px] border-black">
+                TOTAL: {backlogMetrics?.totalItems} ITENS
               </div>
             </Card>
 
-            <Card title="Sprint Atual" description={backlogMetrics?.sprintHealth.currentSprint}>
-              <div className="space-y-4">
+            <Card title="SPRINT ATUAL" description={backlogMetrics?.sprintHealth.currentSprint.toUpperCase()} className="border-black">
+              <div className="space-y-8 mt-4">
                 <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">Taxa de Conclusão</span>
-                    <span className="font-medium text-gray-900">{backlogMetrics?.sprintHealth.completionRate.toFixed(1)}%</span>
+                  <div className="flex justify-between items-end mb-2">
+                    <span className="text-xs font-black uppercase text-gray-500">COMPLETION RATE</span>
+                    <span className="text-3xl font-black italic">{backlogMetrics?.sprintHealth.completionRate.toFixed(1)}%</span>
                   </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-green-500 rounded-full"
-                      style={{ width: `${backlogMetrics?.sprintHealth.completionRate}%` }}
+                  <div className="h-6 bg-[#f0f0f0] border-[3px] border-black shadow-[4px_4px_0px_000000] overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${backlogMetrics?.sprintHealth.completionRate}%` }}
+                      className="h-full bg-primary border-r-[3px] border-black"
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-600">Velocity</p>
-                    <p className="text-lg font-semibold text-gray-900">{backlogMetrics?.sprintHealth.velocity}</p>
+                
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="p-4 border-[2px] border-black bg-white shadow-[4px_4px_0px_000000]">
+                    <p className="text-[10px] font-black text-gray-400 uppercase">VELOCITY</p>
+                    <p className="text-2xl font-black italic">{backlogMetrics?.sprintHealth.velocity}</p>
                   </div>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-600">Capacidade</p>
-                    <p className="text-lg font-semibold text-gray-900">{backlogMetrics?.sprintHealth.capacity}</p>
+                  <div className="p-4 border-[2px] border-black bg-white shadow-[4px_4px_0px_000000]">
+                    <p className="text-[10px] font-black text-gray-400 uppercase">CAPACITY</p>
+                    <p className="text-2xl font-black italic">{backlogMetrics?.sprintHealth.capacity}</p>
                   </div>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Mudança de Escopo</span>
-                  <span className={`font-medium ${
-                    (backlogMetrics?.sprintHealth.scopeChange || 0) > 10 ? 'text-red-600' : 'text-green-600'
-                  }`}>
+                
+                <div className="flex items-center justify-between p-4 bg-black text-white italic font-black uppercase">
+                  <span>SCOPE CHANGE</span>
+                  <span className={cn(
+                    (backlogMetrics?.sprintHealth.scopeChange || 0) > 10 ? 'text-error' : 'text-primary'
+                  )}>
                     +{backlogMetrics?.sprintHealth.scopeChange.toFixed(1)}%
                   </span>
                 </div>
               </div>
             </Card>
 
-            <Card title="WIP Limit" description="Work In Progress">
-              <div className="flex items-center justify-center py-6">
-                <div className="relative w-32 h-32">
-                  <svg className="w-full h-full transform -rotate-90">
-                    <circle
-                      cx="64"
-                      cy="64"
-                      r="56"
-                      stroke="#e5e7eb"
-                      strokeWidth="12"
-                      fill="none"
-                    />
-                    <circle
-                      cx="64"
-                      cy="64"
-                      r="56"
-                      stroke={backlogMetrics && backlogMetrics.wipLimitStatus.utilization > 90 ? '#ef4444' : '#0a5193'}
-                      strokeWidth="12"
-                      fill="none"
-                      strokeDasharray={`${(backlogMetrics?.wipLimitStatus.utilization || 0) / 100 * 351.86} 351.86`}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-3xl font-bold text-gray-900">
-                      {backlogMetrics?.wipLimitStatus.current}
-                    </span>
-                    <span className="text-sm text-gray-500">/ {backlogMetrics?.wipLimitStatus.limit}</span>
+            <Card title="WIP LIMIT" description="UTILIZAÇÃO DA BANDA" className="border-black">
+              <div className="flex flex-col items-center justify-center py-6">
+                <div className="relative w-40 h-40 border-[6px] border-black rounded-full flex items-center justify-center bg-white shadow-[8px_8px_0px_000000]">
+                  <div className="flex flex-col items-center">
+                    <span className="text-5xl font-black italic leading-none">{backlogMetrics?.wipLimitStatus.current}</span>
+                    <div className="h-[3px] w-12 bg-black my-1" />
+                    <span className="text-xl font-black text-gray-500 italic leading-none">{backlogMetrics?.wipLimitStatus.limit}</span>
                   </div>
+                  
+                  {/* Decorative tick marks */}
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div 
+                      key={i} 
+                      className="absolute w-1 h-3 bg-black" 
+                      style={{ transform: `rotate(${i * 45}deg) translateY(-18px)` }} 
+                    />
+                  ))}
                 </div>
-              </div>
-              <div className="text-center">
-                <Badge 
-                  variant={backlogMetrics && backlogMetrics.wipLimitStatus.utilization > 90 ? 'error' : 'success'} 
-                  size="md"
-                >
-                  {backlogMetrics?.wipLimitStatus.utilization.toFixed(0)}% Utilizado
-                </Badge>
+                <div className="mt-8">
+                  <Badge 
+                    variant={backlogMetrics && backlogMetrics.wipLimitStatus.utilization > 90 ? 'error' : 'primary'} 
+                    size="lg"
+                    className="text-lg px-6 py-2"
+                  >
+                    {backlogMetrics?.wipLimitStatus.utilization.toFixed(0)}% UTILIZADO
+                  </Badge>
+                </div>
               </div>
             </Card>
           </div>
 
-          <Card title="Itens em Envelhecimento" description="Itens com mais de 7 dias em progresso">
-            <div className="overflow-x-auto">
-              <table className="w-full">
+          <Card title="ITENS EM ENVELHECIMENTO" description="ANOMALIAS DE PROCESSO (+7 DIAS EM WIP)" className="border-black">
+            <div className="overflow-x-auto mt-6">
+              <table className="w-full border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">ID</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Título</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Status</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Prioridade</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Idade</th>
+                  <tr className="bg-black text-white italic">
+                    <th className="text-left py-4 px-6 font-black uppercase tracking-widest text-xs">ID</th>
+                    <th className="text-left py-4 px-6 font-black uppercase tracking-widest text-xs">TÍTULO</th>
+                    <th className="text-left py-4 px-6 font-black uppercase tracking-widest text-xs">STATUS</th>
+                    <th className="text-left py-4 px-6 font-black uppercase tracking-widest text-xs">PRIORIDADE</th>
+                    <th className="text-left py-4 px-6 font-black uppercase tracking-widest text-xs">IDADE</th>
                   </tr>
                 </thead>
                 <tbody>
                   {backlogMetrics?.agingItems.map((item) => (
-                    <tr key={item.id} className="border-b border-gray-100 last:border-0">
-                      <td className="py-3 px-4 text-sm font-medium text-blue-600">{item.id}</td>
-                      <td className="py-3 px-4 text-sm text-gray-900">{item.title}</td>
-                      <td className="py-3 px-4">
-                        <Badge variant="info" size="sm">{item.status}</Badge>
+                    <tr key={item.id} className="border-b-[3px] border-black hover:bg-secondary/5 transition-colors group">
+                      <td className="py-5 px-6 font-black text-secondary">{item.id}</td>
+                      <td className="py-5 px-6 font-black uppercase italic text-sm">{item.title}</td>
+                      <td className="py-5 px-6">
+                        <Badge variant="default" size="sm">{item.status.toUpperCase()}</Badge>
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-5 px-6">
                         <Badge 
                           variant={
                             item.priority === 'critical' ? 'error' :
                             item.priority === 'high' ? 'warning' :
-                            item.priority === 'medium' ? 'info' :
-                            'default'
+                            item.priority === 'medium' ? 'secondary' : 'default'
                           } 
                           size="sm"
                         >
-                          {item.priority}
+                          {item.priority.toUpperCase()}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{item.age} dias</td>
+                      <td className="py-5 px-6 font-black italic text-black group-hover:scale-110 transition-transform">
+                        {item.age} DIAS
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -397,7 +371,7 @@ export default function QOPPage() {
             </div>
           </Card>
         </section>
-      </div>
+      </motion.div>
     </DashboardLayout>
   );
 }

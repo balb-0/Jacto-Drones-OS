@@ -1,12 +1,21 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Space_Grotesk, Space_Mono } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+});
+
+const spaceMono = Space_Mono({
+  variable: "--font-space-mono",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
 
 export const metadata: Metadata = {
-  title: "Jacto Drones OS - Dashboard",
-  description: "Dashboard de métricas de qualidade para o Jacto Drones Operating System v0.1",
+  title: "QOS/QOP DASHBOARD | ULTRA BRUTAL",
+  description: "Next-gen metrics visualization with god-level design",
 };
 
 export default function RootLayout({
@@ -16,7 +25,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={inter.className}>{children}</body>
+      <body
+        className={`${spaceGrotesk.variable} ${spaceMono.variable} antialiased selection:bg-black selection:text-white`}
+      >
+        {children}
+      </body>
     </html>
   );
 }
