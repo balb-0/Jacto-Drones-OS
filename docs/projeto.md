@@ -31,13 +31,9 @@
 - [3. Objetivos](#3-objetivos)
 - [4. Arquitetura do Produto (ISO 10746)](#4-arquitetura-do-produto-iso-10746)
 - [5. Configuração da Esteira de Sistemas](#5-configuração-da-esteira-de-sistemas)
-  - [5.1 Visão Geral do Pipeline](#51-visão-geral-do-pipeline)
-  - [5.2 Testes Funcionais](#52-testes-funcionais)
-  - [5.3 Testes Não-Funcionais](#53-testes-não-funcionais)
-  - [5.4 Rastreabilidade Técnica](#54-rastreabilidade-técnica)
-  - [5.5 Infraestrutura de Execução](#55-infraestrutura-de-execução)
-  - [5.6 Mapa de Cobertura de Funcionalidades](#56-mapa-de-cobertura-de-funcionalidades)
-  - [5.7 Mapa de Cobertura de Não Funcionalidades](#57-mapa-de-cobertura-de-não-funcionalidades)
+  - [5.1 Plano de Testes Funcionais](#51-plano-de-testes-funcionais)
+  - [5.2 Testes Não Funcionais e Quality Gates](#52-testes-não-funcionais-e-quality-gates)
+  - [5.3 Matriz de Rastreabilidade Técnica](#53-matriz-de-rastreabilidade-técnica)
 - [6. Requisitos SCM](#6-requisitos-scm)
 - [7. Referências](#7-referências)
 
@@ -157,61 +153,6 @@ A execução do pipeline depende de uma infraestrutura escalável e segura de ru
 - **Container Registry:** O GitLab Container Registry armazena as imagens Docker versionadas e assinadas. Cada imagem é tagueada com o hash do commit e a versão SemVer, permitindo rollback imediato.
 - **Armazenamento de Artefatos:** Binários de firmware, relatórios de teste e SBOMs são armazenados como artefatos do GitLab CI/CD com retenção configurada. Artefatos de releases são promovidos para um bucket de armazenamento de longo prazo (S3 ou equivalente) para auditoria regulatória.
 
-## 5.6 Mapa de Cobertura de Funcionalidades
-O Mapa de Cobertura de Funcionalidades consolida, em forma de matriz de rastreabilidade, quais componentes do ecossistema Jacto Drones (firmware embarcado, plataforma de serviços e sistemas de dados) são versionados em repositório Git e exercitados pelo pipeline de integração contínua descrito em §5.1. A organização por frente segue o panorama tecnológico documentado no mapeamento do ambiente Jacto<a href="#ref4"><sup>[4]</sup></a>, e o caso pedagógico Dronecode é utilizado como ambiente de validação realista do fluxo de CI/CD, conforme previsto no Termo de Abertura de Projeto Inteli (TAPI) — ESMD10<a id="ref7-link" href="#ref7"><sup>[7]</sup></a>. A estruturação do pipeline em estágios sequenciais com gates de qualidade segue as práticas consagradas por Humble e Farley em *Continuous Delivery*<a id="ref8-link" href="#ref8"><sup>[8]</sup></a>.
-
-**Tabela 1 — Cobertura por frente, repositório e build automatizado**
-
-| Frente | Componente | Repositório Git | Build automatizado | Stage(s) do pipeline | Caso pedagógico Dronecode |
-| --- | --- | --- | --- | --- | --- |
-| Firmware embarcado | PX4 Autopilot (controle de voo) | `jacto-drones/px4-firmware` (fork PX4-Autopilot) | Cross-compile ARM Cortex-M + x86_64 SITL | Lint → Build → Test (SITL) | PX4 v1.14 (Dronecode)<a href="#ref2"><sup>[2]</sup></a> |
-| Firmware embarcado | Protocolo MAVLink | submódulo `mavlink/mavlink` | Geração de stubs C/Python | Build | MAVLink v2<a id="ref9-link" href="#ref9"><sup>[9]</sup></a> |
-| Firmware embarcado | QGroundControl (GCS de validação) | `jacto-drones/qgc-tests` | Empacotamento Qt para teste de comandos | Test (integração) | QGroundControl v4.x<a id="ref10-link" href="#ref10"><sup>[10]</sup></a> |
-| Plataforma de clientes | Serviço de Missão (planejamento) | `jacto-drones/mission-service` | Imagem Docker multi-arch | Build → Test → Package | — |
-| Plataforma de clientes | Frontend de operação | `jacto-drones/ops-web` | Vite + ESLint + Docker | Lint → Build → Test | — |
-| Sistema de dados | Pipeline de telemetria | `jacto-drones/telemetry-ingest` | Docker + workers Python | Build → Test → SAST | — |
-| Sistema de dados | Dashboard DORA / Cycle Time | `jacto-drones/devops-dashboard` | Docker Compose | Build → Deploy (staging) | — |
-
-> **Nota:** os repositórios listados são placeholders previstos no plano de gestão de configuração e serão materializados ao longo das sprints. À medida que cada repositório é criado, esta tabela deve ser atualizada com a URL definitiva no GitLab e a chave Jira do épico associado.
-
-**Tabela 2 — Rastreio de funcionalidades pedagógicas (validação Dronecode)**
-
-| Funcionalidade do MVP | Cenário de validação | Stage que valida | Critério de aceitação |
-| --- | --- | --- | --- |
-| Decolagem autônoma | PX4 SITL com `MAV_CMD_NAV_TAKEOFF` | Test (SITL) | Altitude alvo ±0.5 m em <30 s simulados<a id="ref11-link" href="#ref11"><sup>[11]</sup></a> |
-| Navegação por waypoints | Missão multi-waypoint em Gazebo | Test (SITL) | Todos os waypoints atingidos sem desvio >2 m<a href="#ref11"><sup>[11]</sup></a> |
-| Pouso e failsafe | Cenário de perda de RC | Test (SITL) | Pouso seguro em <60 s |
-| Conformidade MAVLink | Suite de mensagens `MAV_CMD` | Test (integração) | 100% das mensagens críticas validadas<a href="#ref9"><sup>[9]</sup></a> |
-| Promoção de artefato | Tag SemVer em branch de release | Package → Deploy | Imagem assinada e SBOM gerado<a id="ref12-link" href="#ref12"><sup>[12]</sup></a> |
-
-Cada linha das tabelas acima compõe um elo na cadeia de Controle em Malha Fechada descrita em §4.3: a chave Jira (`JACTO-XXX`) associada ao épico ou história alimenta o pipeline via Smart Commits (§5.4), e o resultado do stage de validação é realimentado para o Jira e o Notion, fechando a rastreabilidade fim a fim exigida pela norma ISO/IEC 12207:2017<a href="#ref5"><sup>[5]</sup></a>.
-
-## 5.7 Mapa de Cobertura de Não Funcionalidades
-Como o software produzido pelo Jacto Drones OS v0.1 dará suporte a sistemas autônomos e críticos, o pipeline incorpora análises não funcionais obrigatórias em diferentes stages. Esta seção consolida em forma matricial os controles de **padronização de formatação (linting)**, **análise estática de código (SAST)**, **segurança de dependências e containers**, **tempo de execução do build** e **integridade de artefato**, exigidos como entrega do caso pedagógico no TAPI<a href="#ref7"><sup>[7]</sup></a> e referenciados nos requisitos não funcionais de §4.4. As categorias de qualidade exercitadas correspondem aos atributos definidos pela ISO/IEC 25010:2023<a id="ref13-link" href="#ref13"><sup>[13]</sup></a>, e os controles de segurança seguem a ISO/IEC 27001:2022<a id="ref14-link" href="#ref14"><sup>[14]</sup></a> e o *Secure Software Development Framework* (NIST SP 800-218)<a id="ref15-link" href="#ref15"><sup>[15]</sup></a>.
-
-**Tabela 3 — Cobertura de análises não funcionais por categoria**
-
-| Categoria NF | Ferramenta | Onde atua (frente) | Stage do pipeline | Gate / threshold | Norma de referência |
-| --- | --- | --- | --- | --- | --- |
-| Padronização de formatação (lint) | clang-tidy + Google C++ Style<a id="ref16-link" href="#ref16"><sup>[16]</sup></a> | Firmware (PX4) | Lint | 0 warnings críticos | ISO/IEC 25010 (manutenibilidade)<a href="#ref13"><sup>[13]</sup></a> |
-| Padronização de formatação (lint) | ESLint<a id="ref17-link" href="#ref17"><sup>[17]</sup></a> | Plataforma de clientes (web) | Lint | 0 erros, warnings sob revisão | ISO/IEC 25010<a href="#ref13"><sup>[13]</sup></a> |
-| Análise estática de segurança (SAST) | Semgrep<a id="ref18-link" href="#ref18"><sup>[18]</sup></a> | Todos os repositórios | SAST | 0 vulnerabilidades Críticas/Altas | ISO/IEC 27001:2022<a href="#ref14"><sup>[14]</sup></a> |
-| Análise estática de segurança (SAST) | CodeQL<a id="ref19-link" href="#ref19"><sup>[19]</sup></a> | Firmware C/C++ + serviços | SAST | 0 vulnerabilidades Críticas/Altas | DO-178C (rastreio de defeitos)<a id="ref20-link" href="#ref20"><sup>[20]</sup></a> |
-| Segurança de dependências / containers | Trivy<a id="ref21-link" href="#ref21"><sup>[21]</sup></a> | Imagens Docker e SBOM | SAST → Package | Bloqueio em CVE Crítico/Alto | ISO/IEC 27001<a href="#ref14"><sup>[14]</sup></a>, NIST SSDF<a href="#ref15"><sup>[15]</sup></a> |
-| Tempo de execução da esteira | Métricas nativas do GitLab CI/CD | Pipeline completo | Todos | Pipeline <15 min; SITL <10 min | DORA (Lead Time)<a id="ref3-link" href="#ref3"><sup>[3]</sup></a> |
-| Integridade de artefato | Assinatura GPG + SBOM | Binários e imagens | Package | Toda promoção assinada | ISO/IEC 27001<a href="#ref14"><sup>[14]</sup></a>, supply chain<a href="#ref15"><sup>[15]</sup></a> |
-| Disponibilidade da esteira | Monitoramento de GitLab Runners | Infra de CI/CD | Observabilidade contínua | 99.9% uptime no horário comercial | DORA (MTTR)<a href="#ref6"><sup>[6]</sup></a> |
-
-**Tabela 4 — Cobertura cruzada por frente do ecossistema**
-
-| Frente | Lint | SAST (código) | SCA (dependências) | Performance | Assinatura |
-| --- | --- | --- | --- | --- | --- |
-| Firmware embarcado | clang-tidy | CodeQL / Semgrep | Trivy (toolchain) | <10 min SITL | GPG firmware |
-| Plataforma de clientes | ESLint | Semgrep | Trivy (imagens) | <15 min pipeline | GPG imagens |
-| Sistema de dados | Semgrep | Semgrep / CodeQL | Trivy | <15 min pipeline | GPG imagens |
-
-Cada gate da Tabela 3 funciona como um *sensor* da malha fechada (§4.3): a violação de qualquer threshold interrompe a promoção do artefato e realimenta o time com logs e alertas, sem intervenção manual. A combinação de cobertura por categoria (Tabela 3) e por frente (Tabela 4) garante que os atributos de qualidade exigidos pela ISO/IEC 25010:2023 (manutenibilidade, segurança, performance)<a href="#ref13"><sup>[13]</sup></a> e pela ISO/IEC 27001:2022 (segurança de dependências e supply chain)<a href="#ref14"><sup>[14]</sup></a> sejam exercitados em todos os componentes versionados. Para o firmware embarcado, a aderência aos princípios de segurança de software aeronáutico do DO-178C<a href="#ref20"><sup>[20]</sup></a> e às boas práticas do NIST SSDF<a href="#ref15"><sup>[15]</sup></a> reforça o rigor exigido para sistemas autônomos críticos, conforme detalhamento das normas em [docs/referencias/normas-engenharia.md](referencias/normas-engenharia.md)<a href="#ref5"><sup>[5]</sup></a>.
-
 # 6. Requisitos SCM
 
 ## 6.1 Políticas de Integração
@@ -296,32 +237,4 @@ Somente após o cumprimento integral desses critérios a funcionalidade é eleg�
 
 <a id="ref6"></a>[6] Google Cloud. *DORA Core Model*. DevOps Research and Assessment. Disponível em: https://dora.dev/research/ <a href="#ref6-link">↩</a>
 
-<a id="ref7"></a>[7] JACTO Máquinas Agrícolas S/A & Inteli. (2026). *Termo de Abertura de Projeto Inteli (TAPI) — ESMD10: Esteira Ágil de Produção de Software — Jacto Drones Operating System v0.1*. Documento de projeto parceiro, módulo ESMD10. <a href="#ref7-link">↩</a>
-
-<a id="ref8"></a>[8] Humble, J., & Farley, D. (2010). *Continuous Delivery: Reliable Software Releases through Build, Test, and Deployment Automation*. Addison-Wesley. <a href="#ref8-link">↩</a>
-
-<a id="ref9"></a>[9] Dronecode Foundation. *MAVLink Developer Guide — Messages, Microservices and Protocol Specification*. Disponível em: https://mavlink.io/en/ <a href="#ref9-link">↩</a>
-
-<a id="ref10"></a>[10] Dronecode Foundation. *QGroundControl User Guide*. Disponível em: https://docs.qgroundcontrol.com/ <a href="#ref10-link">↩</a>
-
-<a id="ref11"></a>[11] PX4 Development Team. *PX4 Autopilot — Software in the Loop (SITL) Simulation Guide*. Disponível em: https://docs.px4.io/main/en/simulation/ <a href="#ref11-link">↩</a>
-
-<a id="ref12"></a>[12] Linux Foundation. *SPDX Specification v2.3 — Software Package Data Exchange*. ISO/IEC 5962:2021. Disponível em: https://spdx.dev/ <a href="#ref12-link">↩</a>
-
-<a id="ref13"></a>[13] ISO/IEC. (2023). *ISO/IEC 25010:2023 — Systems and software engineering — Systems and software Quality Requirements and Evaluation (SQuaRE) — Product quality model*. International Organization for Standardization. <a href="#ref13-link">↩</a>
-
-<a id="ref14"></a>[14] ISO/IEC. (2022). *ISO/IEC 27001:2022 — Information security, cybersecurity and privacy protection — Information security management systems — Requirements*. International Organization for Standardization. <a href="#ref14-link">↩</a>
-
-<a id="ref15"></a>[15] Souppaya, M., Scarfone, K., & Dodson, D. (2022). *NIST Special Publication 800-218: Secure Software Development Framework (SSDF) Version 1.1 — Recommendations for Mitigating the Risk of Software Vulnerabilities*. National Institute of Standards and Technology. https://doi.org/10.6028/NIST.SP.800-218 <a href="#ref15-link">↩</a>
-
-<a id="ref16"></a>[16] LLVM Project. *clang-tidy — Clang-based C++ "linter" tool*. Disponível em: https://clang.llvm.org/extra/clang-tidy/ <a href="#ref16-link">↩</a>
-
-<a id="ref17"></a>[17] OpenJS Foundation. *ESLint — Pluggable JavaScript and TypeScript Linter*. Disponível em: https://eslint.org/docs/latest/ <a href="#ref17-link">↩</a>
-
-<a id="ref18"></a>[18] Semgrep, Inc. *Semgrep — Static Analysis at Ludicrous Speed*. Disponível em: https://semgrep.dev/docs/ <a href="#ref18-link">↩</a>
-
-<a id="ref19"></a>[19] GitHub, Inc. *CodeQL Documentation — Semantic Code Analysis Engine*. Disponível em: https://codeql.github.com/docs/ <a href="#ref19-link">↩</a>
-
-<a id="ref20"></a>[20] RTCA. (2011). *DO-178C — Software Considerations in Airborne Systems and Equipment Certification*. Radio Technical Commission for Aeronautics, em conjunto com EUROCAE ED-12C. <a href="#ref20-link">↩</a>
-
-<a id="ref21"></a>[21] Aqua Security. *Trivy — Comprehensive and Versatile Security Scanner for Containers, Filesystems and IaC*. Disponível em: https://aquasecurity.github.io/trivy/ <a href="#ref21-link">↩</a>
+- JACTO. *Termo de Abertura de Projeto (TAP) - Jacto Drones OS*. 2026.
