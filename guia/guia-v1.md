@@ -20,7 +20,7 @@ O guia é mantido por agentes IA via 7 fluxos do `inteli-guia-kit` (Setup, Fim d
 2. Se for sua primeira leitura, percorra o Bloco 1 (Contexto Fixo) e o pacote de onboarding.
 3. Trabalhe contra os TGs e o DoD da sprint atual. Em caso de dúvida, consulte o documento principal (`docs/projeto.md`) e o TAP (`/Modulo10/M10-study/TAP_M10_Jacto_Drones.md`).
 
-> **Nota da v1.** Hoje (2026-05-14) há um descasamento intencional entre guia e realidade: a **Sprint 1** está como `[CONSOLIDADA — feedback pendente]` e a **Sprint 2** como `[FUTURA PRELIMINAR]`, embora a Sprint 2 já esteja em curso no git (branches `docs-mapa-integracao` e `feat-controle-malha-fechada` ativas). Essa v1 do guia fecha apenas a Sprint 1; uma **v2** será criada subsequentemente (via Fluxo 2 ou Fluxo 1 catch-up) para promover a Sprint 2 para `[ATUAL]` a partir do documento de planejamento da Sprint 2.
+> **Nota da v1.** Hoje (2026-05-14) há um descasamento intencional entre guia e realidade: a **Sprint 1** está marcada `[CONSOLIDADA]` (feedback do avaliador já absorvido — ver Sprint 1 §Feedback do avaliador, nota oficial 6,5/10) e a **Sprint 2** como `[FUTURA PRELIMINAR]`, embora a Sprint 2 já esteja em curso no git (branches `docs-mapa-integracao` e `feat-controle-malha-fechada` ativas). Essa v1 do guia fecha a Sprint 1; uma **v2** será criada subsequentemente (via Fluxo 2 ou Fluxo 1 catch-up) para promover a Sprint 2 para `[ATUAL]` a partir do documento de planejamento da Sprint 2 — já incorporando os princípios derivados do feedback (AS-IS antes de TO-BE; objetividade com referência rastreável; coerência inter-documento como gate de merge).
 
 ## Regras de Ouro
 
@@ -28,6 +28,9 @@ O guia é mantido por agentes IA via 7 fluxos do `inteli-guia-kit` (Setup, Fim d
 - **Evitar complexidade desnecessária.** Não adicionar features além do que o artefato exige.
 - **Análise de progresso/entrega parte SEMPRE do git.** Guia, doc principal e cards são representações; só o git é fato (P1 do kit).
 - **Sprints consolidadas são memória histórica.** Não modificar (exceções nominais nos prompts do kit).
+- **AS-IS antes de TO-BE.** Em qualquer documento entregue, separar explicitamente diagnóstico do estado atual (Jacto + ambiente) do que é proposta do grupo. *(Derivado do feedback do avaliador da Sprint 1, 30/04/2026.)*
+- **Objetividade > completude.** Entregar menos com referência rastreável vale mais do que entregar muito com afirmações não-verificáveis. Toda afirmação nova/exploratória precisa de fonte do grupo (anotações, Sprint Planning, workshop, TAP, discussões com professores, Sprint Review). Conteúdo sem referência → remover. *(Derivado do feedback do avaliador da Sprint 1.)*
+- **Coerência inter-documento é gate de merge.** Stack, terminologia, referências e decisões precisam convergir entre os docs antes do merge. Usar Fluxo 5 do kit cedo, não só perto do fim da sprint. *(Derivado da inconsistência interna apontada pelo avaliador na Sprint 1.)*
 
 ═══════════════════════════════════════════════════════════════════════
 ## BLOCO 1 — CONTEXTO FIXO
@@ -219,7 +222,7 @@ g04-gitlab/
 ## BLOCO 2 — SPRINTS
 ═══════════════════════════════════════════════════════════════════════
 
-### Sprint 1 — Gestão de Configuração — Produto e Processo (ISO 10746) [CONSOLIDADA — feedback pendente]
+### Sprint 1 — Gestão de Configuração — Produto e Processo (ISO 10746) [CONSOLIDADA]
 
 #### Objetivo
 
@@ -314,13 +317,19 @@ Decisões e padrões que **valem a partir da Sprint 1** e devem ser preservados 
 
 #### Itens pendentes
 
-> Esses débitos foram identificados na revisão pós-merge (2026-05-01) e devem ser absorvidos como tasks da Sprint 2.
+> Débitos a absorver como tasks da Sprint 2. Os 7 primeiros foram **explicitamente apontados pelo avaliador** e contribuíram para o desconto na nota — viram prioridade crítica.
 
-- **`DESIGN_OPS.md` não mergeado em `main`.** O documento está completo na branch `docs/design-ops` (todos os 7 integrantes contribuíram) e foi entregue como ponderada peso 3 da Profª Julia Stateri em 01/05/2026. Continua aguardando merge para `main`. *Ação proposta:* mergear na primeira oportunidade da Sprint 2 (não exige rebase complexo — branch isolada que toca apenas o arquivo `DESIGN_OPS.md` na raiz).
-- **`docs/dev-rules.md` com stack errada.** Convenções listam camelCase, Jest, Cypress, ESLint, Angular, JavaScript/TypeScript — mas o projeto é **Python + C/C++** (PX4 firmware). O próprio `referencias/normas-engenharia.md` cobra clang-tidy + Google C++ Style Guide + GTest/Catch2 + MAVSDK. **Risco:** inconsistência detectável em qualquer leitura cruzada da banca. *Ação proposta:* reescrever cedo na Sprint 2.
-- **`docs/gestao-projeto.md` vazio.** Estrutura criada (Avaliação Sprints 1-5, Análise de Riscos, Post Mortem), todos os campos com `_conteúdo_`. Confirmar se é skeleton intencional. *Ação proposta:* preencher §2.1 (avaliação da Sprint 1) cedo, enquanto a fonte está fresca.
+- **CRÍTICO — Falta de separação AS-IS / TO-BE no `docs/projeto.md` §4.** Apontado pelo avaliador (Arquitetura ISO 10746, 1,9/3). A seção 4 lê como solução futura proposta sem separar o que já existe hoje na Jacto do que é proposta nossa. *Ação proposta:* reescrever §4 introduzindo subseção "Estado atual (AS-IS)" baseada em transcrição do workshop + TAP Anexo A; manter a parte de proposta TO-BE explicitamente marcada.
+- **CRÍTICO — `docs/projeto.md` §4.4 com números fortes sem evidência.** "Pipeline < 15 min" e "SLA 99,9%" foram especificamente citados pelo avaliador como afirmações fortes sem fundamento. *Ação proposta:* ou remover, ou marcar como meta provisória do projeto justificando que ainda não há medição (apontando ao DORA Time to Feedback como referência para futura aferição).
+- **CRÍTICO — `docs/dev-rules.md` descolado da stack real.** O avaliador foi explícito: Jest, Cypress, Swagger, ESLint, arquitetura de três camadas, camelCase — *"parece reaproveitamento de template genérico, não resultado de assessment do ambiente real"*. *Ação proposta:* reescrever para Python + C/C++ (clang-tidy, Google C++ Style Guide, GTest/Catch2, MAVSDK), com nota explícita se houver alguma frente web justificada.
+- **CRÍTICO — Falta de diagnóstico AS-IS da esteira atual da Jacto.** Apontado pelo avaliador (Configuração da Esteira, 1,8/3): testes feitos hoje (manuais/automatizados), runners/servidores existentes, tratamento atual de logs, processo atual de validação de firmware. *Ação proposta:* criar seção de diagnóstico em `docs/referencias/mapeamento-ambiente-jacto.md` (ou seção nova) baseada em transcrição do workshop + TAP Anexo A.
+- **CRÍTICO — Auditabilidade de origem em `mapeamento-ambiente-jacto.md` e demais docs.** Apontado pelo avaliador (Referências, 0,7/1; Requisitos SCM, 2,1/3). *Ação proposta:* anexar/referenciar transcrição do workshop (24/04/2026), data + participantes do kickoff, ata da Sprint Review, link/recorte dos artefatos da Jacto. Cada afirmação nova/exploratória aponta para um desses.
+- **CRÍTICO — Justificativa do "GitHub + GitLab mirror" em `mapeamento-ambiente-jacto.md` §4.1.** Apontado pelo avaliador como decisão técnica controversa não justificada. *Ação proposta:* seção dedicada com trade-offs, riscos (sincronização, permissões, latência, fonte da verdade, governança) e por que essa cadeia em vez de simplificar.
+- **CRÍTICO — Referências em `docs/projeto.md` §7 e `referencias/normas-engenharia.md` sem link/data de acesso.** Apontado pelo avaliador. *Ação proposta:* adicionar URL + data de consulta para cada norma e fonte.
+- **`DESIGN_OPS.md` não mergeado em `main`.** O documento está completo na branch `docs/design-ops` (todos os 7 integrantes contribuíram), entregue como ponderada peso 3 da Profª Julia Stateri em 01/05/2026. *Ação proposta:* mergear na primeira oportunidade da Sprint 2.
+- **`docs/gestao-projeto.md` vazio.** Estrutura criada (Avaliação Sprints 1-5, Análise de Riscos, Post Mortem), todos os campos com `_conteúdo_`. *Ação proposta:* preencher §2.1 (avaliação da Sprint 1, incluindo nota 6,5/10 e lições aprendidas) cedo na Sprint 2.
 - **`docs/index.md` com placeholders.** Ainda tem `<nome do projeto>` e `<nome do grupo>` literais. Link para `gestao-configuracao.md` (sem `ç`) diverge do nome real `gestao-configuração.md` (com `ç`) — pode quebrar em alguns renderizadores.
-- **Inconsistência de nome do projeto.** "Jacto Drones Operating System v0.1" em uns docs, "Jacto Drones OS v0.1" em outros, "Jacto Drones OS · v0.1" na apresentação. *Ação proposta:* padronizar como "Jacto Drones OS v0.1" (forma mais usada nos slides e no README).
+- **Inconsistência de nome do projeto.** *Ação proposta:* padronizar como "Jacto Drones OS v0.1".
 
 #### Observações internas (retrospectiva — Sprint Review 1 com parceiro Jacto + orientador Reginaldo, 30/04/2026)
 
@@ -340,11 +349,37 @@ Decisões e padrões que **valem a partir da Sprint 1** e devem ser preservados 
 
 #### Feedback do avaliador
 
-> [aguardando avaliação formal do artefato peso 9 — rubrica do prof. José Romualdo. Feedback substantivo do **orientador Reginaldo Arakaki** e do **parceiro Jacto** na Sprint Review de 30/04/2026 está preservado em "Observações internas (retrospectiva)" acima e em "Decisões Tomadas Durante a Sprint Atual" (Bloco 3). Atualizar esta seção via Fluxo 3 (Pós-Feedback) quando a avaliação formal chegar.]
+> Texto literal preservado (P10 do kit). **Nota final: 6,5 / 10.**
 
-#### Recomendações derivadas
+**Arquitetura Produto (ISO 10746) — 1,9 / 3.**
+> *"O grupo apresenta uma seção específica no documento principal e tenta usar os viewpoints da ISO/IEC 10746 para estruturar a esteira. Há uma boa tentativa de conectar visão tecnológica, visão de engenharia, infraestrutura de execução, GitLab Runners, Docker, artefatos versionados, simulação PX4, MAVLink e controle em malha fechada. Também há uma figura de malha fechada e uma explicação razoável de controlador, atuador, processo e sensor no contexto da esteira. O ponto forte é que o grupo conseguiu sair do template e produzir uma arquitetura compreensível para o OS proposto. O ponto fraco é que a seção ainda se aproxima mais de uma arquitetura de solução futura do que de um retrato AS-IS da JACTO. Há pouca separação entre o que já existe hoje, o que foi observado no parceiro e o que é proposta do grupo. Além disso, alguns requisitos não funcionais aparecem com números fortes, como pipeline abaixo de 15 minutos e SLA de 99,9%, mas sem evidência clara de capacidade atual, restrição organizacional ou medição prévia."*
 
-> [pendente até feedback formal. No entanto, os dois eixos do Reginaldo (rastro / integridade) e as 3 validações do parceiro Jacto já estão registrados em "Decisões Tomadas Durante a Sprint Atual" (Bloco 3) como direcionamento assumido pelo grupo a partir da Sprint 2.]
+**Configuração da Esteira de Sistemas — 1,8 / 3.**
+> *"A entrega tem bons elementos no documento principal: stages de pipeline, testes funcionais em SITL/HITL, validação de MAVLink, testes de missão, SAST, gates de performance, assinatura digital, SBOM, registro de artefatos, rollback e infraestrutura de runners. Para uma sprint que ainda não exigia implementação, isso mostra repertório técnico. Porém, a execução do assessment fica comprometida quando olhamos os documentos auxiliares. Em docs/dev-rules.md, o grupo traz exemplos de testes e ferramentas voltados a uma stack Node/web, como Jest, Cypress, Swagger, ESLint e arquitetura de três camadas. Isso está descolado da realidade descrita pelo próprio projeto, que fala de firmware, PX4, MAVLink, SITL/HITL, C/C++, GitLab Runners e software embarcado. Não é proibido haver uma frente web no projeto, mas a documentação não justifica essa escolha nem separa regras por track. Do jeito que está, parece reaproveitamento de template genérico, não resultado de assessment do ambiente real. Também faltou diagnosticar a esteira atual da JACTO: quais testes são feitos hoje, quais são manuais, quais são automatizados, onde existem runners ou servidores, como os logs são tratados e como os times validam firmware atualmente."*
+
+**Requisitos SCM — 2,1 / 3.**
+> *"O grupo foi relativamente bem. Há políticas de integração, branching, rastreabilidade por chave Jira, Smart Commits, ligação Notion -> Jira -> GitHub -> GitLab -> Jira -> Notion, versionamento semântico, Definition of Done, indicadores DORA e uma cadeia de rastreabilidade técnica. O arquivo docs/referencias/mapeamento-ambiente-jacto.md também tenta mapear ferramentas por frente, o que ajuda. O principal problema é a auditabilidade da origem. O documento afirma que as informações foram levantadas a partir do TAP, entrevistas com stakeholders e artefatos disponibilizados pelo parceiro, mas não traz data, participantes, ata, transcrição, link de board, evidência de reunião ou recorte dos artefatos. Como consequência, algumas afirmações parecem plausíveis, mas não são plenamente verificáveis. Também há uma tensão técnica não resolvida: o grupo afirma que GitHub hospeda o código-fonte e GitLab executa o pipeline por mirror. A ideia pode fazer sentido, mas exigiria uma justificativa mais forte sobre por que operar duas plataformas em vez de simplificar a cadeia SCM, além de discutir riscos de sincronização, permissões, latência, fonte da verdade e governança."*
+
+**Referências — 0,7 / 1.**
+> *"Há referências técnicas e normativas relevantes: ISO/IEC 10746, ISO/IEC/IEEE 12207, ISO 21384-2, DO-178C, Dronecode, PX4, MAVLink, DORA e RBAC-E nº 94. O arquivo docs/referencias/normas-engenharia.md é bem desenvolvido e mostra boa pesquisa. Algumas normas são citadas sem link direto ou sem data de acesso, e a parte mais importante para o assessment, que são as evidências do ambiente do parceiro, continua pouco auditável. Citar TAP e entrevistas ajuda, mas sem anexar ou referenciar claramente os registros usados, a banca não consegue confirmar a origem das afirmações. Referência, nesta sprint, não é só bibliografia; é evidência verificável do AS-IS."*
+
+**Conversa pós-feedback com o avaliador (oral, complementar):**
+- *"O barema do card do artefato serve muito mais como referência para o avaliador do que como guia para o desenvolvimento do projeto pelo grupo."* Implicação: a rubrica não é checklist de conformidade; é a régua de quem julga.
+- *"Faltaram referências e fontes. Remover tudo aquilo que não tem referência, por não ter validade."* Fontes válidas que o grupo já produziu: anotações próprias, Sprint Planning, workshop com o parceiro, TAP, discussões com professores, Sprint Review.
+- *"Não é pra fazer referências constantes, mas elementos novos ou exploratórios — afirmações ou informações novas — precisam estar embasados."* Princípio operacional: **objetividade > completude**.
+- *"Os trabalhos individuais entregues pelos membros não convergem entre si; existe muita inconsistência ao longo do repositório."* Origem identificada: desorganização e falta de coordenação durante a sprint.
+
+#### Recomendações derivadas (válidas a partir da Sprint 2)
+
+Derivadas do feedback do avaliador acima + dos dois eixos do Reginaldo (rastro / integridade) + das 3 validações da Jacto na Sprint Review. Registradas como princípios operacionais permanentes em "Decisões Tomadas Durante a Sprint Atual" (Bloco 3), e refletidas no Checklist Transversal e nas Regras de Ouro.
+
+1. **Princípio AS-IS antes de TO-BE.** Toda seção de documento deve separar explicitamente o que é diagnóstico do estado atual (Jacto + ambiente atual) do que é proposta do grupo. Arquitetura como TO-BE sem AS-IS perde a metade da nota.
+2. **Objetividade > Completude.** Entregar menos com referência rastreável vale mais do que entregar muito com afirmações não-verificáveis. Remover do repo todo conteúdo cuja origem não consegue ser apontada para uma fonte do grupo (anotações, Sprint Planning, workshop, TAP, discussões com professores, Sprint Review).
+3. **Referência rastreável para afirmação nova.** Afirmações novas ou exploratórias precisam citar a fonte. Não é necessário citar fonte para o que é convenção pública (ex.: definição de Conventional Commits), mas é necessário para o que é decisão do grupo, dado do parceiro ou inferência.
+4. **Números sem evidência saem.** Métricas e SLAs específicos (ex.: "pipeline < 15 min", "SLA 99,9%") só ficam no doc se houver evidência de capacidade atual, restrição organizacional ou medição. Caso contrário, marcar como meta provisória ou remover.
+5. **Coerência inter-documento é gate de merge.** Antes de mergear, conferir convergência entre os documentos: stack, terminologia, referências, decisões. O Fluxo 5 (Reconciliação Inter-Branch) do `inteli-guia-kit` é o instrumento — usar mais cedo, não só perto do fim da sprint.
+6. **Decisão técnica controversa exige justificativa.** Casos como "GitHub + GitLab mirror" precisam de seção dedicada explicando trade-offs, riscos e por que essa cadeia em vez de uma só. Não vale supor que a banca infere.
+7. **Mapeamento de evidência por seção.** Para cada seção de docs de assessment, manter no rodapé (ou em apêndice) a fonte que sustenta o que está ali: "Esta seção é baseada em [workshop 24/04, transcrição A.X] + [TAP §Y]". Suficiente para que o avaliador não precise indagar.
 
 ---
 
@@ -375,6 +410,16 @@ Construir a **esteira CI executável** que materializa, em código e pipeline, o
 
 - **Vetor "integridade"** (Eixo 2 do Reginaldo) — commit signing GPG, branch protection em `main`/`develop`, Gitleaks no pre-commit, SAST + Trivy bloqueando severities Altas/Críticas, SBOM por imagem promovida.
 - **Vetor "rastro que ensina"** (Eixo 1 do Reginaldo) — ADR para cada novo critério de validação de log (vibração média + defasagem comando/execução como os dois primeiros), referenciando o caso real da queda compartilhado pelo Held no workshop (Anexo B.5 do TAP).
+
+**P0' — Correções obrigatórias derivadas do feedback do avaliador da Sprint 1** (não estavam previstas, mas precisam entrar no escopo para não repetir a perda de nota — 6,5/10):
+
+- **Separação AS-IS / TO-BE** em todo documento novo ou alterado da Sprint 2. Cada seção indica de qual lado está.
+- **Diagnóstico da esteira atual da Jacto** (testes feitos hoje, manuais vs. automatizados, runners, logs, validação de firmware). Fontes: workshop 24/04 + TAP Anexo A.
+- **Reescrita do `docs/dev-rules.md`** para a stack real (Python + C/C++ + PX4) — usar clang-tidy + Google C++ Style Guide + GTest/Catch2 conforme `referencias/normas-engenharia.md` já indica.
+- **Auditabilidade de origem** em todo doc tocado: referenciar workshop, TAP, transcrição da Sprint Review, anotações do grupo. Sem referência, remover o trecho.
+- **Justificativa do "GitHub + GitLab mirror"** em `mapeamento-ambiente-jacto.md` §4.1 — trade-offs explícitos.
+- **Revisão dos números fortes** em `docs/projeto.md` §4.4 (15 min, 99,9%): ou remover, ou marcar como meta provisória com nota.
+- **Links e datas de acesso** em todas as referências de `projeto.md` §7 e `referencias/normas-engenharia.md`.
 
 #### Estado do git no início da Sprint 2 (descoberta automática em 2026-05-14)
 
@@ -520,7 +565,11 @@ Fechar o módulo com **Relatório Executivo da esteira CI/CD** (diagnóstico ini
 - [ ] `docs/projeto.md` atualizado na seção da sprint corrente.
 - [ ] Evidências geradas e referenciadas (matriz de rastreabilidade preenchida).
 - [ ] DoD da sprint verificado item a item.
-- [ ] **Pipeline completo < 15 min** (limite não-funcional do `projeto.md` §4.4).
+- [ ] **AS-IS e TO-BE separados.** Toda seção de documento novo ou alterado indica explicitamente se está descrevendo estado atual (Jacto/ambiente) ou proposta do grupo. *(Derivado do feedback do avaliador da Sprint 1.)*
+- [ ] **Referência rastreável em afirmação nova.** Toda afirmação nova ou exploratória aponta para uma fonte do grupo (anotações, Sprint Planning, workshop, TAP, discussão com professor, Sprint Review). Conteúdo sem referência → remover. *(Derivado do feedback do avaliador da Sprint 1.)*
+- [ ] **Coerência inter-documento revisada.** Stack, terminologia, referências e decisões convergem entre os documentos alterados na sprint. Em conflito → acionar Fluxo 5 do kit antes do merge. *(Derivado da inconsistência interna apontada pelo avaliador.)*
+- [ ] **Números fortes têm evidência ou são marcados como meta provisória.** Métricas e SLAs específicos só ficam no doc se houver fonte de capacidade atual, restrição organizacional ou medição. *(Derivado do feedback do avaliador da Sprint 1.)*
+- [ ] **Pipeline completo dentro do orçamento de tempo do projeto** (meta provisória ≤ 15 min — `projeto.md` §4.4, a ser confirmada com medição na Sprint 2 ou 3).
 - [ ] **Chave de tarefa (`JACTO-XXX` ou equivalente) no título do PR e nos commits** (Conventional Commits + Smart Commits — `gestao-configuração.md` §3).
 - [ ] **Commits assinados (GPG) quando a política for ativada** (provavelmente Sprint 2 ou 3).
 - [ ] **SBOM gerado para cada imagem promovida** (a partir da Sprint 2 ou 3).
@@ -558,6 +607,10 @@ Fechar o módulo com **Relatório Executivo da esteira CI/CD** (diagnóstico ini
 | 2026-04-30 | feedback orientador (Reginaldo) | **Eixo 1 — "Como o rastro do processo ensina?"** Cobrado nominalmente. Aterrissar em ADRs por critério novo, post-mortems versionados, regressão automática. | Sprint 2-5 (todas) |
 | 2026-04-30 | feedback orientador (Reginaldo) | **Eixo 2 — Integridade do pipeline.** Pedido nominal ao Fernando (*"Não deixa aqui cuidar"*). Aterrissar em commit signing, branch protection, Gitleaks, SAST+Trivy, SBOM, audit log. | Sprint 2-5 (todas) |
 | 2026-05-14 | preferência do grupo       | **Política de revisão e merge não-estrita.** Priorizar conciliação inter-branch sobre cerimônia formal. Regra mínima: CI verde + 1 revisor diferente quando viável. Acionar Fluxo 5 do kit em conflito de branches paralelas. | Bloco 1 (Equipe), Bloco 3 (Planejamento por Papel) |
+| 2026-05-14 | feedback do avaliador (Sprint 1) | **Princípio AS-IS antes de TO-BE.** Todo documento entregue deve separar explicitamente diagnóstico do estado atual (Jacto/ambiente) do que é proposta do grupo. Arquitetura como TO-BE sem AS-IS perde nota. Cobrado pela banca na avaliação do artefato peso 9 da Sprint 1 (1,9/3 em Arquitetura ISO 10746; 1,8/3 em Esteira de Sistemas). | Regras de Ouro, Checklist Transversal, Sprint 2 P0', Itens pendentes da Sprint 1 |
+| 2026-05-14 | feedback do avaliador (Sprint 1) | **Princípio "Objetividade > completude" com referência rastreável.** Toda afirmação nova/exploratória precisa apontar para uma fonte do grupo (anotações, Sprint Planning, workshop, TAP, discussão com professor, Sprint Review). Conteúdo sem referência será removido. Cobrado pela banca (Referências 0,7/1; Requisitos SCM 2,1/3) e reforçado em conversa oral pós-feedback. | Regras de Ouro, Checklist Transversal, todas as sprints futuras |
+| 2026-05-14 | feedback do avaliador (Sprint 1) | **Coerência inter-documento como gate de merge.** Stack, terminologia, decisões e referências precisam convergir entre os documentos alterados antes do merge. Fluxo 5 (Reconciliação Inter-Branch) do kit é o instrumento — usar cedo, não só perto do fim da sprint. Cobrado pela banca após detecção de inconsistência (`dev-rules.md` Node/web vs. resto PX4/C++). | Regras de Ouro, Checklist Transversal, Política de Merge |
+| 2026-05-14 | feedback do avaliador (Sprint 1) | **Nota oficial da Sprint 1: 6,5 / 10.** Decomposição: Arquitetura ISO 10746 1,9/3; Esteira de Sistemas 1,8/3; Requisitos SCM 2,1/3; Referências 0,7/1. Sprint 1 marcada `[CONSOLIDADA]`. | Sprint 1 (marcador e feedback do avaliador) |
 
 ---
 
