@@ -8,12 +8,14 @@ import {
   GitBranch,
   BarChart3,
   Zap,
-  ChevronRight
+  ChevronRight,
+  Eye
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const navigation = [
   { name: 'Visão Geral', href: '/', icon: LayoutDashboard },
+  { name: 'Painel Gerencial', href: '/manager', icon: Eye },
   { name: 'QoS - Qualidade de Serviço', href: '/qos', icon: Zap },
   { name: 'QoP - Qualidade de Processo', href: '/qop', icon: BarChart3 },
   { name: 'Pipeline', href: '/pipeline', icon: GitBranch },

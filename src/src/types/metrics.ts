@@ -161,3 +161,39 @@ export interface FilterOptions {
   team?: string;
   environment?: string;
 }
+
+// Types for managerial dashboard
+
+export interface TeamMemberMetrics {
+  name: string;
+  taskCount: number;
+  tasksByStatus: TasksByStatus;
+  overloadFlag: boolean;
+  avgCycleTime: number;
+  currentTasks: string[];
+}
+
+export interface TasksByStatus {
+  todo: number;
+  inProgress: number;
+  review: number;
+  done: number;
+}
+
+export interface AnomalyDetection {
+  type: 'threshold' | 'statistical';
+  metric: string;
+  currentValue: number;
+  threshold: number;
+  severity: 'warning' | 'critical';
+  description: string;
+  detectedAt: string;
+}
+
+export interface BottleneckAnalysis {
+  stage: string;
+  currentValue: number;
+  threshold: number;
+  status: 'normal' | 'congested' | 'critical';
+  description: string;
+}
