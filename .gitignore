@@ -16,6 +16,7 @@ out/
 
 # Testing
 coverage/
+artifacts/
 
 # Environment files
 .env*

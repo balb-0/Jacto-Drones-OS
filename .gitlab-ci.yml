@@ -8,44 +8,49 @@ stages:
   - deploy
 
 variables:
-  # Exemplo de variável global
   DOCKER_DRIVER: overlay2
 
 before_script:
-  - echo "Iniciando Job do GitLab CI..."
+  - echo "Iniciando job do GitLab CI..."
 
-# 1. Feedback Automatizado: Lint
+# 1. Feedback automatizado: lint
 lint_job:
   stage: lint
   script:
-    - echo "Executando verificação de código (ex: ESLint, clang-tidy)..."
-    # Se o script de lint falhar (exit > 0), o pipeline quebra aqui e bloqueia o Merge Request.
+    - echo "Executando verificação de código, como ESLint ou clang-tidy..."
   allow_failure: false
 
-# 2. Feedback Automatizado: Build
+# 2. Feedback automatizado: build
 build_job:
   stage: build
   script:
     - echo "Compilando firmware e construindo imagens Docker..."
   allow_failure: false
 
-# 3. Feedback Automatizado: Quality Gate (Testes)
-test_job:
+# 3. Feedback automatizado: testes funcionais
+functional_tests_job:
+  image: python:3.12-slim
   stage: test
   script:
-    - echo "Executando testes unitários e simulações SITL..."
-    # A falha neste job notifica imediatamente o autor do MR
+    - echo "Executando testes funcionais do MVP com PX4/SITL e MAVLink em modo demonstrativo..."
+    - python scripts/run_functional_tests.py
+  artifacts:
+    when: always
+    paths:
+      - artifacts/functional-tests/functional-test-report.json
+      - artifacts/functional-tests/functional-test-summary.md
+      - artifacts/functional-tests/simulation.log
+    expire_in: 30 days
   allow_failure: false
 
-# 4. Feedback Automatizado: SAST
+# 4. Feedback automatizado: SAST
 sast_job:
   stage: sast
   script:
     - echo "Rodando varredura de segurança estática no código..."
-    # Falhas críticas de segurança barram a integração
   allow_failure: false
 
-# 5. Implantação e Fechamento (Deploy)
+# 5. Implantação e fechamento
 deploy_staging:
   stage: deploy
   script:
