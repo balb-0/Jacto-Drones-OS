@@ -7,22 +7,26 @@ import type {
   BacklogHealthMetrics,
 } from '@/types/metrics';
 
-function generateTrendData(baseValue: number, variance: number = 0.2): Array<{ date: string; value: number }> {
+function generateTrendData(baseValue: number, variance: number = 0.2, max?: number): Array<{ date: string; value: number }> {
   const data = [];
   const today = new Date();
-  
+
   for (let i = 29; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
     const randomVariance = (Math.random() - 0.5) * 2 * variance;
-    const value = Math.max(0, baseValue * (1 + randomVariance));
-    
+    let value = baseValue * (1 + randomVariance);
+    value = Math.max(0, value);
+    if (max !== undefined) {
+      value = Math.min(max, value);
+    }
+
     data.push({
       date: date.toISOString().split('T')[0],
       value: Number(value.toFixed(2)),
     });
   }
-  
+
   return data;
 }
 
@@ -39,7 +43,7 @@ export async function fetchBuildMetrics(): Promise<BuildMetrics> {
     failedBuilds,
     successRate: Number(((successfulBuilds / totalBuilds) * 100).toFixed(1)),
     averageDuration: 8.5,
-    trend: generateTrendData(95, 0.1),
+    trend: generateTrendData(95, 0.1, 100),
   };
 }
 
@@ -96,7 +100,7 @@ export async function fetchIntegrationStabilityMetrics(): Promise<IntegrationSta
         resolutionTime: 20,
       },
     ],
-    trend: generateTrendData(99.5, 0.02),
+    trend: generateTrendData(99.5, 0.02, 100),
   };
 }
 
