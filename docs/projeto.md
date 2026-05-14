@@ -117,6 +117,8 @@ O pipeline compreende as seguintes etapas:
 A execução de cada job ocorre dentro de contêineres Docker efêmeros, orquestrados por **GitLab Runners**. Essa abordagem garante isolamento total entre builds, eliminando conflitos de dependência e assegurando reprodutibilidade. O tempo total de execução da esteira é monitorado conforme o requisito não funcional de <15 minutos estabelecido na seção 4.4.
 
 ## 5.2 Testes Funcionais
+Colocamos o detalhamento do item **"1 - Testes Funcionais"** no arquivo [`testes-funcionais.md`](testes-funcionais.md). Nesse documento explicamos o escopo do MVP, indicando as partes do TAP e do workflow de desenvolvimento disponibilizado pelo parceiro usados como base e descrevemos as evidências geradas pelo pipeline.
+
 Os testes funcionais validam o comportamento do firmware e dos serviços de missão sob condições que simulam cenários reais de voo. A pilha de validação baseia-se no ecossistema **Dronecode Foundation**, em especial no **PX4 Autopilot** e no protocolo **MAVLink**<a id="ref2-link" href="#ref2"><sup>[2]</sup></a><a id="ref5-link" href="#ref5"><sup>[5]</sup></a>.
 
 - **PX4 SITL (Software In The Loop):** O firmware PX4 é executado em um simulador de voo (Gazebo ou jMAVSim) dentro de um contêiner Docker no pipeline. Missões de teste são carregadas automaticamente, e o comportamento do drone é monitorado em tempo simulado. Cenários cobertos incluem decolagem, navegação por waypoints, pouso e rotinas de contingência (*failsafe*).
