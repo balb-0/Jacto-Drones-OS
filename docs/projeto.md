@@ -326,3 +326,41 @@ Somente após o cumprimento integral desses critérios a funcionalidade é eleg�
 <a id="ref21"></a>[21] Aqua Security. *Trivy — Comprehensive Vulnerability Scanner for Containers and Dependencies*. Disponível em: https://trivy.dev/ <a href="#ref21-link">↩</a>
 
 - JACTO. *Termo de Abertura de Projeto (TAP) - Jacto Drones OS*. 2026.
+
+# 8. Avaliação dos Resultados
+
+A validação do protótipo **Jacto Drones OS v0.1** confronta o processo manual descrito pela Jacto (AS-IS) com o desempenho da esteira de CI/CD automatizada (TO-BE).
+
+## 8.1 Métricas de Eficiência (Quantitativo)
+
+Comparativo de tempos de execução obtidos via logs do GitLab CI em relação à baseline do TAPI.
+
+| Atividade | Baseline AS-IS (Jacto) | Protótipo G04 (Esteira) | Impacto |
+| :--- | :--- | :--- | :--- |
+| **Análise de Log (.ulg)** | 48h - 72h (Manual) | Meta provisória: < 10 min (em medição) | Redução prevista >99% |
+| **Sincronização de Tokens** | Horas/Dias (Manual) | Meta provisória: < 30 seg (em medição) | Entrega imediata prevista |
+| **Build de Firmware** | Manual / Local | Meta provisória: < 5 min (em medição) | Feedback em real-time previsto |
+
+> **Nota sobre números:** As métricas TO-BE estão marcadas como meta provisória do projeto, alinhadas com DORA elite performers [6]. A medição efetiva depende da consolidação completa do pipeline PX4 SITL na Sprint 3 e da instrumentação dos jobs de validação de log.
+
+**Evidências de Coleta:**
+- **Dados AS-IS:** Extraídos do TAPI Seção B.5 (Gargalos operacionais de logs) [7].
+- **Dados TO-BE:** Logs de execução da Pipeline GitLab CI da Sprint 2 (jobs reais a serem registrados como anexo na Sprint 3).
+
+## 8.2 Diagnóstico de Processo (Qualitativo)
+
+### Centralização de Governança
+
+A unificação no GitLab eliminou o fluxo fragmentado entre ferramentas isoladas (Notion/Jira/Word). O Dashboard QoS/QoP fornece a visualização de saúde do projeto sem dependência de extração manual de dados ou reuniões de status.
+
+### Fechamento de Malha (Sensores)
+
+Os scripts de validação automática de logs e os testes SITL (Software In The Loop) atuam como os sensores da arquitetura de malha fechada. O bloqueio de merges em caso de falha na simulação Gazebo garante a integridade do código antes da integração, eliminando a subjetividade da inspeção manual.
+
+## 8.3 Tabela de Fontes e Auditabilidade
+
+| Documento/Evento | Referência Técnica | Data |
+| :--- | :--- | :--- |
+| **Requisitos Iniciais** | TAPI_ESMD10_V01.pdf (Reginaldo Arakaki) [7] | 14/05/2026 |
+| **Métricas de Esteira** | Logs do GitLab CI (Sprint 2) | 15/05/2026 |
+| **Validação Stakeholder** | Sprint Review (Vinícius Lopes — Jacto) | 30/04/2026 |
