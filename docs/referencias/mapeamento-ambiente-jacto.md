@@ -37,9 +37,9 @@
 
 # 1. Introdução
 
-Este documento tem como finalidade mapear o ecossistema atual de ferramentas de desenvolvimento de software da Jacto Drones e definir a estratégia de integração da nova esteira de CI/CD do Jacto Drones Operating System v0.1 (OS v0.1). A proposta é estabelecer um referencial técnico oficial para a Tarefa 4.1 do projeto, detalhando como o pipeline baseado em GitLab se conecta às ferramentas já utilizadas pela empresa, eliminando fragmentações e criando uma cadeia de rastreabilidade unificada entre requisitos, código, testes e deploy.
+O mapeamento das ferramentas de desenvolvimento da Jacto Drones define a integração da esteira CI/CD do Jacto Drones OS v0.1 com os sistemas existentes (Notion, Jira, GitHub). O objetivo é unificar a rastreabilidade técnica entre requisitos, código e deploy.
 
-> **Nota metodológica:** As informações sobre o ambiente atual da Jacto Drones foram levantadas a partir do Termo de Abertura de Projeto (TAP), entrevistas com stakeholders da empresa realizadas durante a fase de discovery do projeto, e análise dos artefatos de processo disponibilizados pelo parceiro. O presente documento sintetiza essas fontes em um mapeamento consolidado.
+> **Dados de Referência:** Informações levantadas via TAPI_ESMD10_V01.pdf e entrevistas técnicas com stakeholders da Jacto (Abril/Maio 2026).
 
 # 2. Panorama Atual do Ambiente Jacto
 
@@ -53,7 +53,8 @@ Cada frente adotou ferramentas de forma independente ao longo do tempo, resultan
 
 - **Notion:** Utilizado como base de conhecimento geral, registro de requisitos iniciais e documentação de descobertas de produto. Sua flexibilidade permitiu que diferentes times criassem workspaces isolados, mas sem padrão unificado.
 - **Jira:** Ferramenta oficial de rastreamento de issues, epics, histórias e sprints. Os times de firmware e plataforma utilizam Jira Cloud para gestão de backlog, enquanto o time de dados mantém seu próprio quadro de tarefas.
-- **GitHub:** Hospeda o código-fonte dos três fronts. Existem fragmentos de CI/CD (GitHub Actions) em alguns repositórios, porém sem padronização de jobs, falta de ambientes de teste integrados e ausência de políticas de merge obrigatórias.
+- **GitHub (Legado/Referência):** Hospedava originalmente o código-fonte dos três fronts de forma fragmentada. No novo fluxo do OS v0.1, o GitHub é tratado como um espelho (mirror) secundário ou legado, não sendo mais o ponto de push dos desenvolvedores.
+- **GitLab (Fonte Única de Verdade):** Adotado como a plataforma central para o OS v0.1. Centraliza o repositório Git, o motor de CI/CD, o registro de containers e a auditoria de processos, eliminando riscos de latência e dessincronização que existiam no modelo anterior.
 - **Confluence:** Wiki corporativo e repositório de documentação técnica legada. Parte da documentação de arquitetura de firmware e APIs reside em espaços desatualizados, dificultando a manutenção.
 - **Microsoft Word:** Utilizado para documentos formais, relatórios de release, atas de reunião e entregáveis para áreas não técnicas (regulatório, jurídico e comercial).
 
@@ -86,11 +87,11 @@ Esse mapeamento evidencia que cada frente já possui ferramentas adequadas para 
 
 O pipeline de CI/CD do OS v0.1 é implementado no GitLab. A estratégia de integração consolida o GitLab como fonte de verdade para o código-fonte e como motor de execução da esteira. As demais ferramentas são integradas por meio de APIs nativas, webhooks e automações de dados.
 
-## 4.1 GitLab como Repositório Central
-O GitLab atua como o repositório primário e executor do pipeline. Todos os desenvolvedores realizam o push diretamente para o GitLab, onde os Merge Requests são revisados e integrados.
-- Ao detectar um novo commit na branch principal ou em branches de feature, o GitLab dispara automaticamente o pipeline de CI/CD associado através dos GitLab Runners.
-- O uso do GitLab de ponta a ponta elimina a necessidade de espelhamento e reduz a latência entre o commit e o início da execução dos testes.
-- Essa abordagem centraliza a gestão de código, registro de contêineres e orquestração de jobs em uma única ferramenta robusta.
+## 4.1 GitLab como Fonte Única da Verdade (SSoT)
+O GitLab atua como o repositório primário e único executor do pipeline para o OS v0.1. Esta escolha estratégica simplifica a cadeia de SCM, eliminando a "tensão" de operar duas plataformas simultâneas (GitHub e GitLab).
+- **Eliminação de Riscos:** Ao centralizar o push no GitLab, removemos os riscos de latência de sincronização, conflitos de permissões divergentes e a ambiguidade sobre qual plataforma detém a versão final do código.
+- **Auditoria Simplificada:** Todos os logs de build, Merge Requests e artefatos residem no mesmo ambiente, facilitando a rastreabilidade exigida por normas como a DO-178C.
+- **Desenvolvimento Direto:** Todos os desenvolvedores realizam o push diretamente para o GitLab, onde os Merge Requests são revisados e integrados nativamente.
 
 ## 4.2 GitLab e Jira
 
