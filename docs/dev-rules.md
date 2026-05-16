@@ -145,3 +145,21 @@ _Sugestão de leitura: https://refactoring.guru/_
 - Simulação: Gazebo, SITL.
 - Dashboard: Next.js 15+, React 19, Tailwind CSS 4, Recharts.
 - Pipeline: GitLab CI/CD, Docker.
+
+## 5.3 Regras por Track (consolidação)
+
+A esteira do Jacto Drones OS v0.1 cobre tracks com naturezas técnicas distintas. Esta tabela consolida as regras já dispersas nas seções anteriores, separando-as por contexto de uso. Em caso de dúvida em qual regra aplicar, identificar primeiro o track e seguir a linha correspondente.
+
+| Categoria | Firmware (PX4 / C++) | Web (Next.js / TS) | Dados / Scripts (Python) |
+| :--- | :--- | :--- | :--- |
+| **Linter / Style guide** | clang-tidy + Google C++ Style Guide | ESLint + Prettier | ruff + black + PEP 8 |
+| **Naming — funções e variáveis** | `snake_case` | `camelCase` | `snake_case` |
+| **Naming — classes e tipos** | `PascalCase` | `PascalCase` | `PascalCase` |
+| **Naming — constantes** | `UPPER_SNAKE_CASE` | `UPPER_SNAKE_CASE` | `UPPER_SNAKE_CASE` |
+| **Formatação automática** | clang-format (4 espaços; linha ≤ 100 chars) | Prettier (2 espaços; linha ≤ 100 chars) | black (4 espaços; linha ≤ 88 chars) |
+| **Testes automatizados** | GTest, Catch2 + SITL/HIL no pipeline | Jest, React Testing Library; Cypress quando aplicável | pytest |
+| **Documentação de API** | Doxygen (a partir de headers C++) | JSDoc / TSDoc (integração com Storybook) | docstrings + Sphinx |
+| **Hook pre-commit** | clang-format check + lint | lint-staged + Prettier | ruff |
+| **Modelo arquitetural** | Módulos isolados (controle, navegação, atuadores) | Componentes React 19 + estado isolado | Scripts curtos + funções puras |
+
+Casos não cobertos pela tabela seguem a regra mais conservadora aplicável ao track em questão. Decisões controversas que afetem regras de mais de um track devem ser registradas como ADR em `docs/decisoes/`.

@@ -43,6 +43,20 @@ O mapeamento das ferramentas de desenvolvimento da Jacto Drones define a integra
 
 # 2. Panorama Atual do Ambiente Jacto
 
+## 2.1 Esteira Atual da Jacto (AS-IS)
+
+> Diagnóstico do estado atual, levantado em workshop com o time técnico da Jacto em 24/04/2026 e nos Anexos A.4 e B.5 do TAPI. Esta subseção descreve o ponto de partida; o restante de §2 e §3 a §7 descreve a proposta de integração do OS v0.1.
+
+- **Testes funcionais hoje:** executados manualmente, com piloto licenciado em campo (drone protótipo ≈ R$ 700.000) e análise pós-voo via script Python caseiro (livraria do próprio engenheiro de controle). Não há simulação automatizada disparada por pipeline; cada ciclo de teste implica logística de voo real.
+- **Runners / servidores de CI:** inexistentes. Desenvolvedores rodam builds e testes localmente, sem isolamento ou reprodutibilidade entre máquinas.
+- **Tratamento atual de logs:** manual. Cada voo de 15 manobras gera aproximadamente 90 arquivos × 120 parâmetros (`.ulg`); a análise consome entre 2 e 3 dias por voo, com gargalo concentrado no engenheiro de controle (gerar gráfico por gráfico via cliques sequenciais na ferramenta caseira).
+- **Validação de firmware:** baseada em voo real e inspeção manual de log. Sem gate automatizado para vibração ou defasagem; o caso de queda relatado pelo time (defasagem silenciosa entre comando e atuação) só foi diagnosticado a posteriori.
+- **Time técnico envolvido:** ~2 engenheiros (controle de voo + firmware/SIL-HIL) + 1 gestora — tamanho que torna automação de alto ROI especialmente valiosa.
+
+A proposta do OS v0.1 detalhada nas seções seguintes substitui esse fluxo manual por uma esteira de Continuous Delivery com simulação SITL automatizada, runners isolados em contêineres, validação de log por gates programáticos e dashboard operacional de métricas.
+
+## 2.2 Stack Fragmentado das Três Frentes
+
 A Jacto Drones mantém hoje três frentes de desenvolvimento de software que operam de forma isolada, sem um pipeline de integração contínua centralizado:
 
 - **Firmware embarcado:** Responsável pelo código que roda diretamente nos drones, incluindo controle de voo, sensores e atuadores.
