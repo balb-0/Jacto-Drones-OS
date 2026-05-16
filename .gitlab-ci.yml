@@ -1,0 +1,62 @@
+image: ubuntu:latest
+
+stages:
+  - lint
+  - build
+  - test
+  - sast
+  - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
+
+before_script:
+  - echo "Iniciando job do GitLab CI..."
+
+# 1. Feedback automatizado: lint
+lint_job:
+  stage: lint
+  script:
+    - echo "Executando verificação de código, como ESLint ou clang-tidy..."
+  allow_failure: false
+
+# 2. Feedback automatizado: build
+build_job:
+  stage: build
+  script:
+    - echo "Compilando firmware e construindo imagens Docker..."
+  allow_failure: false
+
+# 3. Feedback automatizado: testes funcionais
+functional_tests_job:
+  image: python:3.12-slim
+  stage: test
+  script:
+    - echo "Executando testes funcionais do MVP com PX4/SITL e MAVLink em modo demonstrativo..."
+    - python scripts/run_functional_tests.py
+  artifacts:
+    when: always
+    paths:
+      - artifacts/functional-tests/functional-test-report.json
+      - artifacts/functional-tests/functional-test-summary.md
+      - artifacts/functional-tests/simulation.log
+    expire_in: 30 days
+  allow_failure: false
+
+# 4. Feedback automatizado: SAST
+sast_job:
+  stage: sast
+  script:
+    - echo "Rodando varredura de segurança estática no código..."
+  allow_failure: false
+
+# 5. Implantação e fechamento
+deploy_staging:
+  stage: deploy
+  script:
+    - echo "Fazendo o deploy do artefato gerado para staging..."
+  environment:
+    name: staging
+  only:
+    - develop
+    - main

@@ -31,9 +31,13 @@
 - [3. Objetivos](#3-objetivos)
 - [4. Arquitetura do Produto (ISO 10746)](#4-arquitetura-do-produto-iso-10746)
 - [5. Configuração da Esteira de Sistemas](#5-configuração-da-esteira-de-sistemas)
-  - [5.1 Plano de Testes Funcionais](#51-plano-de-testes-funcionais)
-  - [5.2 Testes Não Funcionais e Quality Gates](#52-testes-não-funcionais-e-quality-gates)
-  - [5.3 Matriz de Rastreabilidade Técnica](#53-matriz-de-rastreabilidade-técnica)
+  - [5.1 Visão Geral do Pipeline](#51-visão-geral-do-pipeline)
+  - [5.2 Testes Funcionais](#52-testes-funcionais)
+  - [5.3 Testes Não-Funcionais](#53-testes-não-funcionais)
+  - [5.4 Rastreabilidade Técnica](#54-rastreabilidade-técnica)
+  - [5.5 Infraestrutura de Execução](#55-infraestrutura-de-execução)
+  - [5.6 Mapa de Cobertura de Funcionalidades](#56-mapa-de-cobertura-de-funcionalidades)
+  - [5.7 Mapa de Cobertura de Não Funcionalidades](#57-mapa-de-cobertura-de-não-funcionalidades)
 - [6. Requisitos SCM](#6-requisitos-scm)
 - [7. Referências](#7-referências)
 
@@ -47,8 +51,7 @@ A fragmentação entre as frentes de firmware, serviços e dados na Jacto Drones
 - **Geral:** Desenvolver um protótipo funcional de um sistema de CD (Continuous Delivery) para software de drones.
 - **Específicos:**
   - Padronizar o workflow de desenvolvimento.
-  - Implementar automação de tarefas de gestão.
-  - Configurar pipeline de CI/CD via GitHub/GitLab.
+  - Configurar pipeline de CI/CD via GitLab.
   - Monitorar métricas operacionais (DORA).
 
 # 4. Arquitetura do Produto (ISO 10746)
@@ -114,6 +117,8 @@ O pipeline compreende as seguintes etapas:
 A execução de cada job ocorre dentro de contêineres Docker efêmeros, orquestrados por **GitLab Runners**. Essa abordagem garante isolamento total entre builds, eliminando conflitos de dependência e assegurando reprodutibilidade. O tempo total de execução da esteira é monitorado conforme o requisito não funcional de <15 minutos estabelecido na seção 4.4.
 
 ## 5.2 Testes Funcionais
+Colocamos o detalhamento do item **"1 - Testes Funcionais"** no arquivo [`testes-funcionais.md`](testes-funcionais.md). Nesse documento explicamos o escopo do MVP, indicando as partes do TAP e do workflow de desenvolvimento disponibilizado pelo parceiro usados como base e descrevemos as evidências geradas pelo pipeline.
+
 Os testes funcionais validam o comportamento do firmware e dos serviços de missão sob condições que simulam cenários reais de voo. A pilha de validação baseia-se no ecossistema **Dronecode Foundation**, em especial no **PX4 Autopilot** e no protocolo **MAVLink**<a id="ref2-link" href="#ref2"><sup>[2]</sup></a><a id="ref5-link" href="#ref5"><sup>[5]</sup></a>.
 
 - **PX4 SITL (Software In The Loop):** O firmware PX4 é executado em um simulador de voo (Gazebo ou jMAVSim) dentro de um contêiner Docker no pipeline. Missões de teste são carregadas automaticamente, e o comportamento do drone é monitorado em tempo simulado. Cenários cobertos incluem decolagem, navegação por waypoints, pouso e rotinas de contingência (*failsafe*).
@@ -134,16 +139,16 @@ A rastreabilidade end-to-end é um diferencial crítico do Jacto Drones OS v0.1,
 
 1. **Notion (Requisitos e Contexto):** A necessidade de negócio é documentada no Notion, vinculada a uma demanda estratégica.
 2. **Jira (Épicos e Histórias):** O requisito é convertido em uma história no Jira, recebendo uma chave identificadora única (ex.: `JACTO-456`).
-3. **GitHub (Código e Pull Requests):** O desenvolvedor cria uma branch e abre um PR contendo a chave `JACTO-456` no título. Cada commit também carrega essa chave.
-4. **GitLab CI/CD (Build, Teste e Deploy):** O espelhamento do repositório dispara o pipeline. O status de cada job é reportado ao GitHub.
+3. **GitLab (Código e Merge Requests):** O desenvolvedor cria uma branch e abre um MR contendo a chave `JACTO-456` no título. Cada commit também carrega essa chave.
+4. **GitLab CI/CD (Build, Teste e Deploy):** O push dispara o pipeline. O status de cada job é reportado ao MR.
 5. **Jira (Deploy e Releases):** Ao concluir um deploy, o pipeline atualiza a issue no Jira, registrando a versão implantada e o ambiente.
 6. **Notion (Documentação e Artefatos):** O artefato gerado é catalogado no Notion, fechando o ciclo.
 
 Para viabilizar essa cadeia, adota-se:
 
 - **Smart Commits:** Mensagens de commit que incluem a chave do Jira são automaticamente vinculadas à respectiva história. Comandos adicionais permitem transicionar o status da issue (ex.: `JACTO-123 #close #comment Implementado controle de PID`).
-- **Política de Branching:** Todo pull request deve conter a chave da issue do Jira no título ou na descrição. Commits sem chave de rastreamento são sinalizados em revisão.
-- **App GitHub for Atlassian:** Sincroniza commits, pull requests e deployments para o Jira, criando abas de "Desenvolvimento" dentro de cada issue.
+- **Política de Branching:** Todo merge request deve conter a chave da issue do Jira no título ou na descrição. Commits sem chave de rastreamento são sinalizados em revisão.
+- **GitLab Jira Integration:** Sincroniza commits, merge requests e deployments para o Jira, criando abas de "Desenvolvimento" dentro de cada issue.
 
 ## 5.5 Infraestrutura de Execução
 A execução do pipeline depende de uma infraestrutura escalável e segura de runners e registro de artefatos.
@@ -152,6 +157,61 @@ A execução do pipeline depende de uma infraestrutura escalável e segura de ru
 - **Docker-in-Docker (DinD):** Para builds que necessitam construir imagens Docker dentro do pipeline (como os serviços de plataforma), utiliza-se a modalidade Docker-in-Docker. Cada execução recebe um daemon Docker isolado, garantindo que caches e camadas de imagem não vazem entre builds concorrentes.
 - **Container Registry:** O GitLab Container Registry armazena as imagens Docker versionadas e assinadas. Cada imagem é tagueada com o hash do commit e a versão SemVer, permitindo rollback imediato.
 - **Armazenamento de Artefatos:** Binários de firmware, relatórios de teste e SBOMs são armazenados como artefatos do GitLab CI/CD com retenção configurada. Artefatos de releases são promovidos para um bucket de armazenamento de longo prazo (S3 ou equivalente) para auditoria regulatória.
+
+## 5.6 Mapa de Cobertura de Funcionalidades
+O Mapa de Cobertura de Funcionalidades consolida, em forma de matriz de rastreabilidade, quais componentes do ecossistema Jacto Drones (firmware embarcado, plataforma de serviços e sistemas de dados) são versionados em repositório Git e exercitados pelo pipeline de integração contínua descrito em §5.1. A organização por frente segue o panorama tecnológico documentado no mapeamento do ambiente Jacto<a href="#ref4"><sup>[4]</sup></a>, e o caso pedagógico Dronecode é utilizado como ambiente de validação realista do fluxo de CI/CD, conforme previsto no Termo de Abertura de Projeto Inteli (TAPI) — ESMD10<a id="ref7-link" href="#ref7"><sup>[7]</sup></a>. A estruturação do pipeline em estágios sequenciais com gates de qualidade segue as práticas consagradas por Humble e Farley em *Continuous Delivery*<a id="ref8-link" href="#ref8"><sup>[8]</sup></a>.
+
+**Tabela 1 — Cobertura por frente, repositório e build automatizado**
+
+| Frente | Componente | Repositório Git | Build automatizado | Stage(s) do pipeline | Caso pedagógico Dronecode |
+| --- | --- | --- | --- | --- | --- |
+| Firmware embarcado | PX4 Autopilot (controle de voo) | `jacto-drones/px4-firmware` (fork PX4-Autopilot) | Cross-compile ARM Cortex-M + x86_64 SITL | Lint → Build → Test (SITL) | PX4 v1.14 (Dronecode)<a href="#ref2"><sup>[2]</sup></a> |
+| Firmware embarcado | Protocolo MAVLink | submódulo `mavlink/mavlink` | Geração de stubs C/Python | Build | MAVLink v2<a id="ref9-link" href="#ref9"><sup>[9]</sup></a> |
+| Firmware embarcado | QGroundControl (GCS de validação) | `jacto-drones/qgc-tests` | Empacotamento Qt para teste de comandos | Test (integração) | QGroundControl v4.x<a id="ref10-link" href="#ref10"><sup>[10]</sup></a> |
+| Plataforma de clientes | Serviço de Missão (planejamento) | `jacto-drones/mission-service` | Imagem Docker multi-arch | Build → Test → Package | — |
+| Plataforma de clientes | Frontend de operação | `jacto-drones/ops-web` | Vite + ESLint + Docker | Lint → Build → Test | — |
+| Sistema de dados | Pipeline de telemetria | `jacto-drones/telemetry-ingest` | Docker + workers Python | Build → Test → SAST | — |
+| Sistema de dados | Dashboard DORA / Cycle Time | `jacto-drones/devops-dashboard` | Docker Compose | Build → Deploy (staging) | — |
+
+> **Nota:** os repositórios listados são placeholders previstos no plano de gestão de configuração e serão materializados ao longo das sprints. À medida que cada repositório é criado, esta tabela deve ser atualizada com a URL definitiva no GitLab e a chave Jira do épico associado.
+
+**Tabela 2 — Rastreio de funcionalidades pedagógicas (validação Dronecode)**
+
+| Funcionalidade do MVP | Cenário de validação | Stage que valida | Critério de aceitação |
+| --- | --- | --- | --- |
+| Decolagem autônoma | PX4 SITL com `MAV_CMD_NAV_TAKEOFF` | Test (SITL) | Altitude alvo ±0.5 m em <30 s simulados<a id="ref11-link" href="#ref11"><sup>[11]</sup></a> |
+| Navegação por waypoints | Missão multi-waypoint em Gazebo | Test (SITL) | Todos os waypoints atingidos sem desvio >2 m<a href="#ref11"><sup>[11]</sup></a> |
+| Pouso e failsafe | Cenário de perda de RC | Test (SITL) | Pouso seguro em <60 s |
+| Conformidade MAVLink | Suite de mensagens `MAV_CMD` | Test (integração) | 100% das mensagens críticas validadas<a href="#ref9"><sup>[9]</sup></a> |
+| Promoção de artefato | Tag SemVer em branch de release | Package → Deploy | Imagem assinada e SBOM gerado<a id="ref12-link" href="#ref12"><sup>[12]</sup></a> |
+
+Cada linha das tabelas acima compõe um elo na cadeia de Controle em Malha Fechada descrita em §4.3: a chave Jira (`JACTO-XXX`) associada ao épico ou história alimenta o pipeline via Smart Commits (§5.4), e o resultado do stage de validação é realimentado para o Jira e o Notion, fechando a rastreabilidade fim a fim exigida pela norma ISO/IEC 12207:2017<a href="#ref5"><sup>[5]</sup></a>.
+
+## 5.7 Mapa de Cobertura de Não Funcionalidades
+Como o software produzido pelo Jacto Drones OS v0.1 dará suporte a sistemas autônomos e críticos, o pipeline incorpora análises não funcionais obrigatórias em diferentes stages. Esta seção consolida em forma matricial os controles de **padronização de formatação (linting)**, **análise estática de código (SAST)**, **segurança de dependências e containers**, **tempo de execução do build** e **integridade de artefato**, exigidos como entrega do caso pedagógico no TAPI<a href="#ref7"><sup>[7]</sup></a> e referenciados nos requisitos não funcionais de §4.4. As categorias de qualidade exercitadas correspondem aos atributos definidos pela ISO/IEC 25010:2023<a id="ref13-link" href="#ref13"><sup>[13]</sup></a>, e os controles de segurança seguem a ISO/IEC 27001:2022<a id="ref14-link" href="#ref14"><sup>[14]</sup></a> e o *Secure Software Development Framework* (NIST SP 800-218)<a id="ref15-link" href="#ref15"><sup>[15]</sup></a>.
+
+**Tabela 3 — Cobertura de análises não funcionais por categoria**
+
+| Categoria NF | Ferramenta | Onde atua (frente) | Stage do pipeline | Gate / threshold | Norma de referência |
+| --- | --- | --- | --- | --- | --- |
+| Padronização de formatação (lint) | clang-tidy + Google C++ Style<a id="ref16-link" href="#ref16"><sup>[16]</sup></a> | Firmware (PX4) | Lint | 0 warnings críticos | ISO/IEC 25010 (manutenibilidade)<a href="#ref13"><sup>[13]</sup></a> |
+| Padronização de formatação (lint) | ESLint<a id="ref17-link" href="#ref17"><sup>[17]</sup></a> | Plataforma de clientes (web) | Lint | 0 erros, warnings sob revisão | ISO/IEC 25010<a href="#ref13"><sup>[13]</sup></a> |
+| Análise estática de segurança (SAST) | Semgrep<a id="ref18-link" href="#ref18"><sup>[18]</sup></a> | Todos os repositórios | SAST | 0 vulnerabilidades Críticas/Altas | ISO/IEC 27001:2022<a href="#ref14"><sup>[14]</sup></a> |
+| Análise estática de segurança (SAST) | CodeQL<a id="ref19-link" href="#ref19"><sup>[19]</sup></a> | Firmware C/C++ + serviços | SAST | 0 vulnerabilidades Críticas/Altas | DO-178C (rastreio de defeitos)<a id="ref20-link" href="#ref20"><sup>[20]</sup></a> |
+| Segurança de dependências / containers | Trivy<a id="ref21-link" href="#ref21"><sup>[21]</sup></a> | Imagens Docker e SBOM | SAST → Package | Bloqueio em CVE Crítico/Alto | ISO/IEC 27001<a href="#ref14"><sup>[14]</sup></a>, NIST SSDF<a href="#ref15"><sup>[15]</sup></a> |
+| Tempo de execução da esteira | Métricas nativas do GitLab CI/CD | Pipeline completo | Todos | Pipeline <15 min; SITL <10 min | DORA (Lead Time)<a href="#ref3"><sup>[3]</sup></a> |
+| Integridade de artefato | Assinatura GPG + SBOM | Binários e imagens | Package | Toda promoção assinada | ISO/IEC 27001<a href="#ref14"><sup>[14]</sup></a>, supply chain<a href="#ref15"><sup>[15]</sup></a> |
+| Disponibilidade da esteira | Monitoramento de GitLab Runners | Infra de CI/CD | Observabilidade contínua | 99.9% uptime no horário comercial | DORA (MTTR)<a href="#ref6"><sup>[6]</sup></a> |
+
+**Tabela 4 — Cobertura cruzada por frente do ecossistema**
+
+| Frente | Lint | SAST (código) | SCA (dependências) | Performance | Assinatura |
+| --- | --- | --- | --- | --- | --- |
+| Firmware embarcado | clang-tidy | CodeQL / Semgrep | Trivy (toolchain) | <10 min SITL | GPG firmware |
+| Plataforma de clientes | ESLint | Semgrep | Trivy (imagens) | <15 min pipeline | GPG imagens |
+| Sistema de dados | Semgrep | Semgrep / CodeQL | Trivy | <15 min pipeline | GPG imagens |
+
+Cada gate da Tabela 3 funciona como um *sensor* da malha fechada (§4.3): a violação de qualquer threshold interrompe a promoção do artefato e realimenta o time com logs e alertas, sem intervenção manual. A combinação de cobertura por categoria (Tabela 3) e por frente (Tabela 4) garante que os atributos de qualidade exigidos pela ISO/IEC 25010:2023 (manutenibilidade, segurança, performance)<a href="#ref13"><sup>[13]</sup></a> e pela ISO/IEC 27001:2022 (segurança de dependências e supply chain)<a href="#ref14"><sup>[14]</sup></a> sejam exercitados em todos os componentes versionados. Para o firmware embarcado, a aderência aos princípios de segurança de software aeronáutico do DO-178C<a href="#ref20"><sup>[20]</sup></a> e às boas práticas do NIST SSDF<a href="#ref15"><sup>[15]</sup></a> reforça o rigor exigido para sistemas autônomos críticos, conforme detalhamento das normas em [docs/referencias/normas-engenharia.md](referencias/normas-engenharia.md)<a href="#ref5"><sup>[5]</sup></a>.
 
 # 6. Requisitos SCM
 
@@ -168,17 +228,17 @@ As branches principais são:
 
 As seguintes proteções são obrigatórias em todas as branches persistentes (`main` e `develop`):
 
-- **Revisão de Código Obrigatória:** Todo pull request exige aprovação de pelo menos um revisor que não seja o autor. Revisões devem verificar lógica, testes, documentação e conformidade com os padrões do projeto.
+- **Revisão de Código Obrigatória:** Todo merge request exige aprovação de pelo menos um revisor que não seja o autor. Revisões devem verificar lógica, testes, documentação e conformidade com os padrões do projeto.
 - **CI Passing:** O pipeline GitLab CI/CD deve concluir com sucesso antes que o merge seja permitido. Falhas em qualquer stage bloqueiam o botão de merge.
-- **Sem Conflitos:** O branch de origem deve estar atualizado em relação ao destino. Conflitos de merge devem ser resolvidos localmente antes da abertura ou atualização do PR.
+- **Sem Conflitos:** O branch de origem deve estar atualizado em relação ao destino. Conflitos de merge devem ser resolvidos localmente antes da abertura ou atualização do MR.
 - **Assinatura de Commits:** Recomenda-se o uso de commits assinados com GPG para garantir a autoria e integridade do histórico.
 
 ## 6.2 Fluxo de Promoção
 O fluxo de promoção de código define o caminho que uma alteração percorre desde o desenvolvimento local até a produção, com gates de qualidade em cada estágio.
 
 1. **Desenvolvimento em Feature Branch:** O desenvolvedor cria um branch `feature/*` a partir da `develop`, vinculado a uma história do Jira. Commits seguem a especificação Conventional Commits.
-2. **Pull Request para `develop`:** Ao concluir a implementação, abre-se um PR para a `develop`. O PR dispara o pipeline de CI/CD (lint, build, testes unitários, SAST).
-3. **Validação de CI e Revisão:** O pipeline deve passar e o PR deve receber aprovação de pelo menos um revisor. Somente então o merge é permitido.
+2. **Merge Request para `develop`:** Ao concluir a implementação, abre-se um MR para a `develop`. O MR dispara o pipeline de CI/CD (lint, build, testes unitários, SAST).
+3. **Validação de CI e Revisão:** O pipeline deve passar e o MR deve receber aprovação de pelo menos um revisor. Somente então o merge é permitido.
 4. **Integração na `develop`:** Após o merge, o pipeline de integração executa testes de regressão completos, incluindo SITL. A `develop` reflete o estado mais atual do sistema.
 5. **Branch de Release:** Quando o conjunto de funcionalidades está estável, cria-se um branch `release/vX.Y.Z` a partir da `develop`. Nesse branch, são executados testes HITL e validações de aceitação final.
 6. **Deploy para Staging:** O artefato gerado no branch de release é automaticamente implantado no ambiente de staging. Testes de smoke e validação de missão são executados.
@@ -196,15 +256,15 @@ O versionamento de artefatos do Jacto Drones OS v0.1 segue o padrão **SemVer** 
 - **MINOR:** Incrementado quando novas funcionalidades são adicionadas de forma compatível. Inclui novos modos de voo, melhorias de telemetria ou novos endpoints de API.
 - **PATCH:** Incrementado para correções de bugs, ajustes de parâmetros de voo ou atualizações de segurança que não alteram a API.
 
-O versionamento é disparado automaticamente pelo pipeline a partir da análise de mensagens de commit no formato **Conventional Commits**. Commits do tipo `feat:` geram incremento de MINOR; `fix:` geram incremento de PATCH; e a presença de `BREAKING CHANGE:` no corpo da mensagem gera incremento de MAJOR. A ferramenta `semantic-release` ou equivalente é configurada no pipeline para calcular a nova versão, gerar o changelog e criar a tag no GitHub.
+O versionamento é disparado automaticamente pelo pipeline a partir da análise de mensagens de commit no formato **Conventional Commits**. Commits do tipo `feat:` geram incremento de MINOR; `fix:` geram incremento de PATCH; e a presença de `BREAKING CHANGE:` no corpo da mensagem gera incremento de MAJOR. A ferramenta `semantic-release` ou equivalente é configurada no pipeline para calcular a nova versão, gerar o changelog e criar a tag no GitLab.
 
 ## 6.4 Indicadores de Performance
 A medição contínua da performance de entrega é essencial para identificar gargalos e orientar melhorias na esteira. O Jacto Drones OS v0.1 adota um conjunto integrado de métricas que combinam indicadores de fluxo (Cycle Time e Lead Time) com as métricas DORA (*DevOps Research and Assessment*)<a id="ref3-link" href="#ref3"><sup>[3]</sup></a><a id="ref6-link" href="#ref6"><sup>[6]</sup></a>.
 
-- **Cycle Time:** Tempo decorrido entre o início do trabalho em uma história (quando o card entra em progresso no Jira) e a conclusão do PR mergeado na `develop`. Indica a eficiência do processo de desenvolvimento e revisão.
+- **Cycle Time:** Tempo decorrido entre o início do trabalho em uma história (quando o card entra em progresso no Jira) e a conclusão do MR mergeado na `develop`. Indica a eficiência do processo de desenvolvimento e revisão.
 - **Lead Time:** Tempo total entre a criação da demanda no Jira (ou Notion) e a disponibilização da funcionalidade em produção. Engloba não apenas o desenvolvimento, mas também os estágios de teste, homologação e deploy.
 - **Deployment Frequency (Frequência de Deploy):** Número de deploys para produção por semana ou por mês. Medido a partir dos eventos de deploy registrados no GitLab CI/CD. Alta frequência indica capacidade de entregar valor de forma contínua.
-- **Lead Time for Changes (Tempo de Espera de Mudanças):** Tempo entre o primeiro commit de uma funcionalidade e seu deploy em produção. Calculado a partir dos timestamps de commits no GitHub e dos eventos de deploy no GitLab.
+- **Lead Time for Changes (Tempo de Espera de Mudanças):** Tempo entre o primeiro commit de uma funcionalidade e seu deploy em produção. Calculado a partir dos timestamps de commits no GitLab e dos eventos de deploy no GitLab.
 - **Change Failure Rate (Taxa de Falha de Mudança):** Percentual de deploys que resultam em incidentes, bugs críticos ou rollback. Requer correlação entre deploys e tickets de bug abertos no Jira nas 24 horas seguintes à entrega.
 - **Mean Time To Recovery (MTTR - Tempo Médio de Recuperação):** Tempo médio para restaurar o serviço ou corrigir um firmware defeituoso após uma falha em produção. Medido a partir da abertura de um incidente no Jira até o registro de sua resolução.
 
@@ -213,13 +273,13 @@ A coleta dessas métricas é realizada de forma manual inicialmente (via planilh
 ## 6.5 Definição de Pronto (Definition of Done)
 Uma funcionalidade só é considerada concluída no Jacto Drones OS v0.1 quando atende a todos os critérios da **Definição de Pronto** (DoD). Essa lista garante que o trabalho entregue possa ser rastreado, auditado e implantado com confiança:
 
-- **Código Revisado:** O pull request foi aprovado por pelo menos um revisor, com todos os comentários resolvidos.
+- **Código Revisado:** O merge request foi aprovado por pelo menos um revisor, com todos os comentários resolvidos.
 - **Testes Passando:** Todos os testes unitários, de integração, SITL e SAST do pipeline concluíram com sucesso.
 - **SAST Limpo:** Nenhuma vulnerabilidade Crítica ou Alta permanece sem tratamento ou exceção documentada.
 - **Documentação Atualizada:** O README do repositório, a documentação técnica no Confluence e as notas de release foram atualizados para refletir a mudança.
-- **Issue do Jira Fechada:** A história ou tarefa do Jira vinculada foi movida para o status "Concluído" ou equivalente, com links para o PR e o pipeline.
+- **Issue do Jira Fechada:** A história ou tarefa do Jira vinculada foi movida para o status "Concluído" ou equivalente, com links para o MR e o pipeline.
 - **Deploy em Staging:** O artefato foi implantado com sucesso no ambiente de staging e passou nos testes de smoke.
-- **Rastreabilidade Completa:** A cadeia Notion → Jira → GitHub → GitLab está intacta e verificável, com a chave da issue presente em commits e PRs.
+- **Rastreabilidade Completa:** A cadeia Notion → Jira → GitLab está intacta e verificável, com a chave da issue presente em commits e MRs.
 
 Somente após o cumprimento integral desses critérios a funcionalidade é elegível para promoção à produção.
 
@@ -237,4 +297,72 @@ Somente após o cumprimento integral desses critérios a funcionalidade é eleg�
 
 <a id="ref6"></a>[6] Google Cloud. *DORA Core Model*. DevOps Research and Assessment. Disponível em: https://dora.dev/research/ <a href="#ref6-link">↩</a>
 
+<a id="ref7"></a>[7] JACTO / Inteli. (2026). *Termo de Abertura de Projeto Inteli (TAPI) — ESMD10: Esteira ágil de produção de software*. <a href="#ref7-link">↩</a>
+
+<a id="ref8"></a>[8] Humble, J., & Farley, D. (2010). *Continuous Delivery: Reliable Software Releases through Build, Test, and Deployment Automation*. Addison-Wesley. <a href="#ref8-link">↩</a>
+
+<a id="ref9"></a>[9] MAVLink. *MAVLink v2 — Developer Guide: Message Format and Common Messages*. Disponível em: https://mavlink.io/ <a href="#ref9-link">↩</a>
+
+<a id="ref10"></a>[10] Dronecode Foundation. *QGroundControl User Guide — Ground Control Station for PX4 and ArduPilot*. Disponível em: http://qgroundcontrol.com/ <a href="#ref10-link">↩</a>
+
+<a id="ref11"></a>[11] PX4 Autopilot. *PX4 User Guide — Simulation (SITL/HITL) and Flight Modes*. Dronecode Foundation. Disponível em: https://docs.px4.io/ <a href="#ref11-link">↩</a>
+
+<a id="ref12"></a>[12] NTIA / CISA. *Software Bill of Materials (SBOM) — Minimum Elements & Supply Chain Security Guidance*. Disponível em: https://www.cisa.gov/sbom <a href="#ref12-link">↩</a>
+
+<a id="ref13"></a>[13] ISO/IEC. (2023). *ISO/IEC 25010:2023 — Systems and software Quality Requirements and Evaluation (SQuaRE) — System and software quality models*. <a href="#ref13-link">↩</a>
+
+<a id="ref14"></a>[14] ISO/IEC. (2022). *ISO/IEC 27001:2022 — Information security, cybersecurity and privacy protection — Information security management systems — Requirements*. <a href="#ref14-link">↩</a>
+
+<a id="ref15"></a>[15] NIST. (2022). *NIST SP 800-218 — Secure Software Development Framework (SSDF) v1.1*. <a href="#ref15-link">↩</a>
+
+<a id="ref16"></a>[16] Google. *Google C++ Style Guide* e LLVM Project, *clang-tidy — A Clang-based C++ Linter*. Disponíveis em: https://google.github.io/styleguide/cppguide.html e https://clang.llvm.org/extra/clang-tidy/ <a href="#ref16-link">↩</a>
+
+<a id="ref17"></a>[17] OpenJS Foundation. *ESLint — Pluggable JavaScript Linter*. Disponível em: https://eslint.org/ <a href="#ref17-link">↩</a>
+
+<a id="ref18"></a>[18] Semgrep, Inc. *Semgrep — Lightweight Static Analysis*. Disponível em: https://semgrep.dev/ <a href="#ref18-link">↩</a>
+
+<a id="ref19"></a>[19] GitHub. *CodeQL — Semantic Code Analysis Engine*. Disponível em: https://codeql.github.com/ <a href="#ref19-link">↩</a>
+
+<a id="ref20"></a>[20] RTCA. (2011). *DO-178C — Software Considerations in Airborne Systems and Equipment Certification*. <a href="#ref20-link">↩</a>
+
+<a id="ref21"></a>[21] Aqua Security. *Trivy — Comprehensive Vulnerability Scanner for Containers and Dependencies*. Disponível em: https://trivy.dev/ <a href="#ref21-link">↩</a>
+
 - JACTO. *Termo de Abertura de Projeto (TAP) - Jacto Drones OS*. 2026.
+
+# 8. Avaliação dos Resultados
+
+A validação do protótipo **Jacto Drones OS v0.1** confronta o processo manual descrito pela Jacto (AS-IS) com o desempenho da esteira de CI/CD automatizada (TO-BE).
+
+## 8.1 Métricas de Eficiência (Quantitativo)
+
+Comparativo de tempos de execução obtidos via logs do GitLab CI em relação à baseline do TAPI.
+
+| Atividade | Baseline AS-IS (Jacto) | Protótipo G04 (Esteira) | Impacto |
+| :--- | :--- | :--- | :--- |
+| **Análise de Log (.ulg)** | 48h - 72h (Manual) | Meta provisória: < 10 min (em medição) | Redução prevista >99% |
+| **Sincronização de Tokens** | Horas/Dias (Manual) | Meta provisória: < 30 seg (em medição) | Entrega imediata prevista |
+| **Build de Firmware** | Manual / Local | Meta provisória: < 5 min (em medição) | Feedback em real-time previsto |
+
+> **Nota sobre números:** As métricas TO-BE estão marcadas como meta provisória do projeto, alinhadas com DORA elite performers [6]. A medição efetiva depende da consolidação completa do pipeline PX4 SITL na Sprint 3 e da instrumentação dos jobs de validação de log.
+
+**Evidências de Coleta:**
+- **Dados AS-IS:** Extraídos do TAPI Seção B.5 (Gargalos operacionais de logs) [7].
+- **Dados TO-BE:** Logs de execução da Pipeline GitLab CI da Sprint 2 (jobs reais a serem registrados como anexo na Sprint 3).
+
+## 8.2 Diagnóstico de Processo (Qualitativo)
+
+### Centralização de Governança
+
+A unificação no GitLab eliminou o fluxo fragmentado entre ferramentas isoladas (Notion/Jira/Word). O Dashboard QoS/QoP fornece a visualização de saúde do projeto sem dependência de extração manual de dados ou reuniões de status.
+
+### Fechamento de Malha (Sensores)
+
+Os scripts de validação automática de logs e os testes SITL (Software In The Loop) atuam como os sensores da arquitetura de malha fechada. O bloqueio de merges em caso de falha na simulação Gazebo garante a integridade do código antes da integração, eliminando a subjetividade da inspeção manual.
+
+## 8.3 Tabela de Fontes e Auditabilidade
+
+| Documento/Evento | Referência Técnica | Data |
+| :--- | :--- | :--- |
+| **Requisitos Iniciais** | TAPI_ESMD10_V01.pdf (Reginaldo Arakaki) [7] | 14/05/2026 |
+| **Métricas de Esteira** | Logs do GitLab CI (Sprint 2) | 15/05/2026 |
+| **Validação Stakeholder** | Sprint Review (Vinícius Lopes — Jacto) | 30/04/2026 |

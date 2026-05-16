@@ -37,9 +37,7 @@ _conteúdo_
 
 ## 1.1 Objetivo do Documento
 
-Este documento apresenta estabelecer padrões de codificação e práticas de desenvolvimento para garantir a qualidade e a consistência do código.
-
-Nota: Explicar a importância de seguir padrões de desenvolvimento para facilitar a manutenção, melhorar a legibilidade e promover a colaboração.
+Estabelecer padrões técnicos de codificação e práticas de CI/CD para garantir a consistência do firmware e do dashboard gerencial do Jacto Drones OS v0.1.
 
 # 2. Padrões de Codificação
 _conteúdo_
@@ -67,15 +65,19 @@ _conteúdo_
 
 ## 2.2 Formatação de Código
 
-- Indentação: Utilize 2 espaços para indentação.
-- Linhas: Mantenha o comprimento das linhas em até 80 caracteres.
-- Chaves: Coloque chaves de abertura na mesma linha.
-  - Exemplo:
-    ```
-    if (condition) {
-        // código
-    }
-    ```
+A formatação do projeto é garantida de forma automatizada através do **Prettier** e do **ESLint**, acionados localmente pelo Husky antes de cada commit.
+- **Indentação:** Utilize 2 espaços para indentação (configurado no `.prettierrc`).
+- **Linhas:** Mantenha o comprimento das linhas em até 80 caracteres.
+- **Chaves:** Coloque chaves de abertura na mesma linha.
+- **Ponto e Vírgula:** Uso obrigatório ao final das instruções.
+- **Aspas:** Uso de aspas simples para strings.
+
+  *Exemplo:*
+  ```javascript
+  if (condition) {
+    // código
+  }
+  ```
 
 ## 2.3 Comentários e Documentação
 
@@ -96,9 +98,9 @@ _conteúdo_
     }
     ```
 
-- Documentação da API
-  - Utilizar SWAGGER para documentação da API a partir dos comentários do código.
-  - Configure uma rota, como /api-docs, para que a documentação gerada pelo Swagger seja facilmente acessível aos desenvolvedores e stakeholders.
+- Documentação da API e do Código
+  - Firmware: Utilizar Doxygen para gerar documentação a partir dos headers C++.
+  - Dashboard: Documentar componentes via JSDoc/TSDoc para integração com Storybook.
 
 # 3. Padrões de Projeto
 _conteúdo_
@@ -108,35 +110,26 @@ _conteúdo_
 _Opcionalmente, o grupo pode definir um ou mais design patterns para serem adotados, como forma de exercitarem tipos de solução para problemas/situações recorrentes_
 _Sugestão de leitura: https://refactoring.guru/_
 
-## 3.2 Arquitetura de Software
-
-- Utilize a Arquitetura de Três Camadas: Separe a lógica de negócios (Camada de Negócios), a interface do usuário (Camada de Apresentção) e o acesso aos dados (Camada de Dados).
-  - Exemplo: Em uma aplicação Angular, utilize serviços para lógica de negócios, componentes para a interface e controladores para gerenciar a interação.
+- Utilize a Arquitetura de Visões (RM-ODP) e Malha Fechada: Separe a lógica de controle (Firmware), a orquestração da esteira (Pipeline) e a visualização de gestão (Dashboard).
+  - Exemplo: No Firmware PX4, utilize módulos isolados para controle e navegação. No Dashboard, utilize componentes React 19 para visualização de métricas.
 
 # 4. Práticas de Desenvolvimento
-_conteúdo_
 
-## 4.1 Testes Automatizados
+## 4.1 Testes Automatizados e Simulação
 
-- Testes Unitários: Utilize Jest para criar testes unitários
-  - Exemplo:
-    ```
-    test('adiciona 1 + 2 para igualar 3', () => {
-      expect(1 + 2).toBe(3);
-    });
-    ```
+- Testes Unitários (Python/Firmware): Utilize `pytest` para validar funções de extração de logs `.ulg`.
+- Simulação SITL (Software In The Loop): Uso obrigatório do PX4 SITL + Gazebo para validar missões de voo no pipeline.
+- Validação MAVLink: Testes automatizados para conformidade do protocolo entre a GCS e o Autopilot.
+- Testes de Dashboard (Next.js): Utilize Playwright para regressão visual e acessibilidade (axe-core).
 
-- Testes de Integração: Como sugestão, utilizar o Cypress para testes de integração.
-  - Exemplo: Testar a interação entre componentes de frontend e backend.
+## 4.2 Controle de Qualidade e Containers
 
-- Testes end-to-end: Como sugestão, utilizar o Cypress para testes end-to-end. 
-  - Exemplo: Testar um RF de ponta a ponta.
-
-## 4.2 Controle de Qualidade
-
-- Revisão de Código: Todos os commits devem ser revisados por pelo menos um outro desenvolvedor.
-
-- Sugestão: Utilizar ESLint para análise estática de código JavaScript/TypeScript.
+- **Revisão de Código:** Todos os MRs devem ser revisados por pelo menos um outro desenvolvedor.
+- **Análise Estática Local (Shift-left):** O uso de **ESLint** e **Prettier** é obrigatório e automatizado via Husky (`pre-commit` com `lint-staged`). Além disso, o **TruffleHog** escaneia o código localmente em busca de credenciais vazadas antes de permitir o commit.
+- **Boas Práticas de Docker (Reprodutibilidade):**
+  - Todo `Dockerfile` deve adotar o padrão **multi-stage build** para separar as dependências de desenvolvimento do artefato final em produção.
+  - O uso do arquivo `.dockerignore` é obrigatório para evitar que arquivos de configuração, credenciais locais e pastas como `node_modules` inflem a imagem.
+  - O hook de `pre-push` aciona o build da imagem local e roda o **Trivy** para varredura de vulnerabilidades antes de enviar o código para o GitLab.
 
 # 5. Ferramentas e Tecnologias
 
@@ -147,3 +140,8 @@ _conteúdo_
 - Plugins recomendados: ESLint, Prettier, GitLens.
 
 ## 5.2 Tecnologias e Frameworks
+
+- Firmware: PX4 Autopilot, MAVLink, C++, Python.
+- Simulação: Gazebo, SITL.
+- Dashboard: Next.js 15+, React 19, Tailwind CSS 4, Recharts.
+- Pipeline: GitLab CI/CD, Docker.

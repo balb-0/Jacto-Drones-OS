@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "Iniciando validações de pre-push..."
+
+# 1. Build da Imagem Docker (Garante build reprodutível)
+echo "Buildando imagem Docker para validação..."
+docker build -t jacto-drones-os:local .
+
+# 2. Trivy: Scanner de vulnerabilidades na imagem (Slide 21 da Aula 05)
+echo "Escaneando imagem com Trivy (CRITICAL e HIGH)..."
+docker run --rm \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  aquasec/trivy:latest image \
+  --severity CRITICAL,HIGH jacto-drones-os:local
+
+echo "Validações concluídas. Prosseguindo com o push..."
