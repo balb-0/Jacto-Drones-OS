@@ -58,6 +58,8 @@ A fragmentação entre as frentes de firmware, serviços e dados na Jacto Drones
 
 Esta seção descreve a arquitetura da esteira de Continuous Delivery do Jacto Drones OS v0.1 utilizando os pontos de vista (Viewpoints) estabelecidos pela norma ISO/IEC 10746 (RM-ODP - Reference Model of Open Distributed Processing)<a id="ref1-link" href="#ref1"><sup>[1]</sup></a>.
 
+> **Nota de contextualização (AS-IS):** O conteúdo das subseções §4.1 a §4.4 descreve a proposta do G04 (TO-BE) para a esteira. O ponto de partida (AS-IS) levantado em workshop com o time técnico da Jacto em 24/04/2026 e nos Anexos A.1 a A.4 e B do TAPI<a href="#ref7"><sup>[7]</sup></a> é resumido em: stack atual baseada em PX4 + Matlab/Simulink, gestão fragmentada entre Jira/Trello/Word/Google Drive, hardware Pixhawk (RTOS) + Jetson (Linux), três raias de workflow (Model-Based Design, Test Rigs MIL/SIL/HIL/PIL, Código tradicional) e time técnico reduzido (~2 engenheiros + 1 gestora). O diagnóstico detalhado da esteira atual está em [`mapeamento-ambiente-jacto.md`](referencias/mapeamento-ambiente-jacto.md).
+
 ## 4.1 Visão de Tecnologia (Technology Viewpoint)
 A Visão de Tecnologia especifica as ferramentas e padrões técnicos escolhidos para implementar o sistema, garantindo a integração entre o ecossistema de hardware (drones) e os serviços em nuvem:
 - **Repositório e CI/CD:** GitLab (GitLab CI/CD e Container Registry).
@@ -93,8 +95,8 @@ Caso o *Sensor* detecte qualquer discrepância ou falha, o erro é realimentado 
 ## 4.4 Aspectos Não Funcionais da Esteira
 Além do comportamento funcional, a arquitetura do OS v0.1 deve garantir requisitos operacionais estritos para não gargalar o desenvolvimento da Jacto Drones. Foram definidos os seguintes critérios não funcionais:
 
-- **Performance do Pipeline (Time to Feedback):** A execução completa da esteira (do linting até a finalização dos testes SITL no PX4) não deve ultrapassar **15 minutos**. Este limite baseia-se nas práticas e pesquisas reportadas pela DORA (DevOps Research and Assessment) e na literatura de engenharia de software (como o livro *Accelerate*)<a id="ref3-link" href="#ref3"><sup>[3]</sup></a>, que demonstram que pipelines que excedem o intervalo de 10 a 15 minutos forçam a quebra de fluxo de trabalho e a troca de contexto mental (*context switching*) do desenvolvedor, o que degrada drasticamente a produtividade da equipe e a eficiência da resposta da malha fechada.
-- **Disponibilidade (SLA):** A infraestrutura de CI/CD (GitLab e Runners) deve garantir um SLA de **99.9% de uptime** durante o horário comercial, assegurando que gargalos de infraestrutura não travem entregas críticas (como hotfixes de firmware).
+- **Performance do Pipeline (Time to Feedback):** **Meta provisória do projeto:** a execução completa da esteira (do linting até a finalização dos testes SITL no PX4) **deve ficar abaixo de 15 minutos**, alinhada às práticas reportadas pela DORA (DevOps Research and Assessment) e à literatura de *Accelerate*<a id="ref3-link" href="#ref3"><sup>[3]</sup></a> (elite performers operam pipelines abaixo de 10–15 min para evitar quebra de fluxo). O número opera como **alvo aspiracional**, a ser confirmado por medição real após consolidação dos jobs de SITL na Sprint 3 — não como SLA contratual.
+- **Disponibilidade (SLA):** **Meta provisória do projeto:** 99.9% de uptime no horário comercial, referência aspiracional alinhada a operações de CI/CD maduras (DORA elite performers). A medição efetiva depende de provisionamento de runners e ainda não foi instrumentada — opera como alvo, não como SLA contratual.
 - **Segurança dos Artefatos:**
   - Todo artefato gerado (imagens Docker ou binários de firmware) deve ser escaneado por ferramentas SAST.
   - Vulnerabilidades classificadas como "Críticas" ou "Altas" bloqueiam imediatamente a promoção do artefato.
@@ -130,7 +132,7 @@ Os testes funcionais validam o comportamento do firmware e dos serviços de miss
 Os testes não-funcionais garantem que a esteira e os artefatos gerados atendam aos requisitos de segurança, performance e conformidade regulatória.
 
 - **SAST (Static Application Security Testing):** Ferramentas de análise estática (como Semgrep, CodeQL e Trivy) são executadas em todos os repositórios. O escaneamento cobre o código-fonte C/C++ do firmware, scripts de pipeline e imagens de contêiner. Vulnerabilidades classificadas como Críticas ou Altas bloqueiam a promoção do artefato, conforme definido na seção 4.4.
-- **Gates de Performance:** O tempo de execução de cada stage é medido e comparado contra thresholds definidos. O stage de testes SITL deve concluir em menos de 10 minutos, e o pipeline completo em menos de 15 minutos. Execuções que excedam esses limites geram alertas para o time de infraestrutura.
+- **Gates de Performance:** O tempo de execução de cada stage é medido e comparado contra thresholds-alvo (meta provisória: SITL <10 min e pipeline completo <15 min, conforme §4.4). Os valores operam como referência aspiracional alinhada à DORA<a href="#ref3"><sup>[3]</sup></a>; a medição efetiva e a calibração final serão consolidadas na Sprint 3.
 - **Escaneamento de Artefatos:** Antes do empacotamento, binários de firmware e imagens Docker passam por escaneamento de vulnerabilidades em dependências. Para imagens Docker, é gerado um relatório de camadas e pacotes vulneráveis.
 - **Assinatura Digital:** Todo artefato promovido para staging ou produção é assinado digitalmente com chaves GPG armazenadas no GitLab CI/CD Vault. A assinatura garante a integridade do artefato e protege contra adulterações na cadeia de suprimentos (*supply chain security*), em conformidade com os requisitos da ISO/IEC 27001:2022<a id="ref5-link" href="#ref5"><sup>[5]</sup></a>.
 
@@ -285,11 +287,11 @@ Somente após o cumprimento integral desses critérios a funcionalidade é eleg�
 
 # 7. Referências
 
-<a id="ref1"></a>[1] ISO/IEC. (1998). *ISO/IEC 10746-1:1998 - Information technology — Open Distributed Processing — Reference model: Overview*. <a href="#ref1-link">↩</a>
+<a id="ref1"></a>[1] ISO/IEC. (1998). *ISO/IEC 10746-1:1998 - Information technology — Open Distributed Processing — Reference model: Overview*. Disponível em: https://www.iso.org/standard/20696.html (Acesso em: 16/05/2026). <a href="#ref1-link">↩</a>
 
 <a id="ref2"></a>[2] Dronecode Foundation. *PX4 Autopilot User Guide and MAVLink Developer Guide*. Disponível em: https://docs.px4.io/ <a href="#ref2-link">↩</a>
 
-<a id="ref3"></a>[3] Forsgren, N., Humble, J., & Kim, G. (2018). *Accelerate: The Science of Lean Software and DevOps: Building and Scaling High Performing Technology Organizations*. IT Revolution Press. <a href="#ref3-link">↩</a>
+<a id="ref3"></a>[3] Forsgren, N., Humble, J., & Kim, G. (2018). *Accelerate: The Science of Lean Software and DevOps: Building and Scaling High Performing Technology Organizations*. IT Revolution Press. Disponível em: https://itrevolution.com/product/accelerate/ (Acesso em: 16/05/2026). <a href="#ref3-link">↩</a>
 
 <a id="ref4"></a>[4] G04 — Inteli. (2026). *Mapeamento do Ambiente Jacto — Jacto Drones OS v0.1*. Disponível em: `docs/referencias/mapeamento-ambiente-jacto.md` <a href="#ref4-link">↩</a>
 
@@ -299,7 +301,7 @@ Somente após o cumprimento integral desses critérios a funcionalidade é eleg�
 
 <a id="ref7"></a>[7] JACTO / Inteli. (2026). *Termo de Abertura de Projeto Inteli (TAPI) — ESMD10: Esteira ágil de produção de software*. <a href="#ref7-link">↩</a>
 
-<a id="ref8"></a>[8] Humble, J., & Farley, D. (2010). *Continuous Delivery: Reliable Software Releases through Build, Test, and Deployment Automation*. Addison-Wesley. <a href="#ref8-link">↩</a>
+<a id="ref8"></a>[8] Humble, J., & Farley, D. (2010). *Continuous Delivery: Reliable Software Releases through Build, Test, and Deployment Automation*. Addison-Wesley. Disponível em: https://martinfowler.com/books/continuousDelivery.html (Acesso em: 16/05/2026). <a href="#ref8-link">↩</a>
 
 <a id="ref9"></a>[9] MAVLink. *MAVLink v2 — Developer Guide: Message Format and Common Messages*. Disponível em: https://mavlink.io/ <a href="#ref9-link">↩</a>
 
@@ -309,11 +311,11 @@ Somente após o cumprimento integral desses critérios a funcionalidade é eleg�
 
 <a id="ref12"></a>[12] NTIA / CISA. *Software Bill of Materials (SBOM) — Minimum Elements & Supply Chain Security Guidance*. Disponível em: https://www.cisa.gov/sbom <a href="#ref12-link">↩</a>
 
-<a id="ref13"></a>[13] ISO/IEC. (2023). *ISO/IEC 25010:2023 — Systems and software Quality Requirements and Evaluation (SQuaRE) — System and software quality models*. <a href="#ref13-link">↩</a>
+<a id="ref13"></a>[13] ISO/IEC. (2023). *ISO/IEC 25010:2023 — Systems and software Quality Requirements and Evaluation (SQuaRE) — System and software quality models*. Disponível em: https://www.iso.org/standard/78176.html (Acesso em: 16/05/2026). <a href="#ref13-link">↩</a>
 
-<a id="ref14"></a>[14] ISO/IEC. (2022). *ISO/IEC 27001:2022 — Information security, cybersecurity and privacy protection — Information security management systems — Requirements*. <a href="#ref14-link">↩</a>
+<a id="ref14"></a>[14] ISO/IEC. (2022). *ISO/IEC 27001:2022 — Information security, cybersecurity and privacy protection — Information security management systems — Requirements*. Disponível em: https://www.iso.org/standard/27001 (Acesso em: 16/05/2026). <a href="#ref14-link">↩</a>
 
-<a id="ref15"></a>[15] NIST. (2022). *NIST SP 800-218 — Secure Software Development Framework (SSDF) v1.1*. <a href="#ref15-link">↩</a>
+<a id="ref15"></a>[15] NIST. (2022). *NIST SP 800-218 — Secure Software Development Framework (SSDF) v1.1*. Disponível em: https://csrc.nist.gov/publications/detail/sp/800-218/final (Acesso em: 16/05/2026). <a href="#ref15-link">↩</a>
 
 <a id="ref16"></a>[16] Google. *Google C++ Style Guide* e LLVM Project, *clang-tidy — A Clang-based C++ Linter*. Disponíveis em: https://google.github.io/styleguide/cppguide.html e https://clang.llvm.org/extra/clang-tidy/ <a href="#ref16-link">↩</a>
 
@@ -323,7 +325,7 @@ Somente após o cumprimento integral desses critérios a funcionalidade é eleg�
 
 <a id="ref19"></a>[19] GitHub. *CodeQL — Semantic Code Analysis Engine*. Disponível em: https://codeql.github.com/ <a href="#ref19-link">↩</a>
 
-<a id="ref20"></a>[20] RTCA. (2011). *DO-178C — Software Considerations in Airborne Systems and Equipment Certification*. <a href="#ref20-link">↩</a>
+<a id="ref20"></a>[20] RTCA. (2011). *DO-178C — Software Considerations in Airborne Systems and Equipment Certification*. Disponível em: https://www.rtca.org/products/do-178c-software-considerations-in-airborne-systems-and-equipment-certification/ (Acesso em: 16/05/2026). <a href="#ref20-link">↩</a>
 
 <a id="ref21"></a>[21] Aqua Security. *Trivy — Comprehensive Vulnerability Scanner for Containers and Dependencies*. Disponível em: https://trivy.dev/ <a href="#ref21-link">↩</a>
 
