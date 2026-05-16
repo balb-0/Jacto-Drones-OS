@@ -1,66 +1,45 @@
-# Melhoria do Projeto — Roadmap pós-Sprint 2
+# Melhoria do Projeto
 
-> Documento auxiliar de Avaliação dos Resultados (Task 3.2 da rubrica peso 9 da Sprint 2). Esboço inicial — será refinado ao longo da Sprint 3 com base na medição real do pipeline e no feedback da Sprint 2.
+> Plano de ação para evolução do Jacto Drones OS v0.1 (v0.2+). Ancorado no diagnóstico em [`projeto.md` §8](projeto.md) e nos *Entregáveis Desejáveis* do TAPI.
 
-## 1. Contexto
+## 1. Base do diagnóstico
 
-O Jacto Drones OS v0.1 conclui a Sprint 2 com a esteira básica de Continuous Delivery em operação: pipeline GitLab CI/CD em execução, dashboards QoS/QoP/Gerencial em Next.js consumindo dados mock, e testes funcionais demonstrativos cobrindo o flow MVP do PX4 SITL. A documentação técnica do produto (arquitetura ISO 10746, mapa de cobertura de funcionalidades e não funcionalidades, mapeamento da integração) está consolidada em `main` na tag `v0.2.0`.
+O diagnóstico de partida está em [`projeto.md` §8](projeto.md) (Avaliação dos Resultados): tempos AS-IS × TO-BE em §8.1, qualitativo (centralização de governança + fechamento de malha) em §8.2, fontes em §8.3. Esta seção parte daquele diagnóstico — não o repete.
 
-Este documento sintetiza, com base no panorama atual e nas validações do parceiro durante a Sprint Review (Vinícius Lopes — Jacto, 30/04/2026), as **melhorias propostas para o projeto** ao longo das Sprints 3 a 5 e do pós-M10.
+## 2. Roadmap
 
-## 2. Gargalos identificados
+### Curto prazo (v0.2) — "rastro que ensina"
 
-Fontes: dashboard Painel Gerencial (anomalias e gargalos), feedback formal do avaliador da Sprint 1 (30/04/2026), e Sprint Review com a Jacto.
+| Item | Evidência |
+|---|---|
+| Substituir `functional_tests_job` demonstrativo por PX4 SITL real + extração de `.ulg` como artefato | [`projeto.md` §5.2](projeto.md) (testes funcionais TO-BE); [`testes-funcionais.md`](testes-funcionais.md) (escopo MVP); TAPI Anexo A.4 (workflow Jacto). |
+| Job `validate-log`: gates de vibração + defasagem comando×atuação | Caso de queda relatado pelo time da Jacto — TAPI Anexo B.5: *"se a gente detecta essa defasagem já nos primeiros segundos, a gente já interrompe"*. |
+| ADR-0003 formalizando critérios automáticos de aprovação de log | Princípio "decisão controversa exige ADR" — ver [`decisoes/0001-eliminar-mirror-github.md`](decisoes/0001-eliminar-mirror-github.md) como referência de forma. |
+| Substituir mocks dos dashboards QoS/QoP/Gerencial por dados reais do pipeline | [`dashboard-implementation-report.md`](dashboard-implementation-report.md); [`projeto.md` §4.4](projeto.md) (calibração das metas provisórias com medição efetiva). |
 
-- **Dados reais ainda ausentes:** os dashboards QoS/QoP/Gerencial operam sobre mocks. Sem instrumentação real, a malha fechada do pipeline não se fecha.
-- **Validação de log do PX4:** o `functional_tests_job` é demonstrativo (script Python com cenários simulados). A integração real com PX4 SITL + Gazebo + extração de `.ulg` + gates de vibração e defasagem ainda precisa ser implementada — exatamente o gargalo crítico que a Jacto sinalizou (2-3 dias por análise manual de voo, TAPI Anexo B.5).
-- **Eixo "integridade" do orientador (Reginaldo):** GPG signing, Gitleaks, SAST efetivo e SBOM mencionados em `projeto.md` §4.4 e §5.3 ainda não estão instrumentados na pipeline real.
-- **Documentação rastreável incompleta:** alguns docs em `develop` (ex.: `mapa-cobertura-integracao.md`, `dashboard-implementation-report.md`) ainda têm afirmações sem referência numerada — débito do princípio "objetividade com referência rastreável".
+### Médio prazo (v0.3) — "integridade do pipeline"
 
-## 3. Roadmap proposto
+| Item | Evidência |
+|---|---|
+| GPG signing obrigatório nos commits de `main` | [`projeto.md` §4.4](projeto.md) (assinatura digital citada, não instrumentada) + ISO 27001 A.5.21 / A.8.28 (ref [14] em §7). |
+| Gitleaks pre-commit + Semgrep + CodeQL ativos como gates | [`projeto.md` §5.3](projeto.md) (SAST citado, não rodando); refs [18] e [19] em §7. |
+| SBOM por release (Trivy / Syft) com retenção auditável | [`projeto.md` §5.3](projeto.md); NIST SP 800-218 (ref [15]) + CISA SBOM (ref [12]). |
+| Branch protection em `main` (MR + review + pipeline verde obrigatórios) | [`dev-rules.md`](dev-rules.md) §4; [`gestao-configuração.md`](gestao-configuração.md). |
 
-### 3.1 Curto prazo (Sprint 3) — Eixo "rastro que ensina" (Reginaldo)
+### Longo prazo (pós-M10) — *Entregáveis Desejáveis* do TAPI
 
-- Substituir o `functional_tests_job` demonstrativo por execução real de **PX4 SITL** em Gazebo dentro do pipeline, gerando log `.ulg` como artefato.
-- Implementar `validate-log` como job: extração de métricas-chave (vibração, defasagem comando × atuação, perfil de altitude) e gate de aprovação automática conforme thresholds derivados do caso de queda relatado pela Jacto.
-- Conectar dashboards QoS/QoP a fontes reais (logs do GitLab CI + relatórios do runner Python).
-- Calibrar números fortes (`Pipeline <15 min`, `SITL <10 min`, `SLA 99,9%`) a partir da medição real — substituir a marcação de "meta provisória" do `projeto.md` §4.4 por valores observados.
-- Implementar `ADR-0003` documentando os critérios automáticos de aprovação/reprovação de voo simulado (referenciar Reginaldo: "rastro que ensina" — critério não pode ser caixa-preta, precisa ser auditável).
+| Item | Evidência |
+|---|---|
+| Análise de log via IA generativa | TAPI seção *Entregáveis Desejáveis* + Anexo B.5: *"1 serviço rodando que sobe o log, já gera 1 análise pra gente com a LLM"*. |
+| Integração com Matlab/Simulink (Raia 1 do workflow Jacto) | TAPI Anexo A.4 — Raia 1 (Model-Based Design) com loop MIL/SIL/HIL. |
+| Expansão para HIL/PIL com Pixhawk físico | TAPI Anexo A.4 — Raia 2 (Test Rigs versionados). |
 
-### 3.2 Médio prazo (Sprints 4–5) — Eixo "integridade do pipeline" (Reginaldo)
+## 3. Métricas de sucesso
 
-- **Assinatura digital de commits:** GPG signing obrigatório nos commits da `main`, com chave de chave de cada integrante registrada no GitLab.
-- **Detecção de secrets:** `gitleaks` como hook pre-commit + job no pipeline.
-- **SAST efetivo:** Semgrep + CodeQL configurados no pipeline com regras adaptadas ao domínio (C++ para firmware, TS para dashboard).
-- **SBOM gerado por job:** Trivy / Syft produzindo SBOM em cada release, com retenção de longo prazo em bucket auditável.
-- **Política de branch protection:** configurar `main` como protegida, exigindo MR + 1 review + pipeline verde.
-- **Painel Gerencial conectado a dados reais:** anomalias detectadas a partir de séries históricas de cycle time, throughput e taxa de falha por job.
-
-### 3.3 Longo prazo (pós-M10) — Entregáveis Desejáveis (TAPI)
-
-- **Integração com IA generativa para análise de log** (sonho declarado pela Jacto, Held citado no TAPI Anexo B.5): serviço que recebe `.ulg`, gera análise e retorna status do voo em linguagem natural.
-- **Conexão com Matlab/Simulink:** importação de modelos do time da Jacto para alimentar o pipeline com requisitos de alto nível (Model-Based Design da Raia 1 do workflow Jacto descrito no TAPI Anexo A.4).
-- **Expansão para HIL/PIL:** runners dedicados com Pixhawk físico para validação em hardware real, com gates específicos no pipeline.
-- **Conectores Jira/Notion bidirecionais:** automação completa de `Problem Reports` retornando ao backlog conforme workflow declarado pelo parceiro.
-
-## 4. Métricas de sucesso
-
-Combinação de **métricas DORA** com adaptação do framework **REACH** ao contexto do parceiro:
-
-- **Lead Time for Changes (DORA):** tempo da abertura de issue ao deploy. Meta provisória de elite performer: <24h para mudanças simples.
-- **Deployment Frequency (DORA):** frequência de releases promovidas para `main`. Meta: pelo menos uma release por sprint do projeto acadêmico (~quinzenal).
-- **Change Failure Rate (DORA):** % de releases que precisam de reverter ou hotfix. Meta: <15%.
-- **Mean Time to Restore (DORA):** tempo entre detecção de falha e correção. Meta: <1 dia.
-- **Tempo de análise de voo (adaptação REACH):** redução do tempo manual (2–3 dias hoje) para tempo automatizado via pipeline. Meta provisória: <15 minutos.
-- **Cobertura de gates por commit:** % de commits que passam por lint + build + test + SAST. Meta: 100% para `main`.
-
-## 5. Referências
-
-- TAPI_ESMD10_V01.pdf — seção *Entregáveis Desejáveis* e Anexos A.4, B.5, B.6, B.8.
-- Sprint Review 1 (30/04/2026) — validação do vetor "logs do PX4" pelo Vinícius Lopes (Jacto).
-- Feedback formal do avaliador da Sprint 1 (30/04/2026, nota 6,5/10) e conversa oral pós-feedback.
-- DORA Core Model — DevOps Research and Assessment (https://dora.dev/research/).
-- Forsgren, Humble & Kim (2018), *Accelerate*.
-- `docs/projeto.md` §8 — Avaliação dos Resultados.
-- `docs/decisoes/0001-eliminar-mirror-github.md` e `docs/decisoes/0002-adotar-nextjs-dashboard.md`.
-- Princípios operacionais permanentes do G04 (`guia/guia-v1.md`).
+| Métrica | Meta provisória | Fonte |
+|---|---|---|
+| Lead Time for Changes (DORA) | < 24h para mudanças simples | DORA Core ([6] em [`projeto.md` §7](projeto.md)) |
+| Deployment Frequency (DORA) | ≥ 1 release/sprint | idem |
+| Change Failure Rate (DORA) | < 15% | idem |
+| Tempo de análise de voo | < 15 min (AS-IS: 2–3 dias) | TAPI Anexo B.5 |
+| Cobertura de gates por commit em `main` | 100% | [`projeto.md` §5.1](projeto.md) |
