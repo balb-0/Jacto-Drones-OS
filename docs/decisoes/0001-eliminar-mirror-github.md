@@ -1,7 +1,8 @@
 # ADR-0001 — GitLab como Fonte Única da Verdade (eliminação do mirror GitHub)
 
-**Status:** Aceito (formalizado retrospectivamente em 16/05/2026 — decisão já implementada na Sprint 1 e refletida no repositório)
-**Data da decisão:** Sprint 1 (28/04/2026 a 30/04/2026)
+**Status:** Aceito
+**Data da decisão:** 30/04/2026 (Sprint Review 1)
+**Data da formalização documental:** 16/05/2026
 **Autores:** G04
 
 ## Contexto

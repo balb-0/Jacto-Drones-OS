@@ -30,6 +30,11 @@
 - [2. Descrição do Problema](#2-descrição-do-problema)
 - [3. Objetivos](#3-objetivos)
 - [4. Arquitetura do Produto (ISO 10746)](#4-arquitetura-do-produto-iso-10746)
+  - [4.0 Estado Atual da Jacto (AS-IS)](#40-estado-atual-da-jacto-as-is)
+  - [4.1 Visão de Tecnologia](#41-visão-de-tecnologia-technology-viewpoint)
+  - [4.2 Visão de Engenharia](#42-visão-de-engenharia-engineering-viewpoint)
+  - [4.3 Controle em Malha Fechada](#43-controle-em-malha-fechada)
+  - [4.4 Aspectos Não Funcionais da Esteira](#44-aspectos-não-funcionais-da-esteira)
 - [5. Configuração da Esteira de Sistemas](#5-configuração-da-esteira-de-sistemas)
   - [5.1 Visão Geral do Pipeline](#51-visão-geral-do-pipeline)
   - [5.2 Testes Funcionais](#52-testes-funcionais)
@@ -40,6 +45,7 @@
   - [5.7 Mapa de Cobertura de Não Funcionalidades](#57-mapa-de-cobertura-de-não-funcionalidades)
 - [6. Requisitos SCM](#6-requisitos-scm)
 - [7. Referências](#7-referências)
+- [8. Avaliação dos Resultados](#8-avaliação-dos-resultados)
 
 # 1. Introdução
 O projeto Jacto Drones OS v0.1 visa estabelecer uma infraestrutura de Continuous Delivery para suportar o desenvolvimento de sistemas autônomos. Este documento detalha a arquitetura, processos e ferramentas que compõem o ecossistema de engenharia da solução.
@@ -56,9 +62,62 @@ A fragmentação entre as frentes de firmware, serviços e dados na Jacto Drones
 
 # 4. Arquitetura do Produto (ISO 10746)
 
-Esta seção descreve a arquitetura da esteira de Continuous Delivery do Jacto Drones OS v0.1 utilizando os pontos de vista (Viewpoints) estabelecidos pela norma ISO/IEC 10746 (RM-ODP - Reference Model of Open Distributed Processing)<a id="ref1-link" href="#ref1"><sup>[1]</sup></a>.
+Esta seção descreve a arquitetura da esteira de Continuous Delivery do Jacto Drones OS v0.1 utilizando os pontos de vista (Viewpoints) estabelecidos pela norma ISO/IEC 10746 (RM-ODP - Reference Model of Open Distributed Processing)<a id="ref1-link" href="#ref1"><sup>[1]</sup></a>. As subseções §4.1 a §4.4 descrevem a proposta do G04 (TO-BE); a §4.0 abaixo descreve o ponto de partida (AS-IS).
 
-> **Nota de contextualização (AS-IS):** O conteúdo das subseções §4.1 a §4.4 descreve a proposta do G04 (TO-BE) para a esteira. O ponto de partida (AS-IS) levantado em workshop com o time técnico da Jacto em 24/04/2026 e nos Anexos A.1 a A.4 e B do TAPI<a href="#ref7"><sup>[7]</sup></a> é resumido em: stack atual baseada em PX4 + Matlab/Simulink, gestão fragmentada entre Jira/Trello/Word/Google Drive, hardware Pixhawk (RTOS) + Jetson (Linux), três raias de workflow (Model-Based Design, Test Rigs MIL/SIL/HIL/PIL, Código tradicional) e time técnico reduzido (~2 engenheiros + 1 gestora). O diagnóstico detalhado da esteira atual está em [`mapeamento-ambiente-jacto.md`](referencias/mapeamento-ambiente-jacto.md).
+## 4.0 Estado Atual da Jacto (AS-IS)
+
+Diagnóstico levantado em **workshop com o time técnico da Jacto Drones em 24/04/2026** (Vinícius Lopes — engenheiro de controle de voo; Heldebrandt — engenheiro de firmware; Tamires Silva — líder técnica) e nos **Anexos A.1 a A.4 e B do TAPI**<a href="#ref7"><sup>[7]</sup></a>. Esta subseção é o ponto de comparação para a proposta TO-BE detalhada nas subseções subsequentes — todo número quantitativo de impacto em §8.1 toma esta seção como linha de base.
+
+### 4.0.1 Stack atual de software e hardware
+
+A frente de drones da Jacto opera hoje sobre uma combinação de ferramentas adotadas isoladamente ao longo do tempo, sem integração centralizada (TAPI Anexo B.2):
+
+| Camada | Ferramenta atual | Observação |
+| :--- | :--- | :--- |
+| Controle de voo | **PX4 Autopilot** (open-source) | Base oficial do trabalho — não há ainda firmware proprietário Jacto. |
+| Modelagem e controle | **MATLAB / Simulink** | Citado como referência de fidelidade superior ao Gazebo; restrito a alunos. |
+| Simulação aberta | **Gazebo** (do ecossistema PX4) | Liberado para uso no projeto acadêmico. |
+| Simulação robusta interna | Próprio, baseado em Matlab | Restrito. |
+| Gestão de tarefas | **Jira + Trello** (mistos) | Sem padrão único; cada raia adota o seu. |
+| Versionamento | **Git / GitHub** | Não há CI centralizado; pushes pulverizados. |
+| "Cloud" do time | **Google Drive** | Descrito pelo próprio time como *"rudimentar, aquecido"*. |
+| Hardware embarcado | **Pixhawk** (RTOS para controle em tempo real) + **Jetson Linux** (computação não-crítica em soft real-time) | Separação real-time × soft-real-time. |
+
+### 4.0.2 Workflow técnico em três raias paralelas
+
+O parceiro compartilhou um diagrama do loop de desenvolvimento atual (TAPI Anexo A.4), organizado em três raias que operam em cadência de Sprint mas sem orquestração unificada:
+
+- **Raia 1 — Model-Based Design (MATLAB/Simulink):** `Backlog → Tasks Breakdown → Feature Modeling → Tests in MIL → Generating Code → Commit`. Loop interno: retorno de Generating Code para Feature Modeling. Saída integra ao Jira/GitHub no fim da sprint.
+- **Raia 2 — Infraestrutura de simulação versionada:** **MIL** (Model-in-the-Loop, `V.z.z.z`), **SIL** (Software-in-the-Loop, `V.y.y.y`) e **HIL/PIL** (Hardware/Processor-in-the-Loop, `V.x.x.x`). Saída agregada: **Problem Reports** que retornam ao backlog como bugs.
+- **Raia 3 — Código tradicional (PX4-style):** `Backlog → Tasks Breakdown → Feature Development → Unit Testing → Integration Testing → Commit → Merge Request → Release`. Unit Testing dispara SIL; Integration Testing dispara HIL/PIL.
+
+As três raias compartilham os Test Rigs versionados (Raia 2) mas **não há orquestrador único** disparando o rig correto para o tipo de mudança correto — coordenação manual, feita pelos próprios engenheiros.
+
+### 4.0.3 Gargalos quantificados
+
+O time relatou dores específicas, com valores extraídos do TAPI Anexo B.5 e B.6:
+
+- **Análise de log pós-voo:** 2 a 3 dias por voo, manual. Um voo de 15 manobras gera ~90 arquivos × ~120 parâmetros (.ulg). Hoje o engenheiro de controle clica botão por botão em uma ferramenta caseira em Python para gerar cada gráfico.
+- **Custo de cada voo perdido por bug detectado tarde:** drone protótipo ≈ R$ 700.000; microcontroladores importados levam 3–4 meses para chegar. Cada queda evitada recupera meses de schedule.
+- **Caso real de queda relatado:** rotina de ajuste de parâmetros internos causou **defasagem silenciosa entre comando e atuação**, que cresceu até o drone perder o controle e cair. Citação literal do Held (TAPI Anexo B.5): *"Se a gente detecta essa defasagem já nos primeiros segundos, a gente já interrompe"* — hoje essa detecção não existe.
+- **Métricas de engenharia:** nenhuma formalizada. O que se monitora é "padrão e outliers" subjetivos. A Camille (gestão) declarou no workshop: *"Estamos abertos a receber sugestões de métricas, de indicadores"*.
+
+### 4.0.4 Tamanho do time e implicação de ROI
+
+A engenharia ativa da frente Jacto Drones é composta por **~2 engenheiros técnicos** (Vinícius no controle de voo e Heldebrandt no firmware/SIL-HIL) **+ 1 gestora** (Tamires Silva). Citação direta do Vinícius (TAPI Anexo B.1): *"hoje sou eu aqui, o Held [no firmware], e eu me divido em 2 às vezes"*. Isso implica que automações de alto ROI (qualquer coisa que tire trabalho manual recorrente) têm valor real mesmo em escala pequena, porque liberam diretamente capacidade de duas pessoas — enquanto features de "produtividade de time grande" têm pouca aderência.
+
+### 4.0.5 Síntese para a proposta TO-BE
+
+A proposta arquitetural detalhada em §4.1 a §4.4 ataca os gargalos acima respondendo às seguintes questões:
+
+| Pergunta de partida (AS-IS) | Responde em |
+| :--- | :--- |
+| Como reduzir as 2–3 dias de análise de log para minutos? | §4.4 (meta provisória de tempo de pipeline) + §5.1 (stages) + §5.2 (validação automática de log). |
+| Como detectar defasagem comando×atuação antes da queda? | §4.3 (Controle em Malha Fechada com Sensor automatizado) + §5.2 (testes funcionais SITL) + [`decisoes/0003-criterios-aprovacao-log-sitl.md`](decisoes/0003-criterios-aprovacao-log-sitl.md) (ADR prospectivo dos critérios). |
+| Como orquestrar as três raias com cadência única? | §4.1 + §4.2 (Visões Tecnologia e Engenharia unificadas via GitLab CI/CD). |
+| Como expor métricas de engenharia que o time admitiu não ter? | §5 + dashboards QoS/QoP/Gerencial (ver [`dashboard-implementation-report.md`](dashboard-implementation-report.md)). |
+
+O diagnóstico operacional da esteira atual (testes manuais, ausência de runners, validação por voo real) está consolidado em [`referencias/mapeamento-ambiente-jacto.md`](referencias/mapeamento-ambiente-jacto.md) §2.1.
 
 ## 4.1 Visão de Tecnologia (Technology Viewpoint)
 A Visão de Tecnologia especifica as ferramentas e padrões técnicos escolhidos para implementar o sistema, garantindo a integração entre o ecossistema de hardware (drones) e os serviços em nuvem:
