@@ -1,7 +1,8 @@
 # ADR-0002 — Adoção de Next.js + TypeScript + Tailwind + Recharts no Dashboard
 
-**Status:** Aceito (formalizado retrospectivamente em 16/05/2026 — decisão já implementada na Sprint 2 e refletida no repositório)
-**Data da decisão:** Sprint 2 (04/05/2026 a 15/05/2026)
+**Status:** Aceito
+**Data da decisão:** 04/05/2026 (Sprint Planning 2)
+**Data da formalização documental:** 16/05/2026
 **Autores:** G04
 
 ## Contexto
