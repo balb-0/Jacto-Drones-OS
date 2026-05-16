@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "Iniciando validações de pre-commit..."
+
+# 1. TruffleHog: Scanner de Secrets (Slide 10 da Aula 05)
+echo "Verificando segredos com TruffleHog..."
+docker run --rm -v "$(pwd):/repo" trufflesecurity/trufflehog:latest git file:///repo --since-commit HEAD --only-verified --fail
+
+# 2. Lint-staged: ESLint e Prettier nos arquivos alterados
+echo "Rodando Lint e Formatação..."
+npx lint-staged
