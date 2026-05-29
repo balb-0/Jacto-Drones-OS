@@ -1,15 +1,15 @@
 # Mapa de Cobertura da Integração
 
-Este documento detalha o Mapa de Cobertura da Integração para o projeto **Jacto Drones OS v0.1**, servindo como referência para a arquitetura da esteira de Continuous Delivery, a infraestrutura de deploy/testes e o fluxo de trabalho adotado pela equipe.
+Este documento detalha o Mapa de Cobertura da Integração do projeto **Jacto Drones OS v0.1**, servindo como referência para a arquitetura da esteira de Continuous Delivery, a infraestrutura de deploy/testes e o fluxo de trabalho da equipe. O recorte é o que **de fato roda na Sprint 3** (pipeline real, PX4 SITL, quality gates) — o que ainda é meta segue marcado como proposto.
 
 ## 1. Arquitetura da Esteira e Infraestrutura (GitLab CI/CD)
 
-A arquitetura de integração contínua do projeto foi desenhada sob o conceito de **Sistema de Controle em Malha Fechada**. Diferente de pipelines puramente lineares, nossa esteira utiliza os resultados dos testes e da segurança como sensores que realimentam o backlog e a gestão do projeto, garantindo que o código não avance se não atender aos rigorosos critérios de qualidade de um software autônomo.
+A arquitetura de integração contínua foi desenhada sob o conceito de **Sistema de Controle em Malha Fechada**: diferente de um pipeline puramente linear, a esteira usa os resultados dos testes e dos quality gates como sensores que realimentam a gestão do projeto, impedindo que o código avance se não atender aos critérios de qualidade de um software autônomo. Essa malha já está fechada na Sprint 3 — o veredito dos gates bloqueia o merge e é publicado automaticamente como comentário no Merge Request.
 
-A infraestrutura é inteiramente baseada no ecossistema **GitLab**:
-- **GitLab Repository:** Fonte única da verdade para o código.
-- **GitLab Runners:** Nós de execução isolados (containers Docker) que processam as rotinas de build, testes (SITL/HITL) e segurança.
-- **GitLab Container Registry:** Repositório de artefatos onde as imagens Docker e os binários homologados são armazenados de forma segura e versionada.
+A infraestrutura é baseada no ecossistema **GitLab**:
+- **GitLab Repository:** fonte única da verdade para o código.
+- **GitLab Runners:** nós de execução isolados (containers Docker) que processam build, testes e segurança. O runner compartilhado da instância é *docker-executor* sem socket/privilégio, portanto os jobs rodam a imagem pública como runtime e os scanners operam em modo *filesystem* (sem `docker build`/`docker run`), conforme [ADR-0006](decisoes/0006-promocao-sem-registry.md).
+- **Promoção de artefato por SHA:** não há GitLab Container Registry. O artefato promovido entre ambientes é o conjunto de saídas de CI identificado pelo `$CI_COMMIT_SHA` (ex.: `metrics.json`); o deploy é **simulado por Environment** (staging automático, prod e rollback manuais) e a release em tag `v*` gera um GitLab Release real — ver [ADR-0006](decisoes/0006-promocao-sem-registry.md) e [`ci/deploy.yml`](../ci/deploy.yml).
 
 ### Diagrama de Fluxo (Malha Fechada)
 
@@ -21,37 +21,40 @@ A infraestrutura é inteiramente baseada no ecossistema **GitLab**:
 </div>
 <br>
 
-## 2. Definition of Done (DoD) Padronizado
+## 2. Definition of Done (DoD) por track
 
-Para garantir a coesão técnica, padronizamos o "Definition of Done" para as três frentes de engenharia do projeto. Uma tarefa só pode ser marcada como "Concluída" (Done) no Jira e mesclada na branch principal (`develop` ou `main`) se atender a 100% dos critérios abaixo:
+O DoD é definido por track de engenharia, refletindo a **stack real** do projeto: firmware **C/C++ do PX4** (validado via SITL), web/painéis em **Next.js/TypeScript** e dados/automação em **Python**. Uma tarefa só é "Concluída" e mesclada (`develop`/`main`) se atender a 100% dos critérios da sua coluna.
 
-| Categoria | Firmware (PX4/Autopilot) | Serviços (Plataforma Web) | Dados (Analytics/ETL) |
+| Categoria | Firmware (PX4, C/C++ — via SITL) | Web / Painéis (Next.js/TS) | Dados / Automação (Python) |
 | :--- | :--- | :--- | :--- |
-| **Código e Estilo** | Compilação nativa e Docker limpa. Adesão ao Google C++ Style. | Zero erros de lint (ESLint/Prettier). | Scripts/queries validados e otimizados. |
-| **Testes (Coverage)** | Testes SITL via simulador Dronecode com 100% de sucesso. | Testes Jest (Unitários) e Cypress (E2E) passando sem falhas. | Testes de integridade de schemas e data quality (DQ) passando. |
-| **Qualidade e Segurança**| Sem avisos críticos no `clang-tidy`. SAST aprovado (ex: SonarQube). | SAST aprovado. Sem credenciais hardcoded. | Validação de governança e segurança de acesso aprovada. |
-| **Documentação** | Parâmetros documentados no código; diagramas atualizados (PlantUML). | Endpoints descritos via Swagger/OpenAPI. | Dicionário de dados e metadados atualizados no catálogo. |
-| **Integração Ágil** | Commit rastreável com chave Jira; Merge Request com link para a issue. | Commit rastreável com chave Jira; Merge Request com link para a issue. | Commit rastreável com chave Jira; Merge Request com link para a issue. |
-| **Revisão Humana** | Aprovação obrigatória (Peer Review) de pelo menos 1 membro sênior. | Aprovação obrigatória (Peer Review) de pelo menos 1 desenvolvedor. | Aprovação obrigatória (Peer Review) de pelo menos 1 engenheiro de dados. |
+| **Código e estilo** | Build PX4 SITL conclui sem erro (cache ccache). | Sem erros de `tsc` e ESLint (`src/eslint.config.mjs`). | Código segue o padrão do repositório; funções puras testáveis. |
+| **Testes** | Missão SITL (`square_50m`) voa e gera `.ulg`; `metrics.json` não degenerado; `pytest tests/sitl` passa. | App compila (`next build`); checagem de tipos (`tsc`) sem erro. | `pytest` em `tests/unit` com cobertura de linha ≥ 0,90 (ratchet, `quality_gates.yaml`). |
+| **Quality gates** | Invariantes de missão dentro do threshold (`scripts/quality_gates.py`): aceleração ≤ 15 m/s², duração ≤ 180 s, σ-altitude cruzeiro ≤ 1,0 m. | Painel consome KPI real (DORA/missão), sem dado fabricado. | Gate de cobertura passa; gate **bloqueia o merge** quando reprova. |
+| **Segurança (informativa na S3)** | Semgrep + Trivy `fs`/`config` + TruffleHog/Gitleaks publicam achados (`allow_failure`). | Idem — sem credenciais hardcoded. | Idem — `trivy fs` sobre dependências Python. |
+| **Documentação** | Parâmetros de missão e critérios de log documentados; ADR quando há decisão ([`docs/decisoes/`](decisoes/)). | Comportamento do painel descrito; fonte do dado citada. | Origem da métrica documentada (artefato de CI / API GitLab). |
+| **Rastreabilidade** | Commit Conventional + `Refs #N` (commitlint); MR vinculado à issue do GitLab (#2-#7, uma por TG). | Idem. | Idem. |
+| **Revisão humana** | Aprovação de pelo menos 1 revisor que não seja o autor; CI verde. | Idem. | Idem. |
 
-## 3. Fluxo de Integração: Do VSCode ao Backlog
+> **Estado na Sprint 3.** Os gates de **cobertura** e de **invariantes de missão** são **bloqueantes** (reprovam o merge). Os scanners de segurança (Semgrep, Trivy, TruffleHog/Gitleaks, commitlint) são **informativos** (`allow_failure`) nesta sprint e tornam-se bloqueantes nas Sprints 4-5, junto com assinatura GPG e SBOM — ver [ADR-0007](decisoes/0007-sast-semgrep.md) e [ADR-0004](decisoes/0004-gpg-signing-main.md). clang-tidy no firmware é roadmap (hoje o firmware é exercitado via SITL, não compilado isoladamente no CI).
 
-A integração do trabalho técnico com a gestão ágil ocorre de maneira fluida e automatizada. Abaixo detalhamos como o código sai da máquina do desenvolvedor e transita pelo sistema:
+## 3. Fluxo de Integração: do editor ao backlog
 
-### Fase 1: Desenvolvimento Local (VSCode)
-O desenvolvedor sincroniza o repositório local com o GitLab e utiliza o **VSCode** para implementar a feature ou correção. Durante essa fase, ferramentas locais como ESLint (para web) ou clang-tidy (para C++) já operam preventivamente.
+A integração entre o trabalho técnico e a gestão ágil é automatizada de ponta a ponta. A rastreabilidade é feita por **issues do GitLab + Conventional Commits + `Refs #N`** (validado por commitlint) — não há integração nativa Jira-GitLab nesta esteira; Jira/Notion permanecem como proposta futura.
 
-### Fase 2: Versionamento Rastreável (Conventional Commits)
-Ao finalizar a tarefa, o código é "commitado" usando o padrão Conventional Commits, sendo obrigatória a inclusão da chave da respectiva tarefa do Jira.
-*Exemplo:* `feat(telemetry): implementa websocket pub/sub (#JACTO-88)`
+### Fase 1: desenvolvimento local
+O desenvolvedor sincroniza o repositório e implementa a feature. Ferramentas locais (ESLint/`tsc` para web, `pytest` para Python) operam preventivamente. Hooks Husky (commitlint, scanners) existem client-side, mas a integridade não depende deles: os mesmos controles rodam server-side no pipeline.
 
-### Fase 3: Abertura do Merge Request (GitLab)
-O código é enviado via `git push` para o GitLab. O desenvolvedor abre um **Merge Request (MR)** para a branch de destino (`develop` ou `main`). Essa ação muda automaticamente o status da tarefa no Jira para "In Review" através da integração nativa Jira-GitLab.
+### Fase 2: versionamento rastreável (Conventional Commits)
+O código é commitado no padrão Conventional Commits, com referência à issue do GitLab no corpo.
+*Exemplo:* `feat(telemetry): adiciona coleta de cycle time` + `Refs #4`.
 
-### Fase 4: Integração Contínua e Quality Gates (GitLab CI/CD)
-O MR aciona o pipeline de validação. O GitLab Runner compila o código, executa a bateria de testes e faz a análise estática de vulnerabilidades.
-- **Se o pipeline falhar:** O MR é bloqueado automaticamente. A integração realimenta a issue no Jira (Sensor em Malha Fechada), notificando que a tarefa requer atenção e impedindo que código quebrado afete o repositório.
-- **Se o pipeline passar:** O botão de Merge é habilitado, aguardando apenas a aprovação humana (Code Review).
+### Fase 3: abertura do Merge Request
+O código é enviado via `git push` e abre-se um Merge Request para a branch de destino (`develop` ou `main`). A issue correspondente do GitLab é vinculada ao MR.
 
-### Fase 5: Conclusão
-Com o Code Review aprovado, o código é mesclado. O pipeline de Continuous Deployment gera o artefato imutável, o armazena no GitLab Registry, e o status da tarefa no Jira transita automaticamente para "Done", completando o ciclo.
+### Fase 4: integração contínua e quality gates (GitLab CI/CD)
+O MR/branch aciona o pipeline com 6 stages — `lint → build → test → sast → gate → deploy` ([`.gitlab-ci.yml`](../.gitlab-ci.yml), fragmentos em `ci/*.yml`). O runner compila o PX4, roda a missão SITL, extrai `metrics.json` e avalia os quality gates.
+- **Se um gate bloqueante reprova:** o job `quality-gates` falha (exit ≠ 0) e o **merge é bloqueado** — o sensor da malha fechada realimenta o time. Os scanners informativos publicam achados sem bloquear.
+- **Se o pipeline passa:** o resultado dos gates e os KPIs da missão são publicados como **comentário automático no MR** (via token de serviço), aguardando a aprovação humana (Code Review).
+
+### Fase 5: conclusão e promoção
+Com o Code Review aprovado, o código é mesclado. O artefato de CI (identificado por SHA) é promovido por Environment: **staging** automático em `develop`/`main`; **prod** e **rollback** manuais; **release** real em tag `v*`. Não há push de imagem para Registry — a promoção é simulada e auditável por SHA ([`ci/deploy.yml`](../ci/deploy.yml), [`scripts/promote_artifact.py`](../scripts/promote_artifact.py), [ADR-0006](decisoes/0006-promocao-sem-registry.md)), fechando o ciclo da malha.
