@@ -197,3 +197,53 @@ export interface BottleneckAnalysis {
   status: 'normal' | 'congested' | 'critical';
   description: string;
 }
+
+// Indicadores de processo REAIS coletados da API GitLab (snapshot via
+// scripts/collect_gitlab_metrics.py). Espelham src/data/process-metrics.json.
+
+export interface ProcessMetricsMeta {
+  coletado_em: string;
+  fonte: string;
+}
+
+export interface DeploymentFrequencyData {
+  staging_deploys_success: number;
+  ambiente: string;
+  nota: string;
+}
+
+export interface LeadTimeData {
+  n_mrs_merged: number;
+  mediana_h: number;
+  media_h: number;
+  min_h: number;
+  max_h: number;
+}
+
+export interface ChangeFailureRefData {
+  total: number;
+  failed: number;
+  cfr_pct: number;
+}
+
+export interface ChangeFailureRateData {
+  develop: ChangeFailureRefData;
+  main: ChangeFailureRefData;
+}
+
+export interface PipelineSampleData {
+  total: number;
+  success: number;
+  failed: number;
+  skipped: number;
+  canceled: number;
+}
+
+export interface ProcessMetrics {
+  _meta: ProcessMetricsMeta;
+  deployment_frequency: DeploymentFrequencyData;
+  lead_time_for_changes_h: LeadTimeData;
+  change_failure_rate: ChangeFailureRateData;
+  pipelines_amostra_100: PipelineSampleData;
+  observacao_honesta: string;
+}
