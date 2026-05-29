@@ -113,3 +113,40 @@ aderente ao que os logs sustentam.
 
 Cada linha acima aponta para um artefato versionado e um commit/branch
 rastreável — não há afirmação sem âncora no entorno imediato.
+
+## 4. Observações internas — Sprint 3
+
+> Registro do que foi **validado a posteriori** pelo time (integrador
+> @Fernando), conferindo que cada um dos 3 pontos do feedback S2 tem um
+> artefato e um commit/MR **rastreável** antes da Sprint Review 3. Esta seção é
+> o "fechamento" interno: confirma que o checklist da §2 não é declaração, e sim
+> verificação no entorno imediato.
+
+**Método da validação.** Para cada ponto, partimos do feedback literal (AS-IS),
+localizamos o artefato que o endereça (TO-BE) e confirmamos a âncora no histórico
+git (`git log`/`git show`) e no arquivo versionado. Nada foi aceito sem
+evidência clicável.
+
+| Ponto | Verificado a posteriori | Âncora rastreável | Veredito |
+|---|---|---|---|
+| 1 — Contrato por integração | `mapa-cobertura-deploy.md` §2 contém as 8 integrações com gatilho/entrada/saída/falha; cabeçalho referencia §5.6/§5.7 | commits `9561e90` e `4d53d97`; merge `b847a13` (`feat/deploy-cd-pipeline`) — **em `develop`** | **Fechado** |
+| 2 — Protocolo de medição | `dora-protocolo.md` e `qos-protocol.ts` declaram janela × método × aceite por indicador, com origem dos thresholds | merges `2a523b6` (`feat/dashboard-qop-manager`) e `69d8949` (`feat/dashboard-qos`) — **em `develop`** | **Fechado** (dashboards mergeados) |
+| 3 — Medido × projetado | §8 refatorada para tabelas distintas medido × projetado; KPIs medidos em `dora.json`/`metrics.json` | branch `docs/avaliacao-resultados` (**TG3.1**) — **a integrar via MR** | **Em integração** |
+
+**Pendência honesta (não-fechado neste snapshot).** Na revisão, `projeto.md` §8 em
+`develop` ainda exibe a redação S2 ("meta provisória … em medição"). O Ponto 3 só
+se considera **integrado** após o merge de `docs/avaliacao-resultados`. Mantemos o
+registro como pendência rastreável — coerente com "medido antes de projetado":
+preferimos declarar o pendente a apresentar projeção como resultado.
+
+**Princípios de doc aplicados nesta validação (autoavaliação interna):**
+
+- **Evidência no entorno imediato** — cada linha tem commit/branch/arquivo/seção (§2, §3 e a tabela acima).
+- **AS-IS antes de TO-BE** — §1 fixa o diagnóstico S2 antes de §2 mostrar a entrega.
+- **Medido antes de projetado** — KPIs medidos isolados em tabela própria; metas rotuladas como projetadas.
+- **Objetividade > completude** — tabelas item × evidência em vez de prosa; o que não tem âncora não é afirmado.
+
+**Conclusão para a Sprint Review 3.** Os 3 pontos do feedback S2 estão endereçados
+com rastreabilidade integral: **2 fechados em `develop`** (pontos 1 e 2) e **1 em
+integração** (ponto 3, branch `docs/avaliacao-resultados`). Este documento é a
+prova consolidada do fechamento.
