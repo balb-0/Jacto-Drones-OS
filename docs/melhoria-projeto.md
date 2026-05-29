@@ -29,13 +29,23 @@ Itens que estavam no roadmap de curto e médio prazo e foram **entregues** na Sp
 
 ## 3. Roadmap
 
-### Longo prazo (pós-M10) — *Entregáveis Desejáveis* do TAPI
+### 3.1 Longo prazo (pós-M10) — *Entregáveis Desejáveis* do TAPI
 
 | Item | Evidência |
 |---|---|
 | Análise de log via IA generativa | TAPI seção *Entregáveis Desejáveis* + Anexo B.5: *"1 serviço rodando que sobe o log, já gera 1 análise pra gente com a LLM"*. |
 | Integração com Matlab/Simulink (Raia 1 do workflow Jacto) | TAPI Anexo A.4 — Raia 1 (Model-Based Design) com loop MIL/SIL/HIL. |
 | Expansão para HIL/PIL com Pixhawk físico | TAPI Anexo A.4 — Raia 2 (Test Rigs versionados). |
+
+### 3.2 Próximos passos (Sprints 4–5) — fechar o eixo integridade
+
+A Sprint 3 entregou a esteira real (§2): SITL, gates bloqueantes e dashboards com dados reais. O que **falta** do eixo integridade ("rastro que ensina" / procedência cobrada pelo orientador) é tornar *enforced* o que hoje está apenas decidido ou em modo informativo:
+
+| Próximo passo | O que muda (AS-IS Sprint 3 → TO-BE) | Âncora / evidência |
+|---|---|---|
+| **GPG signing ENFORCED em `main`** | Decisão registrada em [ADR-0004](decisoes/0004-gpg-signing-main.md) → habilitar o push rule *Reject unsigned commits* server-side em `main`, de modo que push com commit não assinado seja rejeitado (controle inevitável, não checklist). | [ADR-0004](decisoes/0004-gpg-signing-main.md); ISO 27001 A.8.28 (ref [14] em [`projeto.md` §7](projeto.md)). |
+| **SAST bloqueante** (remover `allow_failure`) | Jobs Gitleaks/Semgrep hoje rodam informativos (`allow_failure`, `require_passed: false`) → promovê-los a gate: vulnerabilidade Crítica/Alta ou *secret* detectado **bloqueia o merge**, virando `require_passed: true` em [`quality_gates.yaml`](../quality_gates.yaml). | [`ci/sast.yml`](../ci/sast.yml); [ADR-0007](decisoes/0007-sast-semgrep.md); §8.2 (gate de SAST em modo *skip*). |
+| **SBOM por release** (Trivy/Syft) com retenção auditável | Ausente hoje → gerar *Software Bill of Materials* por release como artefato versionado e auditável, fechando a cadeia de suprimentos (procedência do que a esteira promove). | NIST SP 800-218 (ref [15]) + CISA SBOM (ref [12]) em [`projeto.md` §7](projeto.md); [`projeto.md` §5.3](projeto.md). |
 
 ## 4. Métricas de sucesso
 
