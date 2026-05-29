@@ -56,3 +56,14 @@
 | `max_acceleration_m_s2` | ≤ 15.0 (invariante físico) | ADR-0003 | sim |
 | `std_altitude_cruise_m` | ≤ 1.0 (baseline) | baseline `square_50m` | sim |
 | `mission_duration_s` | ≤ 180 s (baseline) | baseline `square_50m` | sim |
+
+## 5. Arquitetura CD (staging → promoção → rollback)
+
+- **Artefato imutável**: artefato de CI por `$CI_COMMIT_SHA` (instância sem
+  Container Registry — ver `docs/decisoes/0006-promocao-sem-registry.md`).
+- **Promoção**: o MESMO artefato é re-apontado por GitLab Environment
+  (dev → staging → prod), **sem rebuild** (`scripts/promote_artifact.py`).
+- **"Quem aperta o botão"** (Aula 07): staging é automático (develop/main);
+  prod é `when: manual` — Continuous Delivery, apropriado para firmware.
+- **Rollback**: re-aponta prod a um SHA anterior (mecânica inversa, `--rollback`).
+- **Release**: tag `v*` → GitLab Release com checksum/SBOM.
