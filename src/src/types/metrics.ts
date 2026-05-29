@@ -247,3 +247,45 @@ export interface ProcessMetrics {
   pipelines_amostra_100: PipelineSampleData;
   observacao_honesta: string;
 }
+
+// DORA medido (derivado do snapshot real via scripts/collect_gitlab_metrics.py
+// derive_dora). Espelha src/data/dora.json. Classificação honesta — MTTR
+// 'nao-medido' quando não há evento de recuperação na janela.
+
+export type DoraLevel = 'elite' | 'high' | 'medium' | 'low' | 'nao-medido';
+
+export interface DoraDeploymentFrequency {
+  valor: number;
+  unidade: string;
+  classificacao: DoraLevel;
+  nota: string;
+}
+
+export interface DoraLeadTime {
+  mediana_h: number;
+  media_h: number;
+  classificacao: DoraLevel;
+  nota: string;
+}
+
+export interface DoraChangeFailureRate {
+  producao_main_pct: number;
+  desenvolvimento_develop_pct: number;
+  classificacao_producao: DoraLevel;
+  nota: string;
+}
+
+export interface DoraMttr {
+  valor_h: number | null;
+  classificacao: DoraLevel;
+  nota: string;
+}
+
+export interface DoraMetricsReal {
+  _meta: ProcessMetricsMeta;
+  deployment_frequency: DoraDeploymentFrequency;
+  lead_time_for_changes: DoraLeadTime;
+  change_failure_rate: DoraChangeFailureRate;
+  mttr: DoraMttr;
+  observacao_honesta: string;
+}
