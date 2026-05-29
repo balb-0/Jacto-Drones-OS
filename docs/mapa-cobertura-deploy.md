@@ -13,10 +13,10 @@
 | Build PX4 SITL | `sitl-mission-metrics` (build) | id=100, imagem pública px4-dev | binário `px4_sitl_default` |
 | Missão simulada | `sitl-mission-metrics` (test) | mesmo job (jmavsim headless) | `.ulg` |
 | Extração de métricas | `sitl-mission-metrics` (test) | mesmo job (pyulog) | `metrics.json` (artefato) |
-| Quality gates | `quality-gates` (gate) | id=100 | `quality_gates_result.json` |
+| Quality gates *(pendente TG6 — `scripts/quality_gates.py`)* | `quality-gates` (gate) | id=100 | `quality_gates_result.json` |
 | Deploy staging | `deploy_staging` (deploy) | id=100 | `deploy-staging.json` + Environment |
 | Deploy prod | `deploy_prod` (deploy, manual) | id=100 | `deploy-prod.json` + Environment |
-| Release | `release` (deploy, tag `v*`) | id=100 | GitLab Release (checksum/SBOM) |
+| Release | `release` (deploy, tag `v*`) | id=100 | **GitLab Release real** + ref. ao `metrics.json` |
 
 ## 2. Contratos operacionais por integração
 
@@ -31,6 +31,8 @@
 | `métricas → quality gate` | `metrics.json` presente | `metrics.json` + `quality_gates.yaml` | `exit 0` (pass) / `≠0` (fail) | qualquer threshold violado |
 | `gate verde → deploy staging` | pipeline verde em develop/main | artefato por `$CI_COMMIT_SHA` | `deploy-staging.json` + Environment | artefato ausente |
 | `staging → prod` | clique manual (main) | mesmo artefato (mesmo SHA) | `deploy-prod.json` | aprovação negada / artefato divergente |
+| `tag v* → release` | push de tag `v[0-9]*` | `$CI_COMMIT_SHA` + tag | GitLab Release real + `release-<tag>.json` | tag sem pipeline verde / erro do release-cli |
+| `incidente → rollback` | acionamento manual com `ROLLBACK_SHA` | SHA anterior válido | `deploy-prod.json` (`rollback:true`) + Environment | `ROLLBACK_SHA` vazio / SHA inválido |
 
 ## 3. Cobertura Não-Funcional do Deploy
 
@@ -40,7 +42,7 @@
 | Rastreabilidade | `SHA ↔ commit ↔ MR ↔ issue (#TG)` | todos | DO-178C |
 | Segurança (secrets) | TruffleHog/Gitleaks server-side (TG5) | sast | ISO 27001 A.5.21 |
 | Análise estática (SAST) | GitLab SAST/Semgrep no runner `sonar-00` (TG5) | sast | NIST SP 800-218 |
-| Integridade do artefato | checksum + SBOM no release | deploy | ISO 27001 A.8.31 |
+| Integridade do artefato | GitLab Release imutável por SHA (checksum/SBOM = TG5/futuro) | deploy | ISO 27001 A.8.31 |
 | Tempo de feedback | duração do pipeline medida (DORA) | todos | DORA / *Accelerate* |
 
 ## 4. Thresholds por gate não-funcional
@@ -50,7 +52,7 @@
 
 | Gate | Threshold | Origem | Bloqueia merge? |
 |---|---|---|---|
-| `coverage.min_line_coverage` | ≥ 0.55 (meta 0.80) | `quality_gates.yaml` | sim (TG6) |
+| `coverage.min_line_coverage` | ≥ 0.90 (`libs/`, medido 98%) | `quality_gates.yaml` | sim (TG6) |
 | SAST new blocker/critical | 0 | `quality_gates.yaml` | informativo → sim |
 | secrets verificados | 0 | TG5 | sim |
 | `max_acceleration_m_s2` | ≤ 15.0 (invariante físico) | ADR-0003 | sim |
@@ -66,7 +68,8 @@
 - **"Quem aperta o botão"** (Aula 07): staging é automático (develop/main);
   prod é `when: manual` — Continuous Delivery, apropriado para firmware.
 - **Rollback**: re-aponta prod a um SHA anterior (mecânica inversa, `--rollback`).
-- **Release**: tag `v*` → GitLab Release com checksum/SBOM.
+- **Release**: tag `v*` → **GitLab Release real** (keyword `release:`/release-cli)
+  referenciando o artefato por SHA; checksum/SBOM = TG5/futuro.
 
 ## 6. Malha fechada estendida ao deploy
 
