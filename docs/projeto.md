@@ -398,9 +398,9 @@ A validação do protótipo **Jacto Drones OS v0.1** confronta o processo manual
 
 A Sprint 3 consolidou o pipeline PX4 SITL real e converteu as metas provisórias da Sprint 2 em **números medidos**. A tabela abaixo registra os resultados **medidos** no pipeline `#30535` em `develop` (commit `c967ad6`, status VERDE), confrontados com a baseline AS-IS do TAPI. Os campos que dependem do voo real de produção (`.ulg` da Jacto) permanecem como **meta projetada** — separados literalmente em §8.1.2.
 
-### 8.1.1 Resultado medido nesta sprint (pipeline real)
+### 8.1.1 ✅ Resultado MEDIDO nesta sprint (pipeline real)
 
-Tempos e métricas extraídos diretamente dos logs do GitLab CI e do artefato `reports/metrics.json` (job `sitl-mission-metrics`), não de estimativas.
+Tempos e métricas extraídos diretamente dos logs do GitLab CI e do artefato `reports/metrics.json` (job `sitl-mission-metrics`), não de estimativas. **Toda linha desta tabela é um fato medido no pipeline `#30535`.**
 
 | Indicador | Resultado medido (Sprint 3) | Como foi medido |
 | :--- | :--- | :--- |
@@ -431,9 +431,9 @@ Tempos e métricas extraídos diretamente dos logs do GitLab CI e do artefato `r
 - **Dados AS-IS:** Extraídos do TAPI Seção B.5 (Gargalos operacionais de logs)<a id="ref7-link" href="#ref7"><sup>[7]</sup></a>.
 - **Dados TO-BE medidos:** Logs do pipeline `#30535` (GitLab CI, `develop` @ `c967ad6`); artefato `reports/metrics.json` do job `sitl-mission-metrics`; saída do `quality-gates` (5/5); coleta DORA via API GitLab (projeto `10705`).
 
-### 8.1.2 Meta / projeção para sprints futuras (NÃO medido nesta sprint)
+### 8.1.2 🎯 Meta / PROJETADO para sprints futuras (NÃO medido nesta sprint)
 
-Os indicadores abaixo **não foram medidos** na Sprint 3: dependem de instrumentação ou de insumos de produção que ainda não existem no escopo do protótipo. Permanecem como **meta projetada** explícita — não devem ser lidos como resultado obtido.
+Os indicadores abaixo **não foram medidos** na Sprint 3: dependem de instrumentação ou de insumos de produção que ainda não existem no escopo do protótipo. Permanecem como **meta projetada** explícita — **nenhum** valor desta tabela deve ser lido como resultado obtido.
 
 | Indicador (projetado) | Meta | Por que não foi medido nesta sprint |
 | :--- | :--- | :--- |
@@ -445,13 +445,17 @@ Os indicadores abaixo **não foram medidos** na Sprint 3: dependem de instrument
 
 ## 8.2 Diagnóstico de Processo (Qualitativo)
 
+O texto abaixo é **aderente** às tabelas de §8.1: descreve como "medido" apenas o que roda de fato no pipeline `#30535`, e marca explicitamente como "projetado" o que ainda é meta.
+
 ### Centralização de Governança
 
-A unificação no GitLab eliminou o fluxo fragmentado entre ferramentas isoladas (Notion/Jira/Word). O Dashboard QoS/QoP fornece a visualização de saúde do projeto sem dependência de extração manual de dados ou reuniões de status.
+**Medido:** a unificação no GitLab substituiu, no escopo do protótipo, o fluxo fragmentado entre ferramentas isoladas (Notion/Jira/Word) — toda a esteira (código, CI/CD, MRs, métricas) vive num único projeto (`10705`). Os dashboards QoS/QoP/Gerencial passaram a consumir **dados reais do pipeline** (Camada 1 da Sprint 3, ver [`dashboard-implementation-report.md`](dashboard-implementation-report.md)), e não mais mocks: a visualização de saúde do projeto é gerada a partir do `reports/metrics.json` e da coleta DORA, sem extração manual.
 
 ### Fechamento de Malha (Sensores)
 
-Os scripts de validação automática de logs e os testes SITL (Software In The Loop) atuam como os sensores da arquitetura de malha fechada. O bloqueio de merges em caso de falha na simulação Gazebo garante a integridade do código antes da integração, eliminando a subjetividade da inspeção manual.
+**Medido (roda de fato):** a missão SITL `square_50m` é executada de fato a cada pipeline — o firmware PX4 voa em simulação *headless*, gera o `.ulg`, e o [`scripts/extract_metrics.py`](../scripts/extract_metrics.py) produz o `reports/metrics.json` que alimenta os testes de invariantes e baseline (`tests/sitl`). Sobre essas métricas, o job `quality-gates` ([`scripts/quality_gates.py`](../scripts/quality_gates.py)) é **bloqueante**: sem `allow_failure`, um pipeline que viole qualquer dos 5 gates falha e **impede o merge** de fato — esse é o "sensor" da malha fechada que opera hoje, substituindo a subjetividade da inspeção manual por critérios versionados em [`quality_gates.yaml`](../quality_gates.yaml) ([ADR-0005](decisoes/0005-thresholds-quality-gates.md)).
+
+**Projetado (ainda meta):** a validação automática do `.ulg` de **voo real de produção** (gates de vibração e de defasagem comando×atuação — caso de queda relatado pela Jacto, TAPI B.5) ainda **não** está instrumentada sobre logs reais; os critérios estão formalizados em [ADR-0003](decisoes/0003-criterios-aprovacao-log-sitl.md) e exercitados sobre o caso pedagógico `square_50m`, mas a aplicação ao voo real da Jacto segue como meta (ver §8.1.2). Da mesma forma, o gate de SAST roda em modo *skip* nesta sprint (`require_passed: false` em [`quality_gates.yaml`](../quality_gates.yaml)); torná-lo bloqueante é próximo passo do eixo integridade ([ADR-0007](decisoes/0007-sast-semgrep.md), ver [`melhoria-projeto.md`](melhoria-projeto.md)).
 
 ## 8.3 Tabela de Fontes e Auditabilidade
 
