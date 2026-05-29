@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "coletado_em": "2026-05-29",
+    "fonte": "API GitLab git.inteli.edu.br projeto 10705"
+  },
+  "deployment_frequency": {
+    "staging_deploys_success": 10,
+    "ambiente": "staging",
+    "nota": "todos success; ambiente staging via deploy_staging (ci/deploy.yml)"
+  },
+  "lead_time_for_changes_h": {
+    "n_mrs_merged": 21,
+    "mediana_h": 0.4,
+    "media_h": 27.4,
+    "min_h": 0,
+    "max_h": 182.4
+  },
+  "change_failure_rate": {
+    "develop": {
+      "total": 11,
+      "failed": 5,
+      "cfr_pct": 45
+    },
+    "main": {
+      "total": 4,
+      "failed": 0,
+      "cfr_pct": 0
+    }
+  },
+  "pipelines_amostra_100": {
+    "total": 61,
+    "success": 27,
+    "failed": 28,
+    "skipped": 4,
+    "canceled": 2
+  },
+  "observacao_honesta": "Amostra pequena; muitos failed sao iteracoes de de-risking (spike SITL). CFR alto em develop reflete desenvolvimento, nao producao. Reportar com janela e nota."
+}
