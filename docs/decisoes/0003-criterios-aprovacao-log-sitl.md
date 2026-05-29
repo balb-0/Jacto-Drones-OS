@@ -30,6 +30,8 @@ Adotar três famílias de métricas extraídas do `.ulg` como **gates obrigatór
 
 Cada execução do job produz `functional-test-report.json` (formato já estabelecido em [`scripts/run_functional_tests.py`](../../scripts/run_functional_tests.py)) acrescido dos três campos. Falha em qualquer um marca o MR como reprovado.
 
+> **Nota de implementação (Sprint 3):** esta proposta original (Sprint 2) falava de um job `validate-log` e de `functional-test-report.json`. A implementação real da Sprint 3 produz `reports/metrics.json` (via job `sitl-mission-metrics` + `scripts/extract_metrics.py`) e aplica os gates em `quality_gates.yaml` + `tests/sitl/`. Ver a seção "Aceitação na Sprint 3" abaixo para os gates efetivamente implementados.
+
 ## Alternativas consideradas (e rejeitadas)
 
 - **Aprovação só por execução sem crash:** insuficiente — não detectaria o caso real da queda, que progrediu silenciosamente até o desastre.

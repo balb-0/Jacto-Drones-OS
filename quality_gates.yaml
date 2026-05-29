@@ -1,22 +1,27 @@
 # Quality Gates do pipeline — thresholds versionados (TG6.1).
 #
-# Cada seção mapeia 1:1 com um check de scripts/quality_gates.py (TG6.2).
+# Cada seção mapeia 1:1 com um check de scripts/quality_gates.py (TG6.2 — o
+# enforcement automático chega lá; até então isto é o contrato versionado).
 # Mudar qualquer threshold aqui exige PR + justificativa no commit (ratchet:
 # coverage não baixa). Hierarquia baseline × invariante: docs/testing-philosophy.md.
 # Origem dos thresholds de missão: ADR-0003 (critérios de aprovação de log SITL).
 
-# Coverage de testes unitários (tests/unit, funções puras de libs/ e scripts/).
+# Coverage de testes unitários (tests/unit, funções puras de libs/).
 coverage:
-  # Baseline da Sprint 3: 55%. Os CLIs de integração (run_mission, promote_artifact)
-  # são exercitados via SITL, não via unit — meta 0.80 quando ganharem unit (Sprint 4).
-  min_line_coverage: 0.55
+  # libs/ (geometria + loader de missão) tem 98% medido; ratchet em 0.90 protege
+  # contra regressão. CLIs (run_mission, promote_artifact) são exercitados via SITL.
+  min_line_coverage: 0.90
 
 # Métricas de missão (extraídas por scripts/extract_metrics.py → metrics.json).
 # Baseline frouxo: detecta regressão grosseira, não crava performance ideal.
+# Chave (threshold) → campo de metrics.json que o TG6.2 compara:
+#   max_acceleration_m_s2   → max_acceleration_m_s2
+#   max_mission_duration_s  → mission_duration_s
+#   max_std_altitude_cruise_m → std_altitude_cruise_m
 mission_metrics:
-  max_acceleration_m_s2: 15.0   # INVARIANTE físico (x500) — alinhado ao ADR-0003
-  max_mission_duration_s: 180   # baseline square_50m (~79 s medido + folga)
-  min_altitude_stability_m: 1.0 # std de altitude em cruzeiro <= 1.0 m (baseline ~0.69 medido)
+  max_acceleration_m_s2: 15.0      # INVARIANTE físico (x500). NB: vehicle_acceleration inclui g (~9.8)
+  max_mission_duration_s: 180      # baseline square_50m (~79 s medido + folga)
+  max_std_altitude_cruise_m: 1.0   # std de altitude em cruzeiro <= 1.0 m (baseline ~0.69 medido)
 
 # SAST (TG5) — informativo na Sprint 3; vira bloqueante quando o runner sonar-00
 # estiver amarrado. Mantido aqui para o avaliador (scripts/quality_gates.py) já
