@@ -6,9 +6,11 @@
 // números agregados. Aqui apenas importamos o JSON (resolveJsonModule).
 
 import processMetricsRaw from '@/data/process-metrics.json';
-import type { ProcessMetrics } from '@/types/metrics';
+import doraRaw from '@/data/dora.json';
+import type { ProcessMetrics, DoraMetricsReal } from '@/types/metrics';
 
 const processMetrics = processMetricsRaw as ProcessMetrics;
+const doraMetrics = doraRaw as DoraMetricsReal;
 
 /** Retorna o snapshot de indicadores de processo coletado da API GitLab. */
 export function getProcessMetrics(): ProcessMetrics {
@@ -18,4 +20,14 @@ export function getProcessMetrics(): ProcessMetrics {
 /** Versão assíncrona para uniformizar com os demais serviços do dashboard. */
 export async function fetchProcessMetrics(): Promise<ProcessMetrics> {
   return processMetrics;
+}
+
+/** Retorna o DORA medido, derivado do snapshot real (src/data/dora.json). */
+export function getDoraMetrics(): DoraMetricsReal {
+  return doraMetrics;
+}
+
+/** Versão assíncrona do DORA medido. */
+export async function fetchDoraMetrics(): Promise<DoraMetricsReal> {
+  return doraMetrics;
 }

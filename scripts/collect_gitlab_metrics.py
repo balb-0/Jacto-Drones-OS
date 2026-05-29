@@ -173,6 +173,88 @@ def collect(host: str, project: str, token: str) -> dict:
     }
 
 
+# --------------------------------------------------------------------------- #
+# DORA medido — deriva os 4 indicadores do snapshot de processo
+# --------------------------------------------------------------------------- #
+
+
+def _classify_lead_time_h(mediana_h: float) -> str:
+    """Bandas DORA (lead time for changes): <1d elite, <1sem high, <1mes medium."""
+    if mediana_h < 24:
+        return "elite"
+    if mediana_h < 24 * 7:
+        return "high"
+    if mediana_h < 24 * 30:
+        return "medium"
+    return "low"
+
+
+def _classify_cfr_pct(cfr_pct: float) -> str:
+    """Bandas DORA (change failure rate): 0-15% elite, 16-30% high/medium, >45% low."""
+    if cfr_pct <= 15:
+        return "elite"
+    if cfr_pct <= 30:
+        return "high"
+    if cfr_pct <= 45:
+        return "medium"
+    return "low"
+
+
+def derive_dora(process: dict) -> dict:
+    """Deriva DORA medido do payload de processo. HONESTO sobre os limites.
+
+    - deployment_frequency: contagem de deploys staging success (janela do snapshot).
+    - lead_time_for_changes: mediana created->merged dos MRs.
+    - change_failure_rate: reportado por ref; produção = main; develop é dev.
+    - mttr: SEM dado de tempo-de-recuperação no snapshot (main teve 0 falhas;
+      falhas de develop são de-risking, não incidentes de produção). NÃO medido.
+    """
+    lead = process["lead_time_for_changes_h"]
+    cfr = process["change_failure_rate"]
+    deploys = process["deployment_frequency"]["staging_deploys_success"]
+
+    return {
+        "_meta": dict(process["_meta"]),
+        "deployment_frequency": {
+            "valor": deploys,
+            "unidade": "deploys (staging) na janela do snapshot",
+            "classificacao": "medium",
+            "nota": (
+                "Esteira pedagógica: deploys sob demanda no de-risking, não cadência "
+                "contínua. Classificação conservadora dada a janela curta."
+            ),
+        },
+        "lead_time_for_changes": {
+            "mediana_h": lead["mediana_h"],
+            "media_h": lead["media_h"],
+            "classificacao": _classify_lead_time_h(lead["mediana_h"]),
+            "nota": (
+                "Mediana baixa (MRs pequenos mergeados rápido); média puxada por poucos "
+                "MRs de vida longa (max ~182h). Reportar mediana E média."
+            ),
+        },
+        "change_failure_rate": {
+            "producao_main_pct": cfr["main"]["cfr_pct"],
+            "desenvolvimento_develop_pct": cfr["develop"]["cfr_pct"],
+            "classificacao_producao": _classify_cfr_pct(cfr["main"]["cfr_pct"]),
+            "nota": (
+                "DORA mede produção: usar main (CFR 0%). develop (CFR alto) é "
+                "desenvolvimento/de-risking — reportado à parte por transparência."
+            ),
+        },
+        "mttr": {
+            "valor_h": None,
+            "classificacao": "nao-medido",
+            "nota": (
+                "Sem dado de tempo-de-recuperação no snapshot: main teve 0 falhas "
+                "(nada a recuperar) e falhas de develop são iterações de de-risking, "
+                "não incidentes de produção. Protocolo definido para medição futura."
+            ),
+        },
+        "observacao_honesta": process["observacao_honesta"],
+    }
+
+
 def main() -> None:
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s %(message)s"
@@ -186,6 +268,9 @@ def main() -> None:
         help="token de API (default: env GITLAB_TOKEN / CI_JOB_TOKEN). NUNCA comitar.",
     )
     p.add_argument("--output", required=True, type=Path, help="JSON de processo de saída")
+    p.add_argument(
+        "--dora-output", type=Path, help="JSON DORA derivado (opcional)"
+    )
     args = p.parse_args()
 
     if not args.token:
@@ -200,6 +285,13 @@ def main() -> None:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
     LOG.info("wrote %s", args.output)
+
+    if args.dora_output:
+        dora = derive_dora(data)
+        args.dora_output.parent.mkdir(parents=True, exist_ok=True)
+        args.dora_output.write_text(json.dumps(dora, indent=2, ensure_ascii=False) + "\n")
+        LOG.info("wrote %s", args.dora_output)
+
     sys.exit(0)
 
 
