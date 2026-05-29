@@ -8,11 +8,16 @@
 # comentário de gates ($GITLAB_MR_TOKEN, um token de projeto/usuário com escopo
 # de api, guardado como variável protegida do CI — NUNCA no browser).
 #
-# Disciplina:
-#  - rules: só em merge_request_event (não polui pushes/branches).
-#  - allow_failure: true — comentário é cortesia de DX, não um gate; se o token
-#    faltar ou a API falhar, o pipeline NÃO quebra por causa disto.
-#  - needs: sitl-mission-metrics — herda metrics.json e sequencia após a missão.
+# Padrão CANÔNICO do comentário automático (NÃO usa merge_request_event):
+#  - rules: roda no BRANCH pipeline ($CI_COMMIT_BRANCH; não em tags) — não cria
+#    pipeline de MR duplicado nem deixa o `needs` apontar para job ausente.
+#  - Descobre o MR ABERTO cuja source_branch é a branch atual via API e posta a
+#    nota nele. Sem token, sem MR aberto, ou sem métricas: faz skip gracioso.
+#  - allow_failure: true — comentário é cortesia de DX, NÃO um gate; o gate
+#    bloqueante é o job `quality-gates`. Se o token faltar ou a API falhar, o
+#    pipeline NÃO quebra por causa disto.
+#  - needs: sitl-mission-metrics com optional:true — agora resolve (ambos rodam
+#    no branch pipeline) e herda metrics.json; optional por segurança.
 # ─────────────────────────────────────────────────────────────────────────
 
 mr-kpis-comment:
@@ -21,58 +26,56 @@ mr-kpis-comment:
   needs:
     - job: sitl-mission-metrics
       artifacts: true
+      optional: true
   allow_failure: true
   rules:
-    # Só roda em pipeline de merge request (onde existe MR para comentar).
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # Roda em branch pipelines (não em tags); SEM merge_request_event — o MR é
+    # descoberto via API a partir da branch atual.
+    - if: '$CI_COMMIT_BRANCH'
   before_script:
     - apt-get update -qq && apt-get install -y -qq --no-install-recommends curl >/dev/null
   script:
-    - |
-      if [ ! -f reports/metrics.json ]; then
-        echo "reports/metrics.json ausente — missão não publicou métricas; skip comentário"
-        exit 0
-      fi
-    - |
-      if [ -z "$GITLAB_MR_TOKEN" ]; then
-        echo "GITLAB_MR_TOKEN não definido — configure a variável protegida; skip comentário"
-        exit 0
-      fi
+    # 1) descobre o MR aberto cuja source_branch é a branch atual
+    - 'MR_IID=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_MR_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/merge_requests?source_branch=$CI_COMMIT_BRANCH&state=opened" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0][\"iid\"] if d else \"\")")'
     # Monta o corpo (markdown) da nota a partir do metrics.json — Python já está
-    # na imagem base e evita escaping frágil de shell sobre JSON.
+    # na imagem base e evita escaping frágil de shell sobre JSON. Degrade
+    # gracioso: se metrics.json faltar, publica só o cabeçalho + aviso.
     - |
-      python3 - <<'PY' > mr_note.md
-      import json
-      m = json.load(open("reports/metrics.json"))
-      def g(k, d="—"):
-          return m.get(k, d)
+      python3 - <<'PY' > nota.md
+      import json, os
+      print("> 🤖 _Comentário automático do pipeline de CD. Publicado via token de serviço da esteira (hoje o PAT de @Fernando; idealmente um token impessoal de projeto/grupo — ver ADR-0008). Os MRs em si são abertos por cada membro responsável._")
+      print()
       print("## 📊 KPIs da missão (square_50m)")
       print()
-      print("| Indicador | Valor |")
-      print("|---|---|")
-      print(f"| Duração | {g('mission_duration_s')} s |")
-      print(f"| Altitude máx | {g('max_altitude_m')} m |")
-      print(f"| Altitude média | {g('mean_altitude_m')} m |")
-      print(f"| Estabilidade (σ altitude cruzeiro) | {g('std_altitude_cruise_m')} m |")
-      print(f"| Aceleração máx | {g('max_acceleration_m_s2')} m/s² |")
-      print(f"| Maior queda de bateria | {g('max_battery_drop_pct')} % |")
-      print(f"| Amostras | {g('n_samples')} |")
-      print()
-      print("_Artefato real: reports/metrics.json (job sitl-mission-metrics). Aceites versionados em quality_gates.yaml; veredito no stage `gate`._")
+      if not os.path.exists("reports/metrics.json"):
+          print("_reports/metrics.json ausente — o job sitl-mission-metrics não publicou métricas neste pipeline._")
+      else:
+          m = json.load(open("reports/metrics.json"))
+          def g(k, d="—"):
+              return m.get(k, d)
+          print("| Indicador | Valor |")
+          print("|---|---|")
+          print(f"| Duração | {g('mission_duration_s')} s |")
+          print(f"| Altitude máx | {g('max_altitude_m')} m |")
+          print(f"| Altitude média | {g('mean_altitude_m')} m |")
+          print(f"| Estabilidade (σ altitude cruzeiro) | {g('std_altitude_cruise_m')} m |")
+          print(f"| Aceleração máx | {g('max_acceleration_m_s2')} m/s² |")
+          print(f"| Maior queda de bateria | {g('max_battery_drop_pct')} % |")
+          print(f"| Amostras | {g('n_samples')} |")
+          print()
+          print("_Artefato real: reports/metrics.json (job sitl-mission-metrics). Aceites versionados em quality_gates.yaml; veredito no stage `gate`._")
       PY
-    - 'echo "--- nota a publicar ---"; cat mr_note.md'
-    # Posta a nota no MR via API de Notes. --data-urlencode evita problemas de
-    # encoding do markdown. --fail faz curl retornar != 0 em HTTP de erro, mas
-    # allow_failure:true garante que isso não quebra o pipeline.
-    - |
-      curl --silent --show-error --fail \
-        --request POST \
-        --header "PRIVATE-TOKEN: ${GITLAB_MR_TOKEN}" \
-        --data-urlencode "body@mr_note.md" \
-        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests/${CI_MERGE_REQUEST_IID}/notes" \
-        && echo "nota de KPIs publicada no MR !${CI_MERGE_REQUEST_IID}"
+    - 'echo "--- nota a publicar ---"; cat nota.md'
+    # Skips graciosos: sem token (comentário é cortesia) ou sem MR aberto p/ a
+    # branch (push direto sem MR). Não quebram o pipeline.
+    - 'test -n "$GITLAB_MR_TOKEN" || { echo "sem token; skip"; exit 0; }'
+    - 'test -n "$MR_IID" || { echo "sem MR aberto p/ $CI_COMMIT_BRANCH; skip"; exit 0; }'
+    # 2) posta a nota (corpo em arquivo .md) no MR descoberto. --data-urlencode
+    # evita problemas de encoding do markdown.
+    - 'curl -s --show-error --request POST --header "PRIVATE-TOKEN: $GITLAB_MR_TOKEN" --data-urlencode "body@nota.md" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/merge_requests/$MR_IID/notes"'
+    - 'echo "nota de KPIs publicada no MR !$MR_IID"'
   artifacts:
     # Rastro auditável do que foi comentado.
-    paths: [mr_note.md]
+    paths: [nota.md]
     when: always
     expire_in: 7 days
