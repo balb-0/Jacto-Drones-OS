@@ -39,7 +39,9 @@ Logo, "build de imagem → registry → pull" não é executável como no demo.
    padrão do `release.yml` do demo, que builda PX4 do zero num job comum.
 2. **O artefato imutável é o artefato de CI por `$CI_COMMIT_SHA`** (binário
    SITL + `metrics.json`), não uma imagem de container. Em tag `v*`, um
-   **GitLab Release** com checksum/SBOM materializa o artefato versionado.
+   **GitLab Release real** (keyword `release:` / release-cli) referenciando o
+   artefato de CI por SHA materializa o ponto de versão; geração de
+   checksum/SBOM fica como evolução (TG5/Sprint 4).
 3. **Promoção dev→staging→prod = o MESMO artefato re-apontado por GitLab
    Environment, sem rebuild** (`scripts/promote_artifact.py`), com `prod`
    sob `when: manual` (Continuous Delivery — "quem aperta o botão", Aula 07).
