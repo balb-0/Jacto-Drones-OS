@@ -7,6 +7,18 @@ import type {
   BacklogHealthMetrics,
 } from '@/types/metrics';
 
+// QoS de PRODUTO (firmware) com dado REAL: os KPIs de missão SITL são a fonte
+// de verdade do /qos (TG2.4). Reexportados aqui para que o módulo canônico de
+// métricas exponha a fonte real ao lado das funções legadas. As funções
+// fetch* abaixo (build/test/integração) seguem MOCK e estão marcadas como
+// LEGADO/PROJETADO — o /qos passou a consumir fetchQoSSnapshot.
+export {
+  fetchMissionMetrics,
+  fetchQoSSnapshot,
+  buildQoSSnapshotSync,
+  QOS_SOURCE,
+} from '@/services/missionMetrics';
+
 function generateTrendData(baseValue: number, variance: number = 0.2, max?: number): Array<{ date: string; value: number }> {
   const data = [];
   const today = new Date();
@@ -29,6 +41,13 @@ function generateTrendData(baseValue: number, variance: number = 0.2, max?: numb
 
   return data;
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// LEGADO/PROJETADO — as funções fetch* abaixo ainda retornam dados MOCK
+// (Math.random/setTimeout). Mantidas porque a home e o /qop ainda as consomem;
+// o /qos NÃO depende mais delas. Métricas de build/teste/integração reais
+// dependem de fontes ainda não disponíveis (histórico de pipelines via API).
+// ─────────────────────────────────────────────────────────────────────────
 
 export async function fetchBuildMetrics(): Promise<BuildMetrics> {
   await new Promise(resolve => setTimeout(resolve, 500));
