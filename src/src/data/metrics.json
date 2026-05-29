@@ -1,0 +1,9 @@
+{
+  "max_acceleration_m_s2": 11.01,
+  "max_altitude_m": 10.01,
+  "max_battery_drop_pct": 0.333,
+  "mean_altitude_m": 7.12,
+  "mission_duration_s": 78.83,
+  "n_samples": 9855,
+  "std_altitude_cruise_m": 0.688
+}
