@@ -1,7 +1,7 @@
 # ADR-0003 — Critérios Automáticos de Aprovação de Log do PX4 SITL
 
-**Status:** **Proposto** — aguardando decisão na Sprint 3, antes da implementação do job `validate-log` no pipeline.
-**Data da proposta:** 16/05/2026
+**Status:** **Aceito** (Sprint 3, 2026-05-28) — promovido de *Proposto* após o spike validar o arco SITL real (build + missão + extração de `.ulg`) e produzir as primeiras medições para calibrar os thresholds.
+**Data da proposta:** 16/05/2026 · **Data da aceitação:** 2026-05-28
 **Autores:** G04
 
 > Este ADR é **prospectivo**: documenta a decisão **antes** do código que a implementa, conforme o princípio operacional permanente do G04 (ver [`guia-v1.md`](../../guia/guia-v1.md) — Regras de Ouro) e o eixo *"rastro que ensina"* cobrado pelo orientador Reginaldo Arakaki na Sprint Review 1 (30/04/2026): *"cada novo critério do pipeline deve nascer de um incidente real (ADR antes do código)"*.
@@ -42,12 +42,31 @@ Cada execução do job produz `functional-test-report.json` (formato já estabel
 - **Falsos positivos esperados:** Drones em manobra agressiva podem violar os limites sem haver problema real. Mitigação: thresholds aplicáveis apenas em segmentos de voo identificados como nominais (hover ou waypoint navigation).
 - **Cobertura parcial:** Os três gates não cobrem todos os modos de falha. Outros critérios (ex.: drift de GPS, falha de IMU, padrões de RC out) entram em ADRs subsequentes conforme incidentes aparecerem.
 
-## Próximos passos antes de aceitar este ADR
+## Aceitação na Sprint 3 (2026-05-28)
 
-1. Validar threshold de defasagem com 3 `.ulg` de voos PX4 padrão (logs disponíveis no repositório público do PX4).
-2. Confirmar com Vinícius Lopes (Jacto) se os três gates capturariam o caso da queda relatado.
-3. Discutir em Sprint Planning 3 (data prevista: ver `cards-da-semana/`).
-4. Atualizar status para **Aceito** quando os três passos acima estiverem concluídos.
+O arco SITL real foi validado por spike (pipeline `30065`): a missão `square_50m`
+gera `.ulg` e `scripts/extract_metrics.py` produz `metrics.json` com 6 KPIs
+cinemáticos. Os **gates efetivamente implementados** nesta sprint partem desses
+KPIs já medidos (`quality_gates.yaml` + `tests/sitl/`):
+
+| Gate implementado | Threshold | Tipo | Onde |
+|---|---|---|---|
+| `max_acceleration_m_s2` | ≤ 15.0 | invariante físico | `test_physical_invariants.py` |
+| `mission_duration_s` | ≤ 180 s | baseline | `test_baseline_thresholds.py` |
+| `std_altitude_cruise_m` | ≤ 1.0 m | baseline | `test_baseline_thresholds.py` |
+
+**Reconciliação com as três famílias propostas.** As famílias originais
+(defasagem RMS comando×atuação, vibração 20–80 Hz, drift de tensão) exigem
+extração mais sofisticada (atitude setpoint×medida, FFT, série de tensão) que
+fica como **incremento provisório calibrável** (Sprint 4), coerente com a
+ressalva já registrada acima ("thresholds iniciais propostos com baixa evidência
+empírica"). O **gate de defasagem** (a métrica-headline do incidente da queda) é
+o próximo a entrar, via `vehicle_attitude` × `vehicle_attitude_setpoint`. Os
+gates cinemáticos acima já dão à esteira poder real de reprovar um voo ruim —
+materializando o "gate é regra" da Aula 10.
+
+**Confirmação com a Jacto** (Vinícius/Held) sobre cobertura do caso da queda fica
+agendada para a Sprint Review 3; não bloqueia a aceitação dos gates cinemáticos.
 
 ## Referências
 
