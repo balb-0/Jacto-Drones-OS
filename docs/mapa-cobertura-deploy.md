@@ -67,3 +67,23 @@
   prod é `when: manual` — Continuous Delivery, apropriado para firmware.
 - **Rollback**: re-aponta prod a um SHA anterior (mecânica inversa, `--rollback`).
 - **Release**: tag `v*` → GitLab Release com checksum/SBOM.
+
+## 6. Malha fechada estendida ao deploy
+
+```mermaid
+flowchart LR
+  PR[push / MR] --> CI[lint + build SITL]
+  CI --> SIM[missao SITL -> .ulg]
+  SIM --> MET[metrics.json]
+  MET --> GATE{quality gates}
+  GATE -- vermelho --> BLOCK[merge bloqueado + Problem Report] --> PR
+  GATE -- verde --> STG[deploy staging auto]
+  STG --> PROD{aprovacao manual}
+  PROD -- aprova --> DEP[deploy prod]
+  PROD -- rejeita --> PR
+  DEP -- incidente --> ROLL[rollback por re-tag] --> PR
+```
+
+Os gates e as métricas funcionam como **sensores** que realimentam o backlog —
+o lado deploy fecha a malha do Controle em Malha Fechada da Sprint 1, agora
+estendida ao CD (cada falha vira Problem Report rastreável).
