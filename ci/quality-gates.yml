@@ -80,3 +80,32 @@ quality-gates-mr-comment:
     paths:
       - reports/quality_gates_comment.md
     expire_in: 30 days
+
+# ─────────────────────────────────────────────────────────────────────────
+# TG6.5.1 — Gate humano: aprovação manual antes do veredito automático (@Kauan)
+#
+# Espelha o manual-approval do demo (ADR-0008): pausa pedagógica leve. Job
+# when: manual no environment protegido `quality-review` — alguém precisa
+# apertar o botão para o stage `gate` fechar e o pipeline seguir pro deploy.
+#
+# allow_failure: false ⇒ pausa REAL (bloqueia o avanço enquanto não aprovado).
+# Só em MR (rules) — é onde a discussão acontece; em push pra develop/main o job
+# é skipped e o veredito automático (job quality-gates) segue sozinho, como no
+# demo. Sem needs (anti DAG-bypass); roda no mesmo stage `gate`.
+# ─────────────────────────────────────────────────────────────────────────
+quality-gates-human-approval:
+  stage: gate
+  image: python:3.12-slim
+  # when: manual vai DENTRO do rule — com rules: presente, o when de nível de job
+  # é ignorado (mesma pegadinha documentada em ci/deploy.yml). allow_failure:
+  # false ⇒ a pausa bloqueia o avanço do pipeline até a aprovação.
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
+      allow_failure: false
+  environment:
+    name: quality-review
+    action: prepare
+  script:
+    - 'echo "Aprovacao humana concedida por ${GITLAB_USER_LOGIN:-?} em $(date -u +%FT%TZ)"'
+    - 'echo "Veredito automatico (job quality-gates) e thresholds: ADR-0005."'
