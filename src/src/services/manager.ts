@@ -3,32 +3,69 @@ import type {
   AnomalyDetection,
   BottleneckAnalysis,
   TrendDataPoint,
+  ProcessMetrics,
+  DoraMetricsReal,
 } from '@/types/metrics';
+import { getProcessMetrics, getDoraMetrics } from '@/services/process';
 
-function generateTrendData(baseValue: number, variance: number = 0.2): Array<{ date: string; value: number }> {
-  const data = [];
-  const today = new Date();
+/**
+ * RECALIBRAÇÃO DA DETECÇÃO DE ANOMALIA SOBRE A SÉRIE REAL (subtask 2.5.4).
+ *
+ * Base de calibração (snapshot 2026-05-29, API GitLab projeto 10705 — ver
+ * src/data/process-metrics.json e docs/dora-protocolo.md):
+ *   - falha de pipeline na amostra: 28/61 ≈ 45.9%
+ *   - CFR develop: 45%  | CFR main (produção): 0%
+ *   - lead time: mediana 0.4h, média 27.4h, máx 182.4h
+ *
+ * Problema do mock antigo: threshold fixo de 10% de falha disparava SEMPRE no
+ * `develop` (fase de de-risking, falha alta por natureza) — falso-positivo
+ * crônico. Recalibração:
+ *   1. O threshold de falha NÃO é mais um 10% fixo: é derivado da série real
+ *      (baseline observado de falha + margem), separando ruído de de-risking
+ *      de sinal real. Produção (main) continua sensível (threshold baixo).
+ *   2. Aging/cycle-time recalibrados em torno da escala real de lead time
+ *      (dias), não dos números inventados do mock.
+ *   3. Detector estatístico ganha guarda de amostra mínima (σ instável com
+ *      poucos pontos) — honesto sobre o tamanho da amostra.
+ */
+export const ANOMALY_CALIBRATION = {
+  // Baseline de falha observado na série real (fração 0-1) + margem (k·desvio).
+  // 45.9% de falha na amostra de de-risking → alerta de DEV só acima de ~60%.
+  devFailureBaselinePct: 45.9,
+  devFailureMarginPct: 15, // margem sobre o baseline de de-risking
+  // Produção é intolerante: qualquer falha de pipeline em main é anomalia.
+  prodFailureThresholdPct: 1,
+  // Lead time: cauda real ~7.6 dias (182.4h). Item "envelhecido" calibrado nessa escala.
+  agingDaysThreshold: 8,
+  // Amostra mínima para o detector estatístico produzir σ confiável.
+  minStatisticalSamples: 8,
+} as const;
 
-  for (let i = 29; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    const randomVariance = (Math.random() - 0.5) * 2 * variance;
-    let value = baseValue * (1 + randomVariance);
-    value = Math.max(0, value);
-
-    data.push({
-      date: date.toISOString().split('T')[0],
-      value: Number(value.toFixed(2)),
-    });
-  }
-
-  return data;
+/** Threshold de falha de pipeline (%) calibrado sobre a série real de de-risking. */
+export function calibratedFailureThresholdPct(): number {
+  return (
+    ANOMALY_CALIBRATION.devFailureBaselinePct +
+    ANOMALY_CALIBRATION.devFailureMarginPct
+  );
 }
 
+/**
+ * DADOS SINTÉTICOS (placeholder) — NÃO derivados do GitLab.
+ *
+ * A carga por pessoa (tarefas por membro, status, cycle time individual) NÃO é
+ * exposta trivialmente pela API GitLab (issues/assignees na esteira pedagógica
+ * não cobrem isso de forma confiável). Em vez de inventar um número "real",
+ * mantemos estes registros como placeholder e os MARCAMOS com `synthetic: true`.
+ * A UI ("Carga da Equipe" em app/manager/page.tsx) renderiza um rótulo explícito
+ * de dado sintético — honestidade medido×projetado (feedback S2).
+ *
+ * Diferente do DORA/processo desta tela, que vêm do snapshot REAL
+ * (src/data/*.json via @/services/process).
+ */
 export async function fetchTeamMemberMetrics(): Promise<TeamMemberMetrics[]> {
-  await new Promise(resolve => setTimeout(resolve, 600));
+  await new Promise((resolve) => setTimeout(resolve, 600));
 
-  return [
+  const placeholder: Omit<TeamMemberMetrics, 'synthetic'>[] = [
     {
       name: 'Calebe',
       taskCount: 8,
@@ -86,50 +123,85 @@ export async function fetchTeamMemberMetrics(): Promise<TeamMemberMetrics[]> {
       currentTasks: ['JACTO-216', 'JACTO-217'],
     },
   ];
+
+  // Marca cada registro como sintético: a UI exige o rótulo de honestidade.
+  return placeholder.map((member) => ({ ...member, synthetic: true }));
 }
 
+/**
+ * Gargalos derivados do snapshot REAL da API GitLab (process-metrics.json):
+ * lead time (mediana×máx), CFR de develop, e taxa de falha de pipelines da
+ * amostra. Sem mocks — cada `currentValue` vem de um número coletado.
+ */
 export async function fetchBottleneckAnalysis(): Promise<BottleneckAnalysis[]> {
-  await new Promise(resolve => setTimeout(resolve, 550));
+  const p = getProcessMetrics();
+  const lead = p.lead_time_for_changes_h;
+  const cfrDev = p.change_failure_rate.develop.cfr_pct;
+  const sample = p.pipelines_amostra_100;
+  const pipelineFailPct = sample.total
+    ? Number(((sample.failed / sample.total) * 100).toFixed(1))
+    : 0;
+  const leadMedianDays = Number((lead.mediana_h / 24).toFixed(2));
+  const leadMaxDays = Number((lead.max_h / 24).toFixed(2));
 
   return [
     {
-      stage: 'Code Review',
-      currentValue: 4.2,
-      threshold: 2.0,
-      status: 'congested',
-      description: 'Tempo médio 2.1x acima do normal',
+      stage: 'Lead Time (mediana)',
+      currentValue: leadMedianDays,
+      threshold: 1,
+      status:
+        leadMedianDays <= 1
+          ? 'normal'
+          : leadMedianDays <= 3
+            ? 'congested'
+            : 'critical',
+      description: `Mediana ${lead.mediana_h}h — MRs pequenos mergeados rápido`,
     },
     {
-      stage: 'Desenvolvimento',
-      currentValue: 2.1,
-      threshold: 2.5,
-      status: 'normal',
-      description: 'Fluxo dentro do esperado',
+      stage: 'Lead Time (cauda)',
+      currentValue: leadMaxDays,
+      threshold: 3,
+      status:
+        leadMaxDays <= 3
+          ? 'normal'
+          : leadMaxDays <= 7
+            ? 'congested'
+            : 'critical',
+      description: `Máx ${lead.max_h}h — poucos MRs de vida longa puxam a média`,
     },
     {
-      stage: 'Testes',
-      currentValue: 1.8,
-      threshold: 1.5,
-      status: 'critical',
-      description: 'Acúmulo de itens em validação',
+      stage: 'CFR develop',
+      currentValue: cfrDev,
+      threshold: 30,
+      status: cfrDev <= 15 ? 'normal' : cfrDev <= 30 ? 'congested' : 'critical',
+      description: `${p.change_failure_rate.develop.failed}/${p.change_failure_rate.develop.total} pipelines failed (de-risking)`,
     },
     {
-      stage: 'Deploy',
-      currentValue: 0.6,
-      threshold: 1.0,
-      status: 'normal',
-      description: 'Implantação fluida',
+      stage: 'Falha de pipeline',
+      currentValue: pipelineFailPct,
+      threshold: 30,
+      status:
+        pipelineFailPct <= 15
+          ? 'normal'
+          : pipelineFailPct <= 30
+            ? 'congested'
+            : 'critical',
+      description: `${sample.failed}/${sample.total} pipelines da amostra (spike SITL)`,
     },
   ];
 }
 
-export function detectThresholdAnomalies(data: {
-  wip: { current: number; limit: number };
-  buildFailureRate: number;
-  cycleTime: { current: number; p95: number };
-  agingItems: Array<{ age: number; id: string }>;
-  stages: Array<{ name: string; avgTime: number; normalTime: number }>;
-}): AnomalyDetection[] {
+export function detectThresholdAnomalies(
+  data: {
+    wip: { current: number; limit: number };
+    buildFailureRate: number;
+    cycleTime: { current: number; p95: number };
+    agingItems: Array<{ age: number; id: string }>;
+    stages: Array<{ name: string; avgTime: number; normalTime: number }>;
+  },
+  // Threshold de falha (%) CALIBRADO sobre a série real (default: baseline+margem).
+  failureThresholdPct: number = calibratedFailureThresholdPct()
+): AnomalyDetection[] {
   const anomalies: AnomalyDetection[] = [];
   const detectedAt = new Date().toISOString();
 
@@ -145,14 +217,16 @@ export function detectThresholdAnomalies(data: {
     });
   }
 
-  if (data.buildFailureRate > 10) {
+  // Recalibrado: 10% fixo gerava falso-positivo crônico no de-risking. Agora o
+  // threshold vem da série real (baseline de falha observado + margem).
+  if (data.buildFailureRate > failureThresholdPct) {
     anomalies.push({
       type: 'threshold',
       metric: 'Build Failure Rate',
-      currentValue: data.buildFailureRate,
-      threshold: 10,
+      currentValue: Number(data.buildFailureRate.toFixed(1)),
+      threshold: Number(failureThresholdPct.toFixed(1)),
       severity: 'critical',
-      description: `Taxa de falha (${data.buildFailureRate.toFixed(1)}%) acima de 10%`,
+      description: `Taxa de falha (${data.buildFailureRate.toFixed(1)}%) acima do baseline calibrado (${failureThresholdPct.toFixed(1)}%)`,
       detectedAt,
     });
   }
@@ -169,21 +243,23 @@ export function detectThresholdAnomalies(data: {
     });
   }
 
-  data.agingItems.forEach(item => {
-    if (item.age > 10) {
+  // Recalibrado para a escala REAL de lead time (cauda ~7.6 dias / 182.4h).
+  const agingThreshold = ANOMALY_CALIBRATION.agingDaysThreshold;
+  data.agingItems.forEach((item) => {
+    if (item.age > agingThreshold) {
       anomalies.push({
         type: 'threshold',
         metric: 'Aging Item',
         currentValue: item.age,
-        threshold: 10,
+        threshold: agingThreshold,
         severity: 'warning',
-        description: `Item ${item.id} envelhecido (${item.age} dias)`,
+        description: `Item ${item.id} envelhecido (${item.age} dias > ${agingThreshold}d)`,
         detectedAt,
       });
     }
   });
 
-  data.stages.forEach(stage => {
+  data.stages.forEach((stage) => {
     if (stage.avgTime > stage.normalTime * 2) {
       anomalies.push({
         type: 'threshold',
@@ -200,19 +276,28 @@ export function detectThresholdAnomalies(data: {
   return anomalies;
 }
 
-export function detectStatisticalAnomalies(trendData: TrendDataPoint[]): AnomalyDetection[] {
+export function detectStatisticalAnomalies(
+  trendData: TrendDataPoint[],
+  // Amostra mínima calibrada: σ é instável com poucos pontos (série real curta).
+  minSamples: number = ANOMALY_CALIBRATION.minStatisticalSamples
+): AnomalyDetection[] {
   const anomalies: AnomalyDetection[] = [];
-  
-  if (trendData.length === 0) {
+
+  // Recalibrado (2.5.4): com amostra menor que o mínimo, NÃO emitimos anomalia
+  // estatística — honesto sobre a base curta (evita falso-positivo por ruído de
+  // σ). O snapshot real tem poucos pontos agregados; reportamos a limitação.
+  if (trendData.length < minSamples) {
     return anomalies;
   }
 
-  const values = trendData.map(d => d.value);
+  const values = trendData.map((d) => d.value);
   const mean = values.reduce((a, b) => a + b, 0) / values.length;
-  
-  const variance = values.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / values.length;
+
+  const variance =
+    values.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) /
+    values.length;
   const stdDev = Math.sqrt(variance);
-  
+
   const currentValue = trendData[trendData.length - 1].value;
   const detectedAt = new Date().toISOString();
 
@@ -245,43 +330,76 @@ export function detectStatisticalAnomalies(trendData: TrendDataPoint[]): Anomaly
   return anomalies;
 }
 
+/**
+ * Monta a entrada da detecção por limite a partir do snapshot REAL.
+ * - buildFailureRate: taxa de falha de pipeline da amostra coletada.
+ * - cycleTime: lead time real (mediana×máx) como proxy de ciclo, em dias.
+ * - stages: gargalos reais já derivados (mapeados p/ o formato do detector).
+ */
+function buildThresholdInputFromProcess(p: ProcessMetrics) {
+  const sample = p.pipelines_amostra_100;
+  const lead = p.lead_time_for_changes_h;
+  return {
+    wip: { current: p.change_failure_rate.develop.total, limit: 20 },
+    buildFailureRate: sample.total ? (sample.failed / sample.total) * 100 : 0,
+    cycleTime: {
+      current: Number((lead.max_h / 24).toFixed(2)),
+      p95: Number((lead.media_h / 24).toFixed(2)),
+    },
+    agingItems: [] as Array<{ age: number; id: string }>,
+    stages: [
+      {
+        name: 'CFR develop',
+        avgTime: p.change_failure_rate.develop.cfr_pct,
+        normalTime: 15,
+      },
+    ],
+  };
+}
+
+/** Série real (proxy) para a detecção estatística: CFR por ref + falha de amostra. */
+function buildRealSeriesFromProcess(p: ProcessMetrics): TrendDataPoint[] {
+  const sample = p.pipelines_amostra_100;
+  const failPct = sample.total
+    ? Number(((sample.failed / sample.total) * 100).toFixed(1))
+    : 0;
+  return [
+    { date: 'main', value: p.change_failure_rate.main.cfr_pct },
+    { date: 'amostra', value: failPct },
+    { date: 'develop', value: p.change_failure_rate.develop.cfr_pct },
+  ];
+}
+
 export async function fetchAllManagerMetrics(): Promise<{
   teamMembers: TeamMemberMetrics[];
   bottlenecks: BottleneckAnalysis[];
   thresholdAnomalies: AnomalyDetection[];
   statisticalAnomalies: AnomalyDetection[];
+  process: ProcessMetrics;
+  dora: DoraMetricsReal;
 }> {
   const [teamMembers, bottlenecks] = await Promise.all([
     fetchTeamMemberMetrics(),
     fetchBottleneckAnalysis(),
   ]);
 
-  const thresholdData = {
-    wip: { current: 22, limit: 20 },
-    buildFailureRate: 12.5,
-    cycleTime: { current: 10.5, p95: 9.2 },
-    agingItems: [
-      { age: 12, id: 'JACTO-123' },
-      { age: 8, id: 'JACTO-124' },
-      { age: 15, id: 'JACTO-125' },
-    ],
-    stages: [
-      { name: 'Code Review', avgTime: 4.2, normalTime: 2.0 },
-      { name: 'Testes', avgTime: 1.8, normalTime: 0.8 },
-    ],
-  };
+  const process = getProcessMetrics();
+  const dora = getDoraMetrics();
 
-  const thresholdAnomalies = detectThresholdAnomalies(thresholdData);
-
-  const cycleTimeTrend = generateTrendData(4.5, 0.3);
-  cycleTimeTrend[cycleTimeTrend.length - 1].value = 10.5;
-
-  const statisticalAnomalies = detectStatisticalAnomalies(cycleTimeTrend);
+  // Detecção alimentada por DADOS REAIS do snapshot (não mais por mocks).
+  const thresholdAnomalies = detectThresholdAnomalies(
+    buildThresholdInputFromProcess(process)
+  );
+  const statisticalAnomalies = detectStatisticalAnomalies(
+    buildRealSeriesFromProcess(process)
+  );
 
   return {
     teamMembers,
     bottlenecks,
     thresholdAnomalies,
     statisticalAnomalies,
+    process,
+    dora,
   };
 }

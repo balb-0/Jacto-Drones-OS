@@ -1,0 +1,129 @@
+# ─────────────────────────────────────────────────────────────────────────
+# TG6 — Quality Gates: enforcement no stage `gate` (@Fernando)
+#
+# Avaliador versionado (scripts/quality_gates.py) consome os artefatos dos
+# stages anteriores e BLOQUEIA o merge se qualquer threshold do
+# quality_gates.yaml for violado.
+#
+# Por que SEM `needs:` (e sem `dependencies:`): o stage `gate` roda DEPOIS de
+# `build` e `test`, então herda por ordem de stage o coverage.xml (job
+# unit-tests) e o reports/metrics.json (job sitl-mission-metrics). Declarar
+# `needs:` criaria um DAG que poderia ANTECIPAR o gate e contornar jobs
+# intermediários (DAG-bypass) — erro já corrigido na Camada 0 (vide ci/deploy.yml
+# e ADR-0006). Aqui o gate é o portão: ninguém passa por fora dele.
+#
+# SEM allow_failure (default false) ⇒ job BLOQUEANTE. Com o metrics.json real
+# do pipeline, os gates PASSAM (cov ~98% > 0.90; accel 11.01 < 15; dur 78.83 <
+# 180; std 0.688 < 1.0; SAST skip). Thresholds e ratchet: ADR-0005.
+# ─────────────────────────────────────────────────────────────────────────
+
+quality-gates:
+  stage: gate
+  image: python:3.12-slim
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip"
+  cache:
+    key: pip-quality-gates
+    paths: [.pip/]
+  before_script:
+    - pip install --quiet pyyaml
+  script:
+    # Herda coverage.xml (stage build) e reports/metrics.json (stage test) por
+    # ordem de stage — sem needs/dependencies (anti DAG-bypass).
+    - python scripts/quality_gates.py
+        --gates quality_gates.yaml
+        --metrics reports/metrics.json
+        --coverage coverage.xml
+        --output reports/quality_gates_result.json
+  artifacts:
+    when: always
+    paths:
+      - reports/quality_gates_result.json
+    expire_in: 30 days
+
+# ─────────────────────────────────────────────────────────────────────────
+# TG6.4.1 — Comentário pass/fail por gate no MR (@Kauan)
+#
+# Posta o resultado dos gates como NOTA no MR via API GitLab
+# (POST /projects/:id/merge_requests/:iid/notes). INFORMATIVO: allow_failure:
+# true — quem BLOQUEIA é o job `quality-gates` (stage gate, sem allow_failure).
+#
+# PADRÃO CANÔNICO (igual ao comentário de CD): roda no BRANCH pipeline
+# (rules: $CI_COMMIT_BRANCH), NÃO em merge_request_event — assim não cria um MR
+# pipeline duplicado nem fica sem os artefatos. No branch pipeline os artefatos
+# coverage.xml (stage build) e reports/metrics.json (stage test) JÁ EXISTEM por
+# ordem de stage (anti DAG-bypass), então o avaliador inline roda de verdade.
+# O MR aberto da branch é descoberto via API (source_branch=$CI_COMMIT_BRANCH).
+#
+# CI_JOB_TOKEN NÃO posta notes → usa a variável CI/CD $GITLAB_MR_TOKEN
+# (provisionada no main loop). Sem needs/dependencies: herda os artefatos por
+# ordem de stage.
+# ─────────────────────────────────────────────────────────────────────────
+quality-gates-mr-comment:
+  stage: gate
+  image: python:3.12-slim
+  allow_failure: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH'   # branch pipelines (não tags); sem merge_request_event
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip"
+  cache:
+    key: pip-quality-gates
+    paths: [.pip/]
+  before_script:
+    - pip install --quiet pyyaml
+  script:
+    # Avaliador informativo: gera o JSON (|| true — não falha o job de comentário
+    # se algum gate reprovar; o bloqueio é do job quality-gates). No branch
+    # pipeline coverage.xml + reports/metrics.json existem (stages anteriores).
+    - "python scripts/quality_gates.py --gates quality_gates.yaml --metrics reports/metrics.json --coverage coverage.xml --output reports/quality_gates_result.json || true"
+    # Cabeçalho 🤖 canônico (token de serviço é dívida técnica — ver ADR-0008).
+    - 'printf "%s\n\n" "> 🤖 _Comentário automático do pipeline de CD. Publicado via token de serviço da esteira (hoje o PAT de @Fernando; idealmente um token impessoal de projeto/grupo — ver ADR-0008). Os MRs em si são abertos por cada membro responsável._" > reports/quality_gates_comment.md'
+    # Renderiza o comentário (cabeçalho X/Y + linha por gate) via helper (TG6.4.2).
+    - "python scripts/gate_comment.py --result reports/quality_gates_result.json >> reports/quality_gates_comment.md"
+    # Sem token configurado, não dá pra postar — registra e segue (informativo).
+    - 'test -n "$GITLAB_MR_TOKEN" || { echo "GITLAB_MR_TOKEN ausente; pulando comentario"; exit 0; }'
+    - "apt-get update -qq && apt-get install -y -qq curl >/dev/null"
+    # Descobre o MR aberto cuja source_branch é a branch atual (via API).
+    - 'MR_IID=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_MR_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/merge_requests?source_branch=$CI_COMMIT_BRANCH&state=opened" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0][\"iid\"] if d else \"\")")'
+    - 'test -n "$MR_IID" || { echo "sem MR aberto p/ $CI_COMMIT_BRANCH; skip"; exit 0; }'
+    # Posta a nota (corpo em arquivo .md) no MR descoberto.
+    - 'curl -s --show-error --request POST --header "PRIVATE-TOKEN: $GITLAB_MR_TOKEN" --data-urlencode "body@reports/quality_gates_comment.md" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/merge_requests/$MR_IID/notes"'
+  artifacts:
+    when: always
+    paths:
+      - reports/quality_gates_comment.md
+    expire_in: 30 days
+
+# ─────────────────────────────────────────────────────────────────────────
+# TG6.5.1 — Gate humano: registro pedagógico opcional da aprovação (@Kauan)
+#
+# O gate humano FORTE NÃO é este job: é a aprovação OBRIGATÓRIA do MR (regra de
+# approvals configurada no projeto) somada ao environment protegido
+# `quality-review` (ADR-0008). Esse é o portão real — ninguém faz merge sem a
+# aprovação humana exigida pelo GitLab.
+#
+# Este job é só o REGISTRO/representação pedagógica desse gate: um botão manual
+# OPCIONAL (when: manual + allow_failure: true) que alguém pode apertar para
+# deixar rastro de "aprovação humana concedida" no environment. Por ser
+# opcional, NÃO trava o status verde do pipeline — diferente da versão antiga
+# (merge_request_event + allow_failure: false), que deixava o pipeline "blocked"
+# (não-verde) e ainda sumia em branch pipelines. Roda em branch pipelines
+# (rules: $CI_COMMIT_BRANCH). Sem needs (anti DAG-bypass); stage `gate`.
+# ─────────────────────────────────────────────────────────────────────────
+quality-gates-human-approval:
+  stage: gate
+  image: python:3.12-slim
+  # when: manual vai DENTRO do rule — com rules: presente, o when de nível de job
+  # é ignorado (mesma pegadinha documentada em ci/deploy.yml). allow_failure:
+  # true ⇒ manual OPCIONAL: o pipeline segue verde mesmo sem apertar o botão.
+  rules:
+    - if: '$CI_COMMIT_BRANCH'
+      when: manual
+      allow_failure: true   # opcional: NÃO bloqueia o pipeline verde
+  environment:
+    name: quality-review
+    action: prepare
+  script:
+    - 'echo "Aprovacao humana (registro pedagogico) concedida por ${GITLAB_USER_LOGIN:-?} em $(date -u +%FT%TZ)"'
+    - 'echo "Gate humano FORTE = approval obrigatorio do MR + environment protegido (ADR-0008). Thresholds: ADR-0005."'

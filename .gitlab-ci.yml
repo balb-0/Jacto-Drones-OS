@@ -1,62 +1,46 @@
-image: ubuntu:latest
-
+# ─────────────────────────────────────────────────────────────────────────
+# Esteira CI/CD — Jacto Drones OS v0.1
+#
+# Arquitetura: fragmentos por concern via `include` glob (`ci/*.yml`). O root
+# declara os stages; cada branch adiciona o seu ci/*.yml SEM editar este arquivo
+# nem conflitar. Pipelines rodam mesmo antes de os outros fragmentos existirem.
+#
+# Restrições da instância (validadas por spike — ver docs/decisoes/0006):
+#  - Runner compartilhado id=100 = docker-executor SEM privilégio/socket
+#    (nada de docker build/run); usa imagem PÚBLICA como runtime do job.
+#  - SEM Container Registry (CI_REGISTRY vazio) → artefato imutável = artefato
+#    de CI por $CI_COMMIT_SHA; promoção via Environments (deploy simulado).
+# ─────────────────────────────────────────────────────────────────────────
 stages:
   - lint
-  - build
-  - test
-  - sast
-  - deploy
+  - build      # build PX4 SITL (ci/sitl-metrics.yml — @Calebe)
+  - test       # missão + métricas + testes (ci/sitl-metrics.yml — @Calebe)
+  - sast       # secrets + SAST (ci/sast.yml — @Lucca)
+  - gate       # quality gates obrigatórios (ci/quality-gates.yml — @Fernando)
+  - deploy     # promoção por ambiente + release (ci/deploy.yml — @Vitor)
+
+include:
+  # Glob: inclui todos os fragmentos por concern que EXISTIREM em ci/ — cada
+  # branch adiciona o seu ci/*.yml sem editar este arquivo nem conflitar, e
+  # arquivos ainda ausentes (camadas futuras) simplesmente não entram.
+  # ci/deploy.yml (@Vitor), ci/sitl-metrics.yml (@Calebe), e adiante
+  # ci/quality-gates.yml (@Fernando) + ci/sast.yml (@Lucca).
+  - local: 'ci/*.yml'
 
 variables:
-  DOCKER_DRIVER: overlay2
+  GIT_SUBMODULE_STRATEGY: none
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip"
 
-before_script:
-  - echo "Iniciando job do GitLab CI..."
-
-# 1. Feedback automatizado: lint
-lint_job:
+# Lint Python rápido (feedback de baixo custo). Informativo na fundação;
+# endurece como gate quando o TG6 amarra a esteira.
+lint:
   stage: lint
-  script:
-    - echo "Executando verificação de código, como ESLint ou clang-tidy..."
-  allow_failure: false
-
-# 2. Feedback automatizado: build
-build_job:
-  stage: build
-  script:
-    - echo "Compilando firmware e construindo imagens Docker..."
-  allow_failure: false
-
-# 3. Feedback automatizado: testes funcionais
-functional_tests_job:
   image: python:3.12-slim
-  stage: test
+  cache:
+    key: pip-lint
+    paths: [.pip/]
+  before_script:
+    - pip install --quiet ruff
   script:
-    - echo "Executando testes funcionais do MVP com PX4/SITL e MAVLink em modo demonstrativo..."
-    - python scripts/run_functional_tests.py
-  artifacts:
-    when: always
-    paths:
-      - artifacts/functional-tests/functional-test-report.json
-      - artifacts/functional-tests/functional-test-summary.md
-      - artifacts/functional-tests/simulation.log
-    expire_in: 30 days
-  allow_failure: false
-
-# 4. Feedback automatizado: SAST
-sast_job:
-  stage: sast
-  script:
-    - echo "Rodando varredura de segurança estática no código..."
-  allow_failure: false
-
-# 5. Implantação e fechamento
-deploy_staging:
-  stage: deploy
-  script:
-    - echo "Fazendo o deploy do artefato gerado para staging..."
-  environment:
-    name: staging
-  only:
-    - develop
-    - main
+    - ruff check libs scripts tests
+  allow_failure: true

@@ -1,0 +1,150 @@
+# ─────────────────────────────────────────────────────────────────────────
+# TG5 — Integridade do pipeline: secrets + SAST server-side (@Lucca)
+#
+# Porta os hooks Husky CLIENT-side (puláveis com `git --no-verify`) para jobs
+# de CI SERVER-side (não puláveis): a integridade deixa de depender da máquina
+# do dev. Espelha o eixo "integridade" cobrado pelo orientador Reginaldo
+# (ADR-0004 GPG em main, ADR-0007 SAST/Semgrep).
+#
+# Restrições da instância (ADR-0006): runner compartilhado id=100 é
+# docker-executor SEM socket/privilégio → nada de `docker build`/`docker run`
+# (o pre-push Husky buildava imagem + `trivy image`). Aqui a imagem pública é o
+# RUNTIME do job e os scanners rodam em modo FILESYSTEM (`trivy fs`/`trivy
+# config`, trufflehog `filesystem`), sem daemon nem registry.
+#
+# Sprint 3: todos os jobs são INFORMATIVOS (`allow_failure: true`) — publicam
+# achados sem bloquear o merge. Viram BLOQUEANTES nas Sprints 4-5 (ADR-0007),
+# quando o runner dedicado sonar-00 (id=133) estiver amarrado ao gate.
+# ─────────────────────────────────────────────────────────────────────────
+
+# TruffleHog — scanner de secrets (Slide 10 da Aula 05). Portado do hook Husky
+# pre-commit: lá rodava `trufflehog git file:///repo --since-commit HEAD
+# --only-verified` via socket; aqui faz scan de FILESYSTEM da árvore do checkout
+# (não precisa de socket nem de histórico git completo). `--fail` faz o job
+# retornar !=0 quando há segredo verificado → o achado vira visível mesmo com
+# allow_failure (job amarelo, não verde silencioso).
+trufflehog:
+  stage: sast
+  image:
+    name: trufflesecurity/trufflehog:latest
+    entrypoint: [""]
+  variables:
+    GIT_STRATEGY: fetch
+  script:
+    - 'echo "### TruffleHog — scan de secrets (filesystem) sobre $CI_PROJECT_DIR"'
+    # filesystem: varre os arquivos do checkout. --only-verified reduz ruído
+    # (apenas segredos que a TruffleHog confirma como ativos); --fail eleva o
+    # exit code quando encontra algo, tornando o achado auditável no pipeline.
+    - trufflehog filesystem "$CI_PROJECT_DIR" --only-verified --fail
+  allow_failure: true
+
+# Trivy — scanner de vulnerabilidades (Slide 21 da Aula 05). Portado do hook
+# Husky pre-push, que buildava a imagem (`docker build`) e rodava `trivy image`
+# via socket. Sem daemon/registry (ADR-0006) trocamos por dois modos sem Docker:
+#   - `trivy fs`     → CVEs em dependências e arquivos do projeto (requirements,
+#                       lockfiles, libs/);
+#   - `trivy config` → misconfigurações de IaC/Dockerfile (o mesmo Dockerfile que
+#                       o pre-push buildava, agora analisado estaticamente).
+# CRITICAL,HIGH como no hook original. `--exit-code 1` torna o achado auditável
+# (job amarelo via allow_failure, nunca verde silencioso).
+trivy-fs:
+  stage: sast
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  variables:
+    GIT_STRATEGY: fetch
+    TRIVY_NO_PROGRESS: "true"
+    TRIVY_CACHE_DIR: "$CI_PROJECT_DIR/.trivycache"
+  cache:
+    key: trivy-db
+    paths: [.trivycache/]
+  script:
+    - 'echo "### [1/2] trivy fs — CVEs em dependencias/arquivos (CRITICAL,HIGH)"'
+    - trivy fs --severity CRITICAL,HIGH --exit-code 1 "$CI_PROJECT_DIR"
+    - 'echo "### [2/2] trivy config — misconfig de IaC/Dockerfile (CRITICAL,HIGH)"'
+    - trivy config --severity CRITICAL,HIGH --exit-code 1 "$CI_PROJECT_DIR"
+  allow_failure: true
+
+# commitlint — Conventional Commits (portado do hook Husky commit-msg). No hook,
+# `commitlint --edit` validava só a mensagem em digitação; no MR validamos o
+# RANGE `origin/develop..HEAD` — apenas os commits do MR, NUNCA o histórico
+# antigo (que é anterior à adoção do commitlint e quebraria a checagem).
+# Usa o commitlint.config.js versionado na raiz (type-enum + references-empty).
+commitlint:
+  stage: sast
+  image: node:20-slim
+  variables:
+    GIT_STRATEGY: fetch
+    GIT_DEPTH: "0"   # histórico completo: precisamos do merge-base com develop
+  before_script:
+    # ca-certificates: a node:20-slim não traz CA bundle → o git fetch via HTTPS
+    # falhava com "server certificate verification failed. CAfile: none".
+    - apt-get update >/dev/null && apt-get install -y --no-install-recommends git ca-certificates >/dev/null
+    - npm install --no-save --no-audit --no-fund @commitlint/cli @commitlint/config-conventional
+  script:
+    - 'echo "### commitlint — valida apenas os commits do MR (origin/develop..HEAD)"'
+    # cria explicitamente refs/remotes/origin/develop: sob GIT_STRATEGY=fetch o
+    # runner NÃO popula origin/develop, e `git fetch origin develop` sozinho deixa
+    # a ref só em FETCH_HEAD → `origin/develop` não resolve e o commitlint aborta.
+    # Após ca-certificates o fetch verifica o cert normalmente; o fallback
+    # `http.sslVerify=false` cobre instância com CA interna (comunicação é com o
+    # próprio GitLab que originou o job — CI interno).
+    - git fetch origin develop:refs/remotes/origin/develop || git -c http.sslVerify=false fetch origin develop:refs/remotes/origin/develop
+    # --from/--to delimita o range do MR; sem isto o commitlint pegaria commits
+    # antigos (pré-commitlint) e falharia por motivo alheio a este MR.
+    - npx commitlint --from origin/develop --to HEAD --verbose
+  allow_failure: true
+
+# Gitleaks — segunda camada de detecção de secrets, por REGRAS/regex (complementa
+# a TruffleHog, que prioriza segredos verificados). Defesa em profundidade: o que
+# um scanner não pega por heurística, o outro pega por padrão. Roda no RUNNER
+# DEDICADO `sonar-00` (id=133), reservado à carga de integridade/SAST, para não
+# disputar o runner compartilhado id=100 com build/missão. `--redact` evita
+# vazar o segredo no log do job; `--exit-code 1` mantém o achado auditável.
+gitleaks:
+  stage: sast
+  tags: [sonar-00]            # runner dedicado id=133
+  image:
+    name: ghcr.io/gitleaks/gitleaks:latest   # imagem OFICIAL (org legado zricethezav descontinuado)
+    entrypoint: [""]
+  variables:
+    GIT_STRATEGY: fetch       # `gitleaks dir` varre o filesystem da árvore: não precisa de histórico
+  script:
+    - 'echo "### Gitleaks — detecção de secrets por regras (runner sonar-00)"'
+    # subcomando `dir` varre o filesystem do checkout (coerente com os demais
+    # scanners fs); `detect --source` foi removido no gitleaks v8.19+ (no-op).
+    # --config: herda as regras default + allowlist de falsos-positivos
+    # conhecidos (ver .gitleaks.toml — ex.: chave de cache do build PX4).
+    - gitleaks dir "$CI_PROJECT_DIR" --config "$CI_PROJECT_DIR/.gitleaks.toml" --redact --exit-code 1 --verbose
+  allow_failure: true         # informativo na Sprint 3; bloqueante nas Sprints 4-5
+
+# Semgrep — SAST (análise estática de código) propriamente dito. É o equivalente
+# funcional do SonarQube do demo (ADR-006 do demo) no nosso eixo de integridade,
+# porém OSS e sem servidor externo: roda como CLI no runner DEDICADO `sonar-00`
+# (id=133). O ruleset `auto` seleciona regras pela linguagem do repo (Python:
+# libs/, scripts/, tests/). `--no-suppress-errors` faz o job retornar !=0 quando
+# há erro interno do scanner, tornando-o auditável (amarelo via allow_failure).
+#
+# ALTERNATIVA — template SAST nativo do GitLab (`Security/SAST.gitlab-ci.yml`,
+# que sob o capô usa o analisador Semgrep do GitLab e emite o relatório
+# `gl-sast-report.json` consumido pela aba Security/MR widget). Não adotado agora
+# porque (a) exige `include: template:` no .gitlab-ci.yml root — e a REGRA DE OURO
+# desta esteira é NÃO editar o root (cada concern só ADICIONA seu ci/*.yml via
+# glob); (b) o widget de Security depende de licença Ultimate para o MR. Fica
+# como evolução natural quando o gate virar bloqueante (ADR-0007, Sprints 4-5).
+semgrep:
+  stage: sast
+  tags: [sonar-00]            # runner dedicado id=133
+  image:
+    name: semgrep/semgrep:latest
+    entrypoint: [""]
+  variables:
+    GIT_STRATEGY: fetch
+    SEMGREP_RULES: "auto"     # regras selecionadas pela linguagem do repo
+  script:
+    - 'echo "### Semgrep — SAST (runner sonar-00); template nativo do GitLab e alternativa"'
+    # --no-suppress-errors é a flag de `semgrep ci` para falhar em erro interno
+    # (o `--error` anterior pertence a `semgrep scan` → era ignorado/incoerente).
+    - semgrep ci --config "$SEMGREP_RULES" --no-suppress-errors
+  allow_failure: true         # informativo na Sprint 3; bloqueante nas Sprints 4-5
