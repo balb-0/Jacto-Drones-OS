@@ -171,6 +171,12 @@ export interface TeamMemberMetrics {
   overloadFlag: boolean;
   avgCycleTime: number;
   currentTasks: string[];
+  /**
+   * Marca o registro como dado SINTÉTICO (placeholder), não derivado do
+   * GitLab. A API não expõe carga por pessoa trivialmente; honestidade
+   * medido×projetado (feedback S2). A UI rotula explicitamente.
+   */
+  synthetic?: boolean;
 }
 
 export interface TasksByStatus {

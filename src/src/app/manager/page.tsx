@@ -110,6 +110,9 @@ export default function ManagerPage() {
   const avgTasksPerMember =
     teamMembers.length > 0 ? (totalTasks / teamMembers.length).toFixed(1) : '0';
   const overloadedCount = teamMembers.filter((m) => m.overloadFlag).length;
+  // Carga por pessoa é placeholder: a API GitLab não a expõe trivialmente.
+  const teamIsSynthetic =
+    teamMembers.length > 0 && teamMembers.every((m) => m.synthetic);
 
   return (
     <DashboardLayout
@@ -528,6 +531,24 @@ export default function ManagerPage() {
               CARGA DA EQUIPE
             </h3>
           </div>
+
+          {teamIsSynthetic && (
+            <div
+              data-testid="team-synthetic-warning"
+              className="flex items-start gap-3 p-5 border-[3px] border-black bg-warning/20 shadow-[4px_4px_0px_#000]"
+            >
+              <AlertTriangle className="w-6 h-6 text-error shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-black uppercase italic leading-tight">
+                  ⚠️ Dados sintéticos (placeholder) — não derivados do GitLab
+                </p>
+                <p className="text-[11px] font-bold text-gray-700 uppercase mt-1 leading-tight">
+                  A carga por pessoa não é exposta trivialmente pela API. Diferente
+                  do DORA medido (dados reais) acima nesta página.
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <MetricCard

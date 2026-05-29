@@ -49,10 +49,23 @@ export function calibratedFailureThresholdPct(): number {
   );
 }
 
+/**
+ * DADOS SINTÉTICOS (placeholder) — NÃO derivados do GitLab.
+ *
+ * A carga por pessoa (tarefas por membro, status, cycle time individual) NÃO é
+ * exposta trivialmente pela API GitLab (issues/assignees na esteira pedagógica
+ * não cobrem isso de forma confiável). Em vez de inventar um número "real",
+ * mantemos estes registros como placeholder e os MARCAMOS com `synthetic: true`.
+ * A UI ("Carga da Equipe" em app/manager/page.tsx) renderiza um rótulo explícito
+ * de dado sintético — honestidade medido×projetado (feedback S2).
+ *
+ * Diferente do DORA/processo desta tela, que vêm do snapshot REAL
+ * (src/data/*.json via @/services/process).
+ */
 export async function fetchTeamMemberMetrics(): Promise<TeamMemberMetrics[]> {
   await new Promise((resolve) => setTimeout(resolve, 600));
 
-  return [
+  const placeholder: Omit<TeamMemberMetrics, 'synthetic'>[] = [
     {
       name: 'Calebe',
       taskCount: 8,
@@ -110,6 +123,9 @@ export async function fetchTeamMemberMetrics(): Promise<TeamMemberMetrics[]> {
       currentTasks: ['JACTO-216', 'JACTO-217'],
     },
   ];
+
+  // Marca cada registro como sintético: a UI exige o rótulo de honestidade.
+  return placeholder.map((member) => ({ ...member, synthetic: true }));
 }
 
 /**
