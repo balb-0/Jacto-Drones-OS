@@ -31,3 +31,14 @@
 | `métricas → quality gate` | `metrics.json` presente | `metrics.json` + `quality_gates.yaml` | `exit 0` (pass) / `≠0` (fail) | qualquer threshold violado |
 | `gate verde → deploy staging` | pipeline verde em develop/main | artefato por `$CI_COMMIT_SHA` | `deploy-staging.json` + Environment | artefato ausente |
 | `staging → prod` | clique manual (main) | mesmo artefato (mesmo SHA) | `deploy-prod.json` | aprovação negada / artefato divergente |
+
+## 3. Cobertura Não-Funcional do Deploy
+
+| Categoria NF | Mecanismo | Stage | Norma de referência |
+|---|---|---|---|
+| Imutabilidade | artefato por `$CI_COMMIT_SHA` (nunca `:latest`) | build/deploy | ISO 27001 A.8.28 |
+| Rastreabilidade | `SHA ↔ commit ↔ MR ↔ issue (#TG)` | todos | DO-178C |
+| Segurança (secrets) | TruffleHog/Gitleaks server-side (TG5) | sast | ISO 27001 A.5.21 |
+| Análise estática (SAST) | GitLab SAST/Semgrep no runner `sonar-00` (TG5) | sast | NIST SP 800-218 |
+| Integridade do artefato | checksum + SBOM no release | deploy | ISO 27001 A.8.31 |
+| Tempo de feedback | duração do pipeline medida (DORA) | todos | DORA / *Accelerate* |
