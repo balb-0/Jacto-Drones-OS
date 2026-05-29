@@ -1,62 +1,56 @@
-image: ubuntu:latest
-
+# ─────────────────────────────────────────────────────────────────────────
+# SPIKE (de-risking TG2.1.2) — NÃO MERGEAR. Valida a MISSÃO completa no id=100:
+# build PX4 -> px4 SITL + jmavsim headless -> mavsdk_server -> run_mission
+# (square_50m) -> .ulg -> extract_metrics -> reports/metrics.json. Tudo num
+# único container (imagem pública como runtime; sem Docker daemon, sem registry).
+# Refs: #3
+# ─────────────────────────────────────────────────────────────────────────
 stages:
-  - lint
-  - build
-  - test
-  - sast
-  - deploy
+  - sitl
 
 variables:
-  DOCKER_DRIVER: overlay2
+  GIT_STRATEGY: clone
+  GIT_SUBMODULE_STRATEGY: none
+  PX4_TAG: "v1.16.2"
 
-before_script:
-  - echo "Iniciando job do GitLab CI..."
-
-# 1. Feedback automatizado: lint
-lint_job:
-  stage: lint
+sitl-mission-metrics:
+  stage: sitl
+  image: px4io/px4-dev-simulation-jammy:2024-05-18
+  timeout: 55m
+  allow_failure: true
+  variables:
+    CCACHE_DIR: "$CI_PROJECT_DIR/.ccache"
+    HEADLESS: "1"
+  cache:
+    key: px4-sitl-v1162
+    paths:
+      - .ccache/
   script:
-    - echo "Executando verificação de código, como ESLint ou clang-tidy..."
-  allow_failure: false
-
-# 2. Feedback automatizado: build
-build_job:
-  stage: build
-  script:
-    - echo "Compilando firmware e construindo imagens Docker..."
-  allow_failure: false
-
-# 3. Feedback automatizado: testes funcionais
-functional_tests_job:
-  image: python:3.12-slim
-  stage: test
-  script:
-    - echo "Executando testes funcionais do MVP com PX4/SITL e MAVLink em modo demonstrativo..."
-    - python scripts/run_functional_tests.py
+    - 'echo "### [1/7] build PX4 $PX4_TAG (ccache)"'
+    - 'git clone --depth 1 --branch "$PX4_TAG" https://github.com/PX4/PX4-Autopilot.git px4src'
+    - '(cd px4src && git submodule update --init --recursive && make px4_sitl_default)'
+    - 'echo "### [2/7] deps python (mavsdk + pyulog + pyyaml)"'
+    - 'pip3 install --quiet "mavsdk==2.8.4" pyulog pyyaml'
+    - 'echo "### [3/7] sobe PX4 SITL + jmavsim headless (background)"'
+    - '(cd px4src && HEADLESS=1 make px4_sitl jmavsim_iris </dev/null >/tmp/px4.log 2>&1 &)'
+    - 'for i in $(seq 1 60); do pgrep -x px4 >/dev/null 2>&1 && { echo "px4 vivo (${i}x2s)"; break; }; sleep 2; done'
+    - 'echo "### [4/7] sobe mavsdk_server (udp://:14540, gRPC :50051)"'
+    - 'SERVER_BIN=$(python3 -c "import mavsdk,os;print(os.path.join(os.path.dirname(mavsdk.__file__),\"bin\",\"mavsdk_server\"))")'
+    - 'echo "mavsdk_server bin: $SERVER_BIN"'
+    - '"$SERVER_BIN" -p 50051 "udp://:14540" >/tmp/mavsdk_server.log 2>&1 &'
+    - 'for i in $(seq 1 20); do pgrep -x mavsdk_server >/dev/null 2>&1 && { echo "mavsdk_server vivo"; break; }; sleep 1; done'
+    - 'echo "### [5/7] roda missão square_50m"'
+    - 'PYTHONPATH="$CI_PROJECT_DIR" python3 scripts/run_mission.py --mission missions/square_50m.yaml --mavsdk-server 127.0.0.1 --mavsdk-port 50051 --system-address "udp://:14540"; RC=$?; echo "run_mission rc=$RC"'
+    - 'echo "### [6/7] localiza .ulg gerado"'
+    - 'ULG=$(find px4src/build/px4_sitl_default/rootfs/log -name "*.ulg" 2>/dev/null | sort | tail -1); echo "ULG=$ULG"'
+    - 'echo "### [7/7] extrai metrics.json"'
+    - 'if [ -n "$ULG" ]; then PYTHONPATH="$CI_PROJECT_DIR" python3 scripts/extract_metrics.py --ulog "$ULG" --output reports/metrics.json && echo "--- metrics.json ---" && cat reports/metrics.json; else echo "SEM .ulg — missão não gerou log"; fi'
+    - 'pkill -x px4 2>/dev/null || true; pkill -x mavsdk_server 2>/dev/null || true; pkill -f jmavsim 2>/dev/null || true'
+    - 'echo "=== mavsdk_server.log (tail) ==="; tail -25 /tmp/mavsdk_server.log 2>/dev/null || true'
+    - 'echo "=== px4.log (tail) ==="; tail -40 /tmp/px4.log 2>/dev/null || true'
+    - 'test -f reports/metrics.json'
   artifacts:
     when: always
     paths:
-      - artifacts/functional-tests/functional-test-report.json
-      - artifacts/functional-tests/functional-test-summary.md
-      - artifacts/functional-tests/simulation.log
-    expire_in: 30 days
-  allow_failure: false
-
-# 4. Feedback automatizado: SAST
-sast_job:
-  stage: sast
-  script:
-    - echo "Rodando varredura de segurança estática no código..."
-  allow_failure: false
-
-# 5. Implantação e fechamento
-deploy_staging:
-  stage: deploy
-  script:
-    - echo "Fazendo o deploy do artefato gerado para staging..."
-  environment:
-    name: staging
-  only:
-    - develop
-    - main
+      - reports/metrics.json
+    expire_in: 7 days
