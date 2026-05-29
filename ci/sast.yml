@@ -107,3 +107,31 @@ gitleaks:
     - 'echo "### Gitleaks — detecção de secrets por regras (runner sonar-00)"'
     - gitleaks detect --source "$CI_PROJECT_DIR" --redact --exit-code 1 --verbose
   allow_failure: true         # informativo na Sprint 3; bloqueante nas Sprints 4-5
+
+# Semgrep — SAST (análise estática de código) propriamente dito. É o equivalente
+# funcional do SonarQube do demo (ADR-006 do demo) no nosso eixo de integridade,
+# porém OSS e sem servidor externo: roda como CLI no runner DEDICADO `sonar-00`
+# (id=133). O ruleset `auto` seleciona regras pela linguagem do repo (Python:
+# libs/, scripts/, tests/). `--error` faz o job retornar !=0 quando há finding,
+# tornando-o auditável (job amarelo via allow_failure nesta sprint).
+#
+# ALTERNATIVA — template SAST nativo do GitLab (`Security/SAST.gitlab-ci.yml`,
+# que sob o capô usa o analisador Semgrep do GitLab e emite o relatório
+# `gl-sast-report.json` consumido pela aba Security/MR widget). Não adotado agora
+# porque (a) exige `include: template:` no .gitlab-ci.yml root — e a REGRA DE OURO
+# desta esteira é NÃO editar o root (cada concern só ADICIONA seu ci/*.yml via
+# glob); (b) o widget de Security depende de licença Ultimate para o MR. Fica
+# como evolução natural quando o gate virar bloqueante (ADR-0007, Sprints 4-5).
+semgrep:
+  stage: sast
+  tags: [sonar-00]            # runner dedicado id=133
+  image:
+    name: semgrep/semgrep:latest
+    entrypoint: [""]
+  variables:
+    GIT_STRATEGY: fetch
+    SEMGREP_RULES: "auto"     # regras selecionadas pela linguagem do repo
+  script:
+    - 'echo "### Semgrep — SAST (runner sonar-00); template nativo do GitLab e alternativa"'
+    - semgrep ci --config "$SEMGREP_RULES" --error
+  allow_failure: true         # informativo na Sprint 3; bloqueante nas Sprints 4-5
