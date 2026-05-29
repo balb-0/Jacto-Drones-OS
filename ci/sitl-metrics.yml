@@ -5,6 +5,10 @@
 # RUNTIME do job. Build PX4 (cache .ccache) → jmavsim headless → mavsdk_server
 # → missão square_50m → .ulg → pyulog → metrics.json (artefato) → testes SITL.
 # Validado por spike (pipeline 30065): missão 0/5→5/5, metrics realistas.
+#
+# Guards anti-falso-verde: se px4/mavsdk_server não sobem, ou se a missão não
+# gera .ulg, ou se metrics.json sai degenerado, o job FALHA (não passa em
+# silêncio). Cleanup garantido em after_script.
 # ─────────────────────────────────────────────────────────────────────────
 
 # Testes unitários (funções puras) + coverage.xml para o quality gate (TG6).
@@ -49,17 +53,23 @@ sitl-mission-metrics:
     - 'echo "### [3/6] sobe PX4 SITL + jmavsim headless"'
     - '(cd px4src && HEADLESS=1 make px4_sitl jmavsim_iris </dev/null >/tmp/px4.log 2>&1 &)'
     - 'for i in $(seq 1 60); do pgrep -x px4 >/dev/null 2>&1 && { echo "px4 vivo"; break; }; sleep 2; done'
+    - 'pgrep -x px4 >/dev/null 2>&1 || { echo "ERRO: px4 nao subiu"; tail -50 /tmp/px4.log; exit 1; }'
     - 'echo "### [4/6] sobe mavsdk_server (udp://:14540, gRPC :50051)"'
     - 'SB=$(python3 -c "import mavsdk,os;print(os.path.join(os.path.dirname(mavsdk.__file__),\"bin\",\"mavsdk_server\"))")'
     - '"$SB" -p 50051 "udp://:14540" >/tmp/mavsdk_server.log 2>&1 &'
     - 'for i in $(seq 1 20); do pgrep -x mavsdk_server >/dev/null 2>&1 && { echo "mavsdk_server vivo"; break; }; sleep 1; done'
+    - 'pgrep -x mavsdk_server >/dev/null 2>&1 || { echo "ERRO: mavsdk_server nao subiu"; tail -30 /tmp/mavsdk_server.log; exit 1; }'
     - 'echo "### [5/6] missão square_50m → .ulg → metrics.json"'
     - 'PYTHONPATH=. python3 scripts/run_mission.py --mission missions/square_50m.yaml --system-address "udp://:14540"'
     - 'ULG=$(find px4src/build/px4_sitl_default/rootfs/log -name "*.ulg" 2>/dev/null | sort | tail -1); echo "ULG=$ULG"'
+    - '[ -n "$ULG" ] || { echo "ERRO: nenhum .ulg gerado — missao nao completou"; tail -50 /tmp/px4.log; exit 1; }'
     - 'PYTHONPATH=. python3 scripts/extract_metrics.py --ulog "$ULG" --output reports/metrics.json'
     - 'echo "--- metrics.json ---"; cat reports/metrics.json'
+    - 'python3 -c "import json; m=json.load(open(''reports/metrics.json'')); assert m[''max_altitude_m'']>0 and m[''n_samples'']>0, ''metrics degenerado: missao nao voou''; print(''metrics.json valido'')"'
     - 'echo "### [6/6] testes SITL (invariantes + baseline) sobre metrics.json"'
     - 'METRICS_JSON=reports/metrics.json PYTHONPATH=. pytest tests/sitl -v'
+  after_script:
+    # cleanup garantido mesmo se os testes falharem (não fica no script[])
     - 'pkill -x px4 2>/dev/null || true; pkill -x mavsdk_server 2>/dev/null || true; pkill -f jmavsim 2>/dev/null || true'
   artifacts:
     when: always
