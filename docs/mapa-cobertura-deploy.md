@@ -42,3 +42,17 @@
 | Análise estática (SAST) | GitLab SAST/Semgrep no runner `sonar-00` (TG5) | sast | NIST SP 800-218 |
 | Integridade do artefato | checksum + SBOM no release | deploy | ISO 27001 A.8.31 |
 | Tempo de feedback | duração do pipeline medida (DORA) | todos | DORA / *Accelerate* |
+
+## 4. Thresholds por gate não-funcional
+
+> Contrato de aceite por gate (janela × método × regra). Detalhe em
+> `quality_gates.yaml` (TG6) e `docs/decisoes/0003-criterios-aprovacao-log-sitl.md`.
+
+| Gate | Threshold | Origem | Bloqueia merge? |
+|---|---|---|---|
+| `coverage.min_line_coverage` | ≥ 0.55 (meta 0.80) | `quality_gates.yaml` | sim (TG6) |
+| SAST new blocker/critical | 0 | `quality_gates.yaml` | informativo → sim |
+| secrets verificados | 0 | TG5 | sim |
+| `max_acceleration_m_s2` | ≤ 15.0 (invariante físico) | ADR-0003 | sim |
+| `std_altitude_cruise_m` | ≤ 1.0 (baseline) | baseline `square_50m` | sim |
+| `mission_duration_s` | ≤ 180 s (baseline) | baseline `square_50m` | sim |
