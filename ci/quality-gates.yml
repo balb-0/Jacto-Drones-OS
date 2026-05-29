@@ -66,9 +66,11 @@ quality-gates-mr-comment:
   before_script:
     - pip install --quiet pyyaml
   script:
-    # Avaliador informativo: gera o JSON e captura o markdown (|| true — não
-    # falha o job de comentário se algum gate reprovar; o bloqueio é do gate).
-    - "python scripts/quality_gates.py --gates quality_gates.yaml --metrics reports/metrics.json --coverage coverage.xml --output reports/quality_gates_result.json > reports/quality_gates_comment.md || true"
+    # Avaliador informativo: gera o JSON (|| true — não falha o job de comentário
+    # se algum gate reprovar; o bloqueio é do job quality-gates).
+    - "python scripts/quality_gates.py --gates quality_gates.yaml --metrics reports/metrics.json --coverage coverage.xml --output reports/quality_gates_result.json || true"
+    # Renderiza o comentário (cabeçalho X/Y + linha por gate) via helper (TG6.4.2).
+    - "python scripts/gate_comment.py --result reports/quality_gates_result.json > reports/quality_gates_comment.md"
     # Sem token configurado, não dá pra postar — registra e segue (informativo).
     - 'test -n "$GITLAB_MR_TOKEN" || { echo "GITLAB_MR_TOKEN ausente; pulando comentario"; exit 0; }'
     - "apt-get update -qq && apt-get install -y -qq curl >/dev/null"
