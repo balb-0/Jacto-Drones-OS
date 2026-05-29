@@ -220,59 +220,64 @@ A execução do pipeline depende de uma infraestrutura escalável e segura de ru
 - **Armazenamento de Artefatos:** Binários de firmware, relatórios de teste e SBOMs são armazenados como artefatos do GitLab CI/CD com retenção configurada. Artefatos de releases são promovidos para um bucket de armazenamento de longo prazo (S3 ou equivalente) para auditoria regulatória.
 
 ## 5.6 Mapa de Cobertura de Funcionalidades
-O Mapa de Cobertura de Funcionalidades consolida, em forma de matriz de rastreabilidade, quais componentes do ecossistema Jacto Drones (firmware embarcado, plataforma de serviços e sistemas de dados) são versionados em repositório Git e exercitados pelo pipeline de integração contínua descrito em §5.1. A organização por frente segue o panorama tecnológico documentado no mapeamento do ambiente Jacto<a href="#ref4"><sup>[4]</sup></a>, e o caso pedagógico Dronecode é utilizado como ambiente de validação realista do fluxo de CI/CD, conforme previsto no Termo de Abertura de Projeto Inteli (TAPI) — ESMD10<a id="ref7-link" href="#ref7"><sup>[7]</sup></a>. A estruturação do pipeline em estágios sequenciais com gates de qualidade segue as práticas consagradas por Humble e Farley em *Continuous Delivery*<a id="ref8-link" href="#ref8"><sup>[8]</sup></a>.
+O Mapa de Cobertura de Funcionalidades consolida, em forma de matriz de rastreabilidade, quais componentes são versionados em repositório Git e exercitados pelo pipeline descrito em §5.1. Para não confundir o que **já roda** com o que está **planejado**, as tabelas trazem uma coluna **Estado** com dois valores: **operacional na Sprint 3** (exercitado pelo pipeline real, com evidência no entorno imediato) e **proposto (Sprints 4-5)** (meta projetada, ainda não ativa). A organização por frente segue o mapeamento do ambiente Jacto<a href="#ref4"><sup>[4]</sup></a>; o caso pedagógico Dronecode é o ambiente de validação realista previsto no Termo de Abertura de Projeto Inteli (TAPI) — ESMD10<a id="ref7-link" href="#ref7"><sup>[7]</sup></a>; e a estruturação em estágios com gates segue Humble e Farley<a id="ref8-link" href="#ref8"><sup>[8]</sup></a>.
 
-**Tabela 1 — Cobertura por frente, repositório e build automatizado**
+> **AS-IS antes de TO-BE.** A stack efetivamente exercitada nesta sprint é **Python** (libs/scripts/testes), **C/C++ do PX4** (firmware, via SITL) e **Next.js/TypeScript** (dashboards). Componentes da plataforma de clientes (serviço de missão, frontend de operação) e o pipeline de telemetria seguem como repositórios **previstos** no plano de configuração, ainda não materializados; o MVP da esteira é validado sobre o firmware PX4 e os artefatos de dados/painéis.
 
-| Frente | Componente | Repositório Git | Build automatizado | Stage(s) do pipeline | Caso pedagógico Dronecode |
-| --- | --- | --- | --- | --- | --- |
-| Firmware embarcado | PX4 Autopilot (controle de voo) | `jacto-drones/px4-firmware` (fork PX4-Autopilot) | Cross-compile ARM Cortex-M + x86_64 SITL | Lint → Build → Test (SITL) | PX4 v1.14 (Dronecode)<a href="#ref2"><sup>[2]</sup></a> |
-| Firmware embarcado | Protocolo MAVLink | submódulo `mavlink/mavlink` | Geração de stubs C/Python | Build | MAVLink v2<a id="ref9-link" href="#ref9"><sup>[9]</sup></a> |
-| Firmware embarcado | QGroundControl (GCS de validação) | `jacto-drones/qgc-tests` | Empacotamento Qt para teste de comandos | Test (integração) | QGroundControl v4.x<a id="ref10-link" href="#ref10"><sup>[10]</sup></a> |
-| Plataforma de clientes | Serviço de Missão (planejamento) | `jacto-drones/mission-service` | Imagem Docker multi-arch | Build → Test → Package | — |
-| Plataforma de clientes | Frontend de operação | `jacto-drones/ops-web` | Vite + ESLint + Docker | Lint → Build → Test | — |
-| Sistema de dados | Pipeline de telemetria | `jacto-drones/telemetry-ingest` | Docker + workers Python | Build → Test → SAST | — |
-| Sistema de dados | Dashboard DORA / Cycle Time | `jacto-drones/devops-dashboard` | Docker Compose | Build → Deploy (staging) | — |
+**Tabela 1 — Cobertura por frente, com estado e evidência (develop @ Sprint 3)**
 
-> **Nota:** os repositórios listados são placeholders previstos no plano de gestão de configuração e serão materializados ao longo das sprints. À medida que cada repositório é criado, esta tabela deve ser atualizada com a URL definitiva no GitLab e a chave Jira do épico associado.
+| Frente | Componente | Estado | Build / stage(s) | Evidência no entorno imediato |
+| --- | --- | --- | --- | --- |
+| Firmware embarcado | PX4 Autopilot (controle de voo) | **Operacional (S3)** | Build PX4 SITL (cache ccache) + missão `square_50m` → `metrics.json`, stages `build`/`test` | [`ci/sitl-metrics.yml`](../ci/sitl-metrics.yml), [`scripts/run_mission.py`](../scripts/run_mission.py), PX4 v1.16.2 (Dronecode)<a href="#ref2"><sup>[2]</sup></a> |
+| Firmware embarcado | Protocolo MAVLink (MAVSDK) | **Operacional (S3)** | Comando da missão SITL via MAVSDK, stage `test` | [`scripts/run_mission.py`](../scripts/run_mission.py); MAVLink v2<a id="ref9-link" href="#ref9"><sup>[9]</sup></a> |
+| Sistema de dados | Painéis DORA / QoS / gerencial | **Operacional (S3)** | App Next.js/TS sobre KPIs reais (DORA + missão), lint `tsc`/ESLint no stage `lint` | [`src/`](../src) (Next.js), [`scripts/collect_gitlab_metrics.py`](../scripts/collect_gitlab_metrics.py); ADR-0002<a href="#ref-adr">↗</a> |
+| Sistema de dados | Extração de métricas de missão | **Operacional (S3)** | `pyulog` sobre `.ulg` → `metrics.json` (artefato de CI), stage `test` | [`scripts/extract_metrics.py`](../scripts/extract_metrics.py); [`quality_gates.yaml`](../quality_gates.yaml) |
+| Firmware embarcado | QGroundControl (GCS de validação) | Proposto (S4-5) | Empacotamento Qt para teste de comandos | QGroundControl v4.x<a id="ref10-link" href="#ref10"><sup>[10]</sup></a> |
+| Plataforma de clientes | Serviço de Missão / Frontend de operação | Proposto (S4-5) | Build de serviço + web (stack a definir) | Repositórios previstos no plano de configuração |
+| Sistema de dados | Pipeline de telemetria (ingest) | Proposto (S4-5) | Workers Python, stages `build`/`test`/`sast` | Repositório previsto no plano de configuração |
 
 **Tabela 2 — Rastreio de funcionalidades pedagógicas (validação Dronecode)**
 
-| Funcionalidade do MVP | Cenário de validação | Stage que valida | Critério de aceitação |
-| --- | --- | --- | --- |
-| Decolagem autônoma | PX4 SITL com `MAV_CMD_NAV_TAKEOFF` | Test (SITL) | Altitude alvo ±0.5 m em <30 s simulados<a id="ref11-link" href="#ref11"><sup>[11]</sup></a> |
-| Navegação por waypoints | Missão multi-waypoint em Gazebo | Test (SITL) | Todos os waypoints atingidos sem desvio >2 m<a href="#ref11"><sup>[11]</sup></a> |
-| Pouso e failsafe | Cenário de perda de RC | Test (SITL) | Pouso seguro em <60 s |
-| Conformidade MAVLink | Suite de mensagens `MAV_CMD` | Test (integração) | 100% das mensagens críticas validadas<a href="#ref9"><sup>[9]</sup></a> |
-| Promoção de artefato | Tag SemVer em branch de release | Package → Deploy | Imagem assinada e SBOM gerado<a id="ref12-link" href="#ref12"><sup>[12]</sup></a> |
+| Funcionalidade do MVP | Estado | Cenário de validação | Stage / critério | Evidência |
+| --- | --- | --- | --- | --- |
+| Decolagem + navegação por waypoints | **Operacional (S3)** | PX4 SITL<a id="ref11-link" href="#ref11"><sup>[11]</sup></a>, missão `square_50m` | `test`: missão voa, `metrics.json` não degenerado (altitude e amostras > 0) | [`missions/square_50m.yaml`](../missions/square_50m.yaml), [`tests/sitl/`](../tests/sitl), [`ci/sitl-metrics.yml`](../ci/sitl-metrics.yml) |
+| Invariantes físicos de voo | **Operacional (S3)** | Métricas extraídas do `.ulg` | `gate`: aceleração ≤ 15 m/s², duração ≤ 180 s, σ-altitude cruzeiro ≤ 1,0 m | [`quality_gates.yaml`](../quality_gates.yaml), ADR-0003<a href="#ref-adr">↗</a> |
+| Pouso e failsafe (perda de RC) | Proposto (S4-5) | Cenário de perda de RC em SITL | `test`: pouso seguro | Roadmap de cenários SITL |
+| Conformidade MAVLink (suite `MAV_CMD`) | Proposto (S4-5) | Suite de mensagens críticas | `test`: 100% das críticas validadas<a href="#ref9"><sup>[9]</sup></a> | Roadmap de validação de protocolo |
+| Promoção de artefato em release | **Operacional (S3, simulado)** | Tag `v*` → GitLab Release real | `deploy`: artefato imutável por SHA, **sem** Container Registry | [`ci/deploy.yml`](../ci/deploy.yml), [`scripts/promote_artifact.py`](../scripts/promote_artifact.py), ADR-0006<a href="#ref-adr">↗</a> |
 
-Cada linha das tabelas acima compõe um elo na cadeia de Controle em Malha Fechada descrita em §4.3: a chave Jira (`JACTO-XXX`) associada ao épico ou história alimenta o pipeline via Smart Commits (§5.4), e o resultado do stage de validação é realimentado para o Jira e o Notion, fechando a rastreabilidade fim a fim exigida pela norma ISO/IEC 12207:2017<a href="#ref5"><sup>[5]</sup></a>.
+<sub><a id="ref-adr"></a>↗ ADRs em [`docs/decisoes/`](decisoes/): 0002 (Next.js), 0003 (critérios de log SITL), 0006 (CD sem Registry).</sub>
+
+Cada linha **operacional** compõe um elo já fechado da malha de §4.3: o resultado do stage de validação volta como veredito de gate e como comentário automático no MR. A rastreabilidade fim a fim exigida pela ISO/IEC 12207:2017<a href="#ref5"><sup>[5]</sup></a> é realizada hoje por **issues do GitLab (#2-#7, uma por TG) + Conventional Commits + `Refs #N`** (validado por commitlint), e não por chave Jira — a integração com Jira/Notion permanece como proposta (§5.4).
 
 ## 5.7 Mapa de Cobertura de Não Funcionalidades
-Como o software produzido pelo Jacto Drones OS v0.1 dará suporte a sistemas autônomos e críticos, o pipeline incorpora análises não funcionais obrigatórias em diferentes stages. Esta seção consolida em forma matricial os controles de **padronização de formatação (linting)**, **análise estática de código (SAST)**, **segurança de dependências e containers**, **tempo de execução do build** e **integridade de artefato**, exigidos como entrega do caso pedagógico no TAPI<a href="#ref7"><sup>[7]</sup></a> e referenciados nos requisitos não funcionais de §4.4. As categorias de qualidade exercitadas correspondem aos atributos definidos pela ISO/IEC 25010:2023<a id="ref13-link" href="#ref13"><sup>[13]</sup></a>, e os controles de segurança seguem a ISO/IEC 27001:2022<a id="ref14-link" href="#ref14"><sup>[14]</sup></a> e o *Secure Software Development Framework* (NIST SP 800-218)<a id="ref15-link" href="#ref15"><sup>[15]</sup></a>.
+Como o Jacto Drones OS v0.1 dará suporte a sistemas autônomos e críticos, o pipeline incorpora análises não funcionais em diferentes stages. Esta seção consolida os controles de **lint**, **SAST e segredos**, **segurança de dependências/IaC**, **quality gates de missão**, **tempo de execução** e **integridade de artefato**, exigidos no TAPI<a href="#ref7"><sup>[7]</sup></a> e em §4.4. Como em §5.6, a coluna **Estado** separa o que **roda na Sprint 3** do que é **proposto (Sprints 4-5)**, e há ainda a distinção entre **bloqueante** (reprova o merge) e **informativo** (`allow_failure`, publica achado sem bloquear). As categorias seguem a ISO/IEC 25010:2023<a id="ref13-link" href="#ref13"><sup>[13]</sup></a>; os controles de segurança, a ISO/IEC 27001:2022<a id="ref14-link" href="#ref14"><sup>[14]</sup></a> e o NIST SP 800-218 (SSDF)<a id="ref15-link" href="#ref15"><sup>[15]</sup></a>.
 
-**Tabela 3 — Cobertura de análises não funcionais por categoria**
+**Tabela 3 — Cobertura de análises não funcionais (estado e evidência)**
 
-| Categoria NF | Ferramenta | Onde atua (frente) | Stage do pipeline | Gate / threshold | Norma de referência |
+| Categoria NF | Ferramenta (real) | Stage | Estado / enforcement | Evidência no entorno imediato |
+| --- | --- | --- | --- | --- |
+| Lint (web/dados) | ESLint + `tsc` (Next.js/TS)<a id="ref17-link" href="#ref17"><sup>[17]</sup></a> | `lint` | **Operacional (S3)** | [`src/eslint.config.mjs`](../src/eslint.config.mjs), [`.gitlab-ci.yml`](../.gitlab-ci.yml) |
+| Quality gates de missão | `scripts/quality_gates.py` + `quality_gates.yaml` | `gate` | **Operacional (S3), BLOQUEANTE** (exit ≠ 0 trava o merge) | [`scripts/quality_gates.py`](../scripts/quality_gates.py), [`quality_gates.yaml`](../quality_gates.yaml), ADR-0005<a href="#ref-adr2">↗</a> |
+| Cobertura de testes unitários | `pytest` + `coverage` (ratchet 0,90) | `build`/`gate` | **Operacional (S3), BLOQUEANTE** | [`tests/unit/`](../tests/unit), [`quality_gates.yaml`](../quality_gates.yaml) |
+| Segredos | TruffleHog + Gitleaks (`filesystem`) | `sast` | **Operacional (S3), informativo** (`allow_failure`) | [`ci/sast.yml`](../ci/sast.yml) |
+| SAST (código) | Semgrep<a id="ref18-link" href="#ref18"><sup>[18]</sup></a> (OSS) | `sast` | **Operacional (S3), informativo** | [`ci/sast.yml`](../ci/sast.yml), ADR-0007<a href="#ref-adr2">↗</a> |
+| Dependências / IaC | Trivy<a id="ref21-link" href="#ref21"><sup>[21]</sup></a> `fs` + `config` (CVE + misconfig) | `sast` | **Operacional (S3), informativo** (sem `trivy image`: deploy sem Registry) | [`ci/sast.yml`](../ci/sast.yml), ADR-0006<a href="#ref-adr2">↗</a> |
+| Conventional Commits | commitlint | `sast` | **Operacional (S3), informativo** | [`ci/sast.yml`](../ci/sast.yml), [`commitlint.config.js`](../commitlint.config.js) |
+| SAST/segredos **bloqueantes** | Semgrep/Trivy (+ análise semântica tipo CodeQL<a id="ref19-link" href="#ref19"><sup>[19]</sup></a>) no runner `sonar-00` | `sast`/`gate` | Proposto (S4-5) | ADR-0007<a href="#ref-adr2">↗</a> |
+| Integridade de artefato | Assinatura GPG + SBOM<a id="ref12-link" href="#ref12"><sup>[12]</sup></a> | `gate`/`deploy` | Proposto (S4-5) | ADR-0004<a href="#ref-adr2">↗</a> (GPG em `main`) |
+| Lint de firmware | clang-tidy + Google C++ Style<a id="ref16-link" href="#ref16"><sup>[16]</sup></a> | `lint` | Proposto (S4-5) | Roadmap (firmware compila hoje só via SITL) |
+
+**Tabela 4 — Cobertura cruzada por frente (S3 operacional × proposto)**
+
+| Frente | Lint | SAST / segredos | Dependências | Quality gate | Integridade |
 | --- | --- | --- | --- | --- | --- |
-| Padronização de formatação (lint) | clang-tidy + Google C++ Style<a id="ref16-link" href="#ref16"><sup>[16]</sup></a> | Firmware (PX4) | Lint | 0 warnings críticos | ISO/IEC 25010 (manutenibilidade)<a href="#ref13"><sup>[13]</sup></a> |
-| Padronização de formatação (lint) | ESLint<a id="ref17-link" href="#ref17"><sup>[17]</sup></a> | Plataforma de clientes (web) | Lint | 0 erros, warnings sob revisão | ISO/IEC 25010<a href="#ref13"><sup>[13]</sup></a> |
-| Análise estática de segurança (SAST) | Semgrep<a id="ref18-link" href="#ref18"><sup>[18]</sup></a> | Todos os repositórios | SAST | 0 vulnerabilidades Críticas/Altas | ISO/IEC 27001:2022<a href="#ref14"><sup>[14]</sup></a> |
-| Análise estática de segurança (SAST) | CodeQL<a id="ref19-link" href="#ref19"><sup>[19]</sup></a> | Firmware C/C++ + serviços | SAST | 0 vulnerabilidades Críticas/Altas | DO-178C (rastreio de defeitos)<a id="ref20-link" href="#ref20"><sup>[20]</sup></a> |
-| Segurança de dependências / containers | Trivy<a id="ref21-link" href="#ref21"><sup>[21]</sup></a> | Imagens Docker e SBOM | SAST → Package | Bloqueio em CVE Crítico/Alto | ISO/IEC 27001<a href="#ref14"><sup>[14]</sup></a>, NIST SSDF<a href="#ref15"><sup>[15]</sup></a> |
-| Tempo de execução da esteira | Métricas nativas do GitLab CI/CD | Pipeline completo | Todos | Pipeline <15 min; SITL <10 min | DORA (Lead Time)<a href="#ref3"><sup>[3]</sup></a> |
-| Integridade de artefato | Assinatura GPG + SBOM | Binários e imagens | Package | Toda promoção assinada | ISO/IEC 27001<a href="#ref14"><sup>[14]</sup></a>, supply chain<a href="#ref15"><sup>[15]</sup></a> |
-| Disponibilidade da esteira | Monitoramento de GitLab Runners | Infra de CI/CD | Observabilidade contínua | 99.9% uptime no horário comercial | DORA (MTTR)<a href="#ref6"><sup>[6]</sup></a> |
+| Firmware (PX4, C/C++) | clang-tidy *(proposto)* | Semgrep *(informativo)* | Trivy `fs` *(informativo)* | invariantes de missão **(bloqueante)** | GPG *(proposto)* |
+| Dados / painéis (Python, Next.js/TS) | ESLint + `tsc` **(operacional)** | Semgrep *(informativo)* | Trivy `fs`+`config` *(informativo)* | coverage ratchet **(bloqueante)** | GPG *(proposto)* |
 
-**Tabela 4 — Cobertura cruzada por frente do ecossistema**
+O que já fecha a malha de §4.3 hoje são os gates **bloqueantes** (`scripts/quality_gates.py`): violação de threshold de cobertura ou de invariante de missão interrompe a promoção e realimenta o time, e o veredito é publicado como comentário automático no MR. Os scanners de segurança são **informativos** nesta sprint (publicam achado sem reprovar) e tornam-se bloqueantes nas Sprints 4-5 (ADR-0007), junto com GPG/SBOM (ADR-0004) — descritos aqui como **roadmap**, não como controle ativo. O alvo de tempo de esteira segue a referência DORA (*Lead Time*)<a href="#ref3"><sup>[3]</sup></a> e é **meta projetada**, não medida ainda travada por gate. As normas detalhadas estão em [docs/referencias/normas-engenharia.md](referencias/normas-engenharia.md)<a href="#ref5"><sup>[5]</sup></a>; para firmware aeronáutico, os princípios do DO-178C<a id="ref20-link" href="#ref20"><sup>[20]</sup></a> e do NIST SSDF<a href="#ref15"><sup>[15]</sup></a> orientam o rigor das próximas sprints.
 
-| Frente | Lint | SAST (código) | SCA (dependências) | Performance | Assinatura |
-| --- | --- | --- | --- | --- | --- |
-| Firmware embarcado | clang-tidy | CodeQL / Semgrep | Trivy (toolchain) | <10 min SITL | GPG firmware |
-| Plataforma de clientes | ESLint | Semgrep | Trivy (imagens) | <15 min pipeline | GPG imagens |
-| Sistema de dados | Semgrep | Semgrep / CodeQL | Trivy | <15 min pipeline | GPG imagens |
-
-Cada gate da Tabela 3 funciona como um *sensor* da malha fechada (§4.3): a violação de qualquer threshold interrompe a promoção do artefato e realimenta o time com logs e alertas, sem intervenção manual. A combinação de cobertura por categoria (Tabela 3) e por frente (Tabela 4) garante que os atributos de qualidade exigidos pela ISO/IEC 25010:2023 (manutenibilidade, segurança, performance)<a href="#ref13"><sup>[13]</sup></a> e pela ISO/IEC 27001:2022 (segurança de dependências e supply chain)<a href="#ref14"><sup>[14]</sup></a> sejam exercitados em todos os componentes versionados. Para o firmware embarcado, a aderência aos princípios de segurança de software aeronáutico do DO-178C<a href="#ref20"><sup>[20]</sup></a> e às boas práticas do NIST SSDF<a href="#ref15"><sup>[15]</sup></a> reforça o rigor exigido para sistemas autônomos críticos, conforme detalhamento das normas em [docs/referencias/normas-engenharia.md](referencias/normas-engenharia.md)<a href="#ref5"><sup>[5]</sup></a>.
+<sub><a id="ref-adr2"></a>↗ ADRs em [`docs/decisoes/`](decisoes/): 0004 (GPG em `main`), 0005 (thresholds/ratchet), 0006 (CD sem Registry), 0007 (SAST Semgrep).</sub>
 
 # 6. Requisitos SCM
 
