@@ -60,7 +60,7 @@ def promote(env: str, sha: str, tag: str | None, rollback: bool) -> int:
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--env", required=True, choices=["staging", "prod", "release"])
-    p.add_argument("--sha", required=True)
+    p.add_argument("--sha", default="")  # validado em promote() (testável sem argparse)
     p.add_argument("--tag", default=None)
     p.add_argument("--rollback", action="store_true")
     args = p.parse_args()
