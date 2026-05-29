@@ -87,3 +87,23 @@ commitlint:
     # antigos (pré-commitlint) e falharia por motivo alheio a este MR.
     - npx commitlint --from origin/develop --to HEAD --verbose
   allow_failure: true
+
+# Gitleaks — segunda camada de detecção de secrets, por REGRAS/regex (complementa
+# a TruffleHog, que prioriza segredos verificados). Defesa em profundidade: o que
+# um scanner não pega por heurística, o outro pega por padrão. Roda no RUNNER
+# DEDICADO `sonar-00` (id=133), reservado à carga de integridade/SAST, para não
+# disputar o runner compartilhado id=100 com build/missão. `--redact` evita
+# vazar o segredo no log do job; `--exit-code 1` mantém o achado auditável.
+gitleaks:
+  stage: sast
+  tags: [sonar-00]            # runner dedicado id=133
+  image:
+    name: zricethezav/gitleaks:latest
+    entrypoint: [""]
+  variables:
+    GIT_STRATEGY: fetch
+    GIT_DEPTH: "0"            # `gitleaks detect` varre o histórico git
+  script:
+    - 'echo "### Gitleaks — detecção de secrets por regras (runner sonar-00)"'
+    - gitleaks detect --source "$CI_PROJECT_DIR" --redact --exit-code 1 --verbose
+  allow_failure: true         # informativo na Sprint 3; bloqueante nas Sprints 4-5
