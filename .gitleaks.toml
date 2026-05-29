@@ -1,0 +1,16 @@
+# Configuração do gitleaks para o G04 (TG5 — job `gitleaks` em ci/sast.yml).
+# Herda TODAS as regras default do gitleaks e adiciona uma allowlist de
+# falsos-positivos conhecidos — strings de alta entropia que NÃO são segredos.
+title = "G04 — gitleaks"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Falsos-positivos conhecidos (não são credenciais)"
+# 'px4-sitl-v1162' é a chave do cache do build PX4 SITL em ci/sitl-metrics.yml,
+# flagada como generic-api-key por entropia (~3.5). É um identificador de cache,
+# não uma credencial. Allowlist por regex resiste a mudança de número de linha.
+regexes = [
+  '''px4-sitl-v1162''',
+]
