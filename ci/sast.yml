@@ -82,7 +82,10 @@ commitlint:
     - npm install --no-save --no-audit --no-fund @commitlint/cli @commitlint/config-conventional
   script:
     - 'echo "### commitlint — valida apenas os commits do MR (origin/develop..HEAD)"'
-    - git fetch --quiet origin develop
+    # cria explicitamente refs/remotes/origin/develop: sob GIT_STRATEGY=fetch o
+    # runner NÃO popula origin/develop, e `git fetch origin develop` sozinho deixa
+    # a ref só em FETCH_HEAD → `origin/develop` não resolve e o commitlint aborta.
+    - git fetch origin develop:refs/remotes/origin/develop
     # --from/--to delimita o range do MR; sem isto o commitlint pegaria commits
     # antigos (pré-commitlint) e falharia por motivo alheio a este MR.
     - npx commitlint --from origin/develop --to HEAD --verbose
@@ -98,22 +101,23 @@ gitleaks:
   stage: sast
   tags: [sonar-00]            # runner dedicado id=133
   image:
-    name: zricethezav/gitleaks:latest
+    name: ghcr.io/gitleaks/gitleaks:latest   # imagem OFICIAL (org legado zricethezav descontinuado)
     entrypoint: [""]
   variables:
-    GIT_STRATEGY: fetch
-    GIT_DEPTH: "0"            # `gitleaks detect` varre o histórico git
+    GIT_STRATEGY: fetch       # `gitleaks dir` varre o filesystem da árvore: não precisa de histórico
   script:
     - 'echo "### Gitleaks — detecção de secrets por regras (runner sonar-00)"'
-    - gitleaks detect --source "$CI_PROJECT_DIR" --redact --exit-code 1 --verbose
+    # subcomando `dir` varre o filesystem do checkout (coerente com os demais
+    # scanners fs); `detect --source` foi removido no gitleaks v8.19+ (no-op).
+    - gitleaks dir "$CI_PROJECT_DIR" --redact --exit-code 1 --verbose
   allow_failure: true         # informativo na Sprint 3; bloqueante nas Sprints 4-5
 
 # Semgrep — SAST (análise estática de código) propriamente dito. É o equivalente
 # funcional do SonarQube do demo (ADR-006 do demo) no nosso eixo de integridade,
 # porém OSS e sem servidor externo: roda como CLI no runner DEDICADO `sonar-00`
 # (id=133). O ruleset `auto` seleciona regras pela linguagem do repo (Python:
-# libs/, scripts/, tests/). `--error` faz o job retornar !=0 quando há finding,
-# tornando-o auditável (job amarelo via allow_failure nesta sprint).
+# libs/, scripts/, tests/). `--no-suppress-errors` faz o job retornar !=0 quando
+# há erro interno do scanner, tornando-o auditável (amarelo via allow_failure).
 #
 # ALTERNATIVA — template SAST nativo do GitLab (`Security/SAST.gitlab-ci.yml`,
 # que sob o capô usa o analisador Semgrep do GitLab e emite o relatório
@@ -133,5 +137,7 @@ semgrep:
     SEMGREP_RULES: "auto"     # regras selecionadas pela linguagem do repo
   script:
     - 'echo "### Semgrep — SAST (runner sonar-00); template nativo do GitLab e alternativa"'
-    - semgrep ci --config "$SEMGREP_RULES" --error
+    # --no-suppress-errors é a flag de `semgrep ci` para falhar em erro interno
+    # (o `--error` anterior pertence a `semgrep scan` → era ignorado/incoerente).
+    - semgrep ci --config "$SEMGREP_RULES" --no-suppress-errors
   allow_failure: true         # informativo na Sprint 3; bloqueante nas Sprints 4-5
