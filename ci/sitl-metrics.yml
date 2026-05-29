@@ -19,7 +19,9 @@ unit-tests:
   before_script:
     - pip install --quiet pytest pytest-cov pyyaml
   script:
-    - PYTHONPATH=. pytest tests/unit -v --cov=libs --cov=scripts --cov-report=xml:coverage.xml --cov-report=term
+    # Coverage medido sobre a lib de domínio (libs/) — funções puras testáveis.
+    # Os CLIs (run_mission, promote_artifact) são exercitados via SITL, não unit.
+    - PYTHONPATH=. pytest tests/unit -v --cov=libs --cov-report=xml:coverage.xml --cov-report=term
   coverage: '/^TOTAL.+?(\d+\%)$/'
   artifacts:
     paths: [coverage.xml]
