@@ -121,7 +121,7 @@ O diagnóstico operacional da esteira atual (testes manuais, ausência de runner
 
 ## 4.1 Visão de Tecnologia (Technology Viewpoint)
 A Visão de Tecnologia especifica as ferramentas e padrões técnicos escolhidos para implementar o sistema, garantindo a integração entre o ecossistema de hardware (drones) e os serviços em nuvem:
-- **Repositório e CI/CD:** GitLab (GitLab CI/CD e Container Registry).
+- **Repositório e CI/CD:** GitLab (GitLab CI/CD). Container Registry para imagens é **proposto (ADR-0006, Sprints 4-5)**; na Sprint 3 o runner (id=100) não tem privilégio/socket Docker, então o CD é simulado por ambiente e o artefato é imutável por `$CI_COMMIT_SHA`, sem Registry.
 - **Simulação e Testes de Firmware:** Ecossistema Dronecode, utilizando **PX4 Autopilot** rodando em simulações SITL/HITL (Software/Hardware In The Loop) e comunicação via protocolo **MAVLink**<a id="ref2-link" href="#ref2"><sup>[2]</sup></a>.
 - **Infraestrutura:** Docker para conteinerização isolada dos ambientes de build e simulação de voo.
 - **Análise Estática (SAST):** Ferramentas integradas ao pipeline para validação de segurança e qualidade estrita do código.
@@ -173,7 +173,7 @@ O pipeline compreende as seguintes etapas:
 - **Test:** Execução de testes unitários e de integração, seguida dos testes funcionais em simulação SITL e HITL (seção 5.2).
 - **SAST:** Análise estática de segurança do código-fonte e das dependências, incluindo escaneamento de vulnerabilidades em containers (seção 5.3).
 - **Package:** Empacotamento de artefatos homologados — binários de firmware versionados, imagens Docker assinadas e SBOMs (*Software Bill of Materials*).
-- **Deploy:** Promoção automatizada para ambientes de staging e, mediante aprovação manual, para produção. O deploy utiliza imagens imutáveis do Container Registry do GitLab.
+- **Deploy:** Promoção automatizada para ambientes de staging e, mediante aprovação manual, para produção. Na Sprint 3 o CD é **simulado por ambiente**, com artefato imutável identificado por `$CI_COMMIT_SHA` (sem reconstrução); o uso de imagens imutáveis do Container Registry do GitLab é **proposto (ADR-0006, Sprints 4-5)**, ainda não ativo.
 
 A execução de cada job ocorre dentro de contêineres Docker efêmeros, orquestrados por **GitLab Runners**. Essa abordagem garante isolamento total entre builds, eliminando conflitos de dependência e assegurando reprodutibilidade. O tempo total de execução da esteira é monitorado conforme o requisito não funcional de <15 minutos estabelecido na seção 4.4.
 
@@ -185,7 +185,7 @@ Os testes funcionais validam o comportamento do firmware e dos serviços de miss
 - **PX4 SITL (Software In The Loop):** O firmware PX4 é executado em um simulador de voo (Gazebo ou jMAVSim) dentro de um contêiner Docker no pipeline. Missões de teste são carregadas automaticamente, e o comportamento do drone é monitorado em tempo simulado. Cenários cobertos incluem decolagem, navegação por waypoints, pouso e rotinas de contingência (*failsafe*).
 - **PX4 HITL (Hardware In The Loop):** Para validações que exigem interação com hardware real, o pipeline dispara jobs em runners dedicados conectados a controladores de voo Pixhawk. Esse stage é executado sob demanda em branches de release, garantindo que o código compilado se comporte corretamente no hardware de produção.
 - **Validação de Protocolo MAVLink:** Testes automatizados verificam a conformidade das mensagens trocadas entre o autopilot e a estação de controle. São validados comandos de missão (`MAV_CMD_NAV_WAYPOINT`), parâmetros de voo e telemetria de estado, assegurando interoperabilidade com o QGroundControl e outras GCS.
-- **Validação de Missão:** Scripts de teste orquestram missões completas (planejamento de waypoints, execução de comandos de voo, verificação de restrições geográficas) e comparam os logs de voo simulado contra os critérios de aceitação definidos no Jira.
+- **Validação de Missão:** Scripts de teste orquestram missões completas (planejamento de waypoints, execução de comandos de voo, verificação de restrições geográficas) e comparam os logs de voo simulado contra os critérios de aceitação versionados em `quality_gates.yaml` (ADR-0003).
 
 ## 5.3 Testes Não-Funcionais
 Os testes não-funcionais garantem que a esteira e os artefatos gerados atendam aos requisitos de segurança, performance e conformidade regulatória.
@@ -193,31 +193,31 @@ Os testes não-funcionais garantem que a esteira e os artefatos gerados atendam 
 - **SAST (Static Application Security Testing):** Ferramentas de análise estática (como Semgrep, CodeQL e Trivy) são executadas em todos os repositórios. O escaneamento cobre o código-fonte C/C++ do firmware, scripts de pipeline e imagens de contêiner. Vulnerabilidades classificadas como Críticas ou Altas bloqueiam a promoção do artefato, conforme definido na seção 4.4.
 - **Gates de Performance:** O tempo de execução de cada stage é medido e comparado contra thresholds-alvo (meta provisória: SITL <10 min e pipeline completo <15 min, conforme §4.4). Os valores operam como referência aspiracional alinhada à DORA<a href="#ref3"><sup>[3]</sup></a>; a medição efetiva e a calibração final serão consolidadas na Sprint 3.
 - **Escaneamento de Artefatos:** Antes do empacotamento, binários de firmware e imagens Docker passam por escaneamento de vulnerabilidades em dependências. Para imagens Docker, é gerado um relatório de camadas e pacotes vulneráveis.
-- **Assinatura Digital:** Todo artefato promovido para staging ou produção é assinado digitalmente com chaves GPG armazenadas no GitLab CI/CD Vault. A assinatura garante a integridade do artefato e protege contra adulterações na cadeia de suprimentos (*supply chain security*), em conformidade com os requisitos da ISO/IEC 27001:2022<a id="ref5-link" href="#ref5"><sup>[5]</sup></a>.
+- **Assinatura Digital:** **Proposto (ADR-0004, Sprints 4-5); não ativa na Sprint 3.** A meta é que todo artefato promovido para staging ou produção seja assinado digitalmente com chaves GPG armazenadas no GitLab CI/CD Vault, garantindo a integridade do artefato e a proteção contra adulterações na cadeia de suprimentos (*supply chain security*), em conformidade com os requisitos da ISO/IEC 27001:2022<a id="ref5-link" href="#ref5"><sup>[5]</sup></a>.
 
 ## 5.4 Rastreabilidade Técnica
-A rastreabilidade end-to-end é um diferencial crítico do Jacto Drones OS v0.1, permitindo auditar qualquer demanda desde sua concepção até o deploy em produção. A cadeia de rastreabilidade opera conforme descrito no documento de mapeamento do ambiente<a id="ref4-link" href="#ref4"><sup>[4]</sup></a>:
+A rastreabilidade end-to-end é um diferencial crítico do Jacto Drones OS v0.1, permitindo auditar qualquer demanda desde sua concepção até o deploy em produção.
 
-1. **Notion (Requisitos e Contexto):** A necessidade de negócio é documentada no Notion, vinculada a uma demanda estratégica.
-2. **Jira (Épicos e Histórias):** O requisito é convertido em uma história no Jira, recebendo uma chave identificadora única (ex.: `JACTO-456`).
-3. **GitLab (Código e Merge Requests):** O desenvolvedor cria uma branch e abre um MR contendo a chave `JACTO-456` no título. Cada commit também carrega essa chave.
-4. **GitLab CI/CD (Build, Teste e Deploy):** O push dispara o pipeline. O status de cada job é reportado ao MR.
-5. **Jira (Deploy e Releases):** Ao concluir um deploy, o pipeline atualiza a issue no Jira, registrando a versão implantada e o ambiente.
-6. **Notion (Documentação e Artefatos):** O artefato gerado é catalogado no Notion, fechando o ciclo.
+**Operacional na Sprint 3 (o que roda hoje).** A rastreabilidade é realizada inteiramente dentro do GitLab, sem dependência de ferramentas externas:
+
+1. **Issue do GitLab (Requisitos e Contexto):** A demanda é registrada como uma **issue do GitLab** (#2-#7, uma por TG), que concentra o contexto e os critérios.
+2. **GitLab (Código e Merge Requests):** O desenvolvedor cria uma branch e abre um MR. Cada commit referencia a issue via **`Refs #N`** e segue **Conventional Commits**, validados por **commitlint**.
+3. **GitLab CI/CD (Build, Teste e Deploy):** O push dispara o pipeline; o status de cada job é reportado ao MR, e o veredito dos gates volta como comentário automático (malha de §4.3).
 
 Para viabilizar essa cadeia, adota-se:
 
-- **Smart Commits:** Mensagens de commit que incluem a chave do Jira são automaticamente vinculadas à respectiva história. Comandos adicionais permitem transicionar o status da issue (ex.: `JACTO-123 #close #comment Implementado controle de PID`).
-- **Política de Branching:** Todo merge request deve conter a chave da issue do Jira no título ou na descrição. Commits sem chave de rastreamento são sinalizados em revisão.
-- **GitLab Jira Integration:** Sincroniza commits, merge requests e deployments para o Jira, criando abas de "Desenvolvimento" dentro de cada issue.
+- **Conventional Commits + `Refs #N`:** Mensagens de commit seguem o padrão Conventional Commits e citam a issue do GitLab por `Refs #N`, vinculando automaticamente o trabalho à respectiva issue. A validação é feita por commitlint no pipeline.
+- **Política de Branching:** Todo merge request deve referenciar a issue do GitLab (`Refs #N`) em commits, título ou descrição. Commits sem referência de rastreamento são sinalizados em revisão.
+
+**Proposto (TO-BE, Sprints 4-5).** A extensão da cadeia para ferramentas externas — **Notion (requisitos estratégicos) → Jira (épicos/histórias, ex.: chave `JACTO-456`) → GitLab** — com **Smart Commits** (comandos como `JACTO-123 #close #comment ...`) e a **GitLab Jira Integration** (sincronizando commits, MRs e deployments para abas de "Desenvolvimento" no Jira) permanece como visão futura, conforme o documento de mapeamento do ambiente<a id="ref4-link" href="#ref4"><sup>[4]</sup></a>. Não está ativa na Sprint 3.
 
 ## 5.5 Infraestrutura de Execução
 A execução do pipeline depende de uma infraestrutura escalável e segura de runners e registro de artefatos.
 
 - **GitLab Runners:** Os jobs são executados por runners que podem ser auto-hospedados (*self-hosted*) na infraestrutura da Jacto ou provisionados em nuvem (AWS EC2, GCP Compute Engine). Runners auto-hospedados são recomendados para jobs de HITL, pois exigem acesso físico a hardware de voo.
-- **Docker-in-Docker (DinD):** Para builds que necessitam construir imagens Docker dentro do pipeline (como os serviços de plataforma), utiliza-se a modalidade Docker-in-Docker. Cada execução recebe um daemon Docker isolado, garantindo que caches e camadas de imagem não vazem entre builds concorrentes.
-- **Container Registry:** O GitLab Container Registry armazena as imagens Docker versionadas e assinadas. Cada imagem é tagueada com o hash do commit e a versão SemVer, permitindo rollback imediato.
-- **Armazenamento de Artefatos:** Binários de firmware, relatórios de teste e SBOMs são armazenados como artefatos do GitLab CI/CD com retenção configurada. Artefatos de releases são promovidos para um bucket de armazenamento de longo prazo (S3 ou equivalente) para auditoria regulatória.
+- **Docker-in-Docker (DinD):** **Proposto (ADR-0006, Sprints 4-5).** Para builds que necessitam construir imagens Docker dentro do pipeline (como os serviços de plataforma), a modalidade Docker-in-Docker daria a cada execução um daemon Docker isolado. Na Sprint 3 não está disponível: o runner (id=100) não tem privilégio nem socket Docker, logo não há DinD ativo.
+- **Container Registry:** **Proposto (ADR-0006, Sprints 4-5).** O GitLab Container Registry armazenaria as imagens Docker versionadas e assinadas, tagueadas por hash de commit e versão SemVer. Na Sprint 3 **não há Registry**: o CD é simulado por ambiente e o artefato é imutável por `$CI_COMMIT_SHA`.
+- **Armazenamento de Artefatos:** Binários de firmware, relatórios de teste e SBOMs são armazenados como artefatos do GitLab CI/CD com retenção configurada. A promoção de artefatos de release para um bucket de armazenamento de longo prazo (S3 ou equivalente) para auditoria regulatória é **proposta (Sprints 4-5)**, ainda não provisionada.
 
 ## 5.6 Mapa de Cobertura de Funcionalidades
 O Mapa de Cobertura de Funcionalidades consolida, em forma de matriz de rastreabilidade, quais componentes são versionados em repositório Git e exercitados pelo pipeline descrito em §5.1. Para não confundir o que **já roda** com o que está **planejado**, as tabelas trazem uma coluna **Estado** com dois valores: **operacional na Sprint 3** (exercitado pelo pipeline real, com evidência no entorno imediato) e **proposto (Sprints 4-5)** (meta projetada, ainda não ativa). A organização por frente segue o mapeamento do ambiente Jacto<a href="#ref4"><sup>[4]</sup></a>; o caso pedagógico Dronecode é o ambiente de validação realista previsto no Termo de Abertura de Projeto Inteli (TAPI) — ESMD10<a id="ref7-link" href="#ref7"><sup>[7]</sup></a>; e a estruturação em estágios com gates segue Humble e Farley<a id="ref8-link" href="#ref8"><sup>[8]</sup></a>.
@@ -288,7 +288,7 @@ As branches principais são:
 
 - **`main`:** Branch de produção. Contém apenas código estável e artefatos validados. Todos os commits na `main` devem estar associados a uma tag de versão.
 - **`develop`:** Branch de integração contínua. Recebe merges de features concluídas e serve como base para testes de regressão e validação em ambiente de staging.
-- **`feature/*`:** Branches de desenvolvimento de funcionalidades. Criadas a partir da `develop` e mergeadas de volta via pull request. O nome deve incluir a chave do Jira (ex.: `feature/JACTO-456-controle-pid`).
+- **`feature/*`:** Branches de desenvolvimento de funcionalidades. Criadas a partir da `develop` e mergeadas de volta via merge request. O nome descreve a funcionalidade (ex.: `feat/quality-gates`), e os commits referenciam a issue do GitLab via `Refs #N`. (A nomeação por chave Jira — ex.: `feature/JACTO-456-controle-pid` — é **proposta**, TO-BE Sprints 4-5.)
 - **`release/*`:** Branches de preparação de release. Criadas a partir da `develop` quando o conjunto de funcionalidades está congelado. Apenas correções de bug e ajustes de documentação são permitidos.
 - **`hotfix/*`:** Branches de correção urgente em produção. Criadas a partir da `main` e mergeadas tanto para `main` quanto para `develop` após validação.
 
@@ -297,18 +297,18 @@ As seguintes proteções são obrigatórias em todas as branches persistentes (`
 - **Revisão de Código Obrigatória:** Todo merge request exige aprovação de pelo menos um revisor que não seja o autor. Revisões devem verificar lógica, testes, documentação e conformidade com os padrões do projeto.
 - **CI Passing:** O pipeline GitLab CI/CD deve concluir com sucesso antes que o merge seja permitido. Falhas em qualquer stage bloqueiam o botão de merge.
 - **Sem Conflitos:** O branch de origem deve estar atualizado em relação ao destino. Conflitos de merge devem ser resolvidos localmente antes da abertura ou atualização do MR.
-- **Assinatura de Commits:** Recomenda-se o uso de commits assinados com GPG para garantir a autoria e integridade do histórico.
+- **Assinatura de Commits:** A assinatura GPG (de commits e de artefatos) é **proposta (ADR-0004, Sprints 4-5)** e não está ativa na Sprint 3; quando habilitada, garante autoria e integridade do histórico e dos artefatos.
 
 ## 6.2 Fluxo de Promoção
 O fluxo de promoção de código define o caminho que uma alteração percorre desde o desenvolvimento local até a produção, com gates de qualidade em cada estágio.
 
-1. **Desenvolvimento em Feature Branch:** O desenvolvedor cria um branch `feature/*` a partir da `develop`, vinculado a uma história do Jira. Commits seguem a especificação Conventional Commits.
+1. **Desenvolvimento em Feature Branch:** O desenvolvedor cria um branch `feature/*` a partir da `develop`, vinculado a uma issue do GitLab via `Refs #N`. Commits seguem a especificação Conventional Commits (validados por commitlint). O vínculo a uma história do Jira é **proposto (TO-BE, Sprints 4-5)**.
 2. **Merge Request para `develop`:** Ao concluir a implementação, abre-se um MR para a `develop`. O MR dispara o pipeline de CI/CD (lint, build, testes unitários, SAST).
 3. **Validação de CI e Revisão:** O pipeline deve passar e o MR deve receber aprovação de pelo menos um revisor. Somente então o merge é permitido.
 4. **Integração na `develop`:** Após o merge, o pipeline de integração executa testes de regressão completos, incluindo SITL. A `develop` reflete o estado mais atual do sistema.
 5. **Branch de Release:** Quando o conjunto de funcionalidades está estável, cria-se um branch `release/vX.Y.Z` a partir da `develop`. Nesse branch, são executados testes HITL e validações de aceitação final.
 6. **Deploy para Staging:** O artefato gerado no branch de release é automaticamente implantado no ambiente de staging. Testes de smoke e validação de missão são executados.
-7. **Merge para `main` e Tag:** Após validação em staging, o release branch é mergeado para `main` e uma tag SemVer é criada. O artefato é assinado e promovido para o Registry.
+7. **Merge para `main` e Tag:** Após validação em staging, o release branch é mergeado para `main` e uma tag SemVer é criada. Na Sprint 3, a tag `v*` gera um **GitLab Release** com artefato imutável por `$CI_COMMIT_SHA` (**sem** Container Registry, ADR-0006); a assinatura GPG e a promoção para o Registry são **propostas (ADR-0004/0006, Sprints 4-5)**.
 8. **Deploy para Produção:** O deploy em produção requer aprovação manual (gate de *change advisory board* ou aprovação do tech lead). O artefato implantado é exatamente o mesmo validado em staging, sem reconstrução.
 
 Cada estágio funciona como um filtro. Falhas em qualquer gate retornam o código para correção, fechando a malha de feedback descrita na seção 4.3.
@@ -327,14 +327,16 @@ O versionamento é disparado automaticamente pelo pipeline a partir da análise 
 ## 6.4 Indicadores de Performance
 A medição contínua da performance de entrega é essencial para identificar gargalos e orientar melhorias na esteira. O Jacto Drones OS v0.1 adota um conjunto integrado de métricas que combinam indicadores de fluxo (Cycle Time e Lead Time) com as métricas DORA (*DevOps Research and Assessment*)<a id="ref3-link" href="#ref3"><sup>[3]</sup></a><a id="ref6-link" href="#ref6"><sup>[6]</sup></a>.
 
-- **Cycle Time:** Tempo decorrido entre o início do trabalho em uma história (quando o card entra em progresso no Jira) e a conclusão do MR mergeado na `develop`. Indica a eficiência do processo de desenvolvimento e revisão.
-- **Lead Time:** Tempo total entre a criação da demanda no Jira (ou Notion) e a disponibilização da funcionalidade em produção. Engloba não apenas o desenvolvimento, mas também os estágios de teste, homologação e deploy.
-- **Deployment Frequency (Frequência de Deploy):** Número de deploys para produção por semana ou por mês. Medido a partir dos eventos de deploy registrados no GitLab CI/CD. Alta frequência indica capacidade de entregar valor de forma contínua.
-- **Lead Time for Changes (Tempo de Espera de Mudanças):** Tempo entre o primeiro commit de uma funcionalidade e seu deploy em produção. Calculado a partir dos timestamps de commits no GitLab e dos eventos de deploy no GitLab.
-- **Change Failure Rate (Taxa de Falha de Mudança):** Percentual de deploys que resultam em incidentes, bugs críticos ou rollback. Requer correlação entre deploys e tickets de bug abertos no Jira nas 24 horas seguintes à entrega.
-- **Mean Time To Recovery (MTTR - Tempo Médio de Recuperação):** Tempo médio para restaurar o serviço ou corrigir um firmware defeituoso após uma falha em produção. Medido a partir da abertura de um incidente no Jira até o registro de sua resolução.
+As métricas DORA são **medidas via API do GitLab** por [`scripts/collect_gitlab_metrics.py`](../scripts/collect_gitlab_metrics.py) (operacional na Sprint 3): a coleta atual reporta **lead time mediana de 0,4h**, **Change Failure Rate de 0% na `main`** e **10 deploys em staging**. A correlação de Cycle/Lead Time e de falhas é feita contra as **issues do GitLab** (`Refs #N`); a leitura a partir de cards/tickets do Jira ou Notion é **proposta (TO-BE, Sprints 4-5)**.
 
-A coleta dessas métricas é realizada de forma manual inicialmente (via planilhas e timestamps de commits), com meta de automatização completa através do GitLab DORA ou Datadog no segundo semestre de operação.
+- **Cycle Time:** Tempo decorrido entre o início do trabalho em uma issue do GitLab (quando entra em progresso) e a conclusão do MR mergeado na `develop`. Indica a eficiência do processo de desenvolvimento e revisão. (Origem em card do Jira: proposta.)
+- **Lead Time:** Tempo total entre a criação da demanda (issue do GitLab) e a disponibilização da funcionalidade. Engloba não apenas o desenvolvimento, mas também os estágios de teste, homologação e deploy. (Origem em Jira/Notion: proposta.)
+- **Deployment Frequency (Frequência de Deploy):** Número de deploys por janela de tempo. Medido a partir dos eventos de deploy registrados no GitLab CI/CD (10 deploys em staging na coleta atual). Alta frequência indica capacidade de entregar valor de forma contínua.
+- **Lead Time for Changes (Tempo de Espera de Mudanças):** Tempo entre o primeiro commit de uma funcionalidade e seu deploy. Calculado a partir dos timestamps de commits e dos eventos de deploy no GitLab (mediana 0,4h na coleta atual).
+- **Change Failure Rate (Taxa de Falha de Mudança):** Percentual de deploys que resultam em incidentes, bugs críticos ou rollback (0% na `main` na coleta atual). A correlação é feita entre deploys e **issues de bug do GitLab** abertas nas 24 horas seguintes à entrega; o uso de tickets do Jira é **proposto**.
+- **Mean Time To Recovery (MTTR - Tempo Médio de Recuperação):** Tempo médio para restaurar o serviço ou corrigir um firmware defeituoso após uma falha. Medido a partir da abertura de uma **issue de incidente no GitLab** até o registro de sua resolução; o registro do incidente no Jira é **proposto**.
+
+A coleta dessas métricas já é **automatizada via API do GitLab** ([`scripts/collect_gitlab_metrics.py`](../scripts/collect_gitlab_metrics.py)) na Sprint 3. A integração com painéis externos como **GitLab DORA nativo ou Datadog** é **proposta (TO-BE, Sprints 4-5)**.
 
 ## 6.5 Definição de Pronto (Definition of Done)
 Uma funcionalidade só é considerada concluída no Jacto Drones OS v0.1 quando atende a todos os critérios da **Definição de Pronto** (DoD). Essa lista garante que o trabalho entregue possa ser rastreado, auditado e implantado com confiança:
@@ -342,10 +344,10 @@ Uma funcionalidade só é considerada concluída no Jacto Drones OS v0.1 quando 
 - **Código Revisado:** O merge request foi aprovado por pelo menos um revisor, com todos os comentários resolvidos.
 - **Testes Passando:** Todos os testes unitários, de integração, SITL e SAST do pipeline concluíram com sucesso.
 - **SAST Limpo:** Nenhuma vulnerabilidade Crítica ou Alta permanece sem tratamento ou exceção documentada.
-- **Documentação Atualizada:** O README do repositório, a documentação técnica no Confluence e as notas de release foram atualizados para refletir a mudança.
-- **Issue do Jira Fechada:** A história ou tarefa do Jira vinculada foi movida para o status "Concluído" ou equivalente, com links para o MR e o pipeline.
+- **Documentação Atualizada:** O README do repositório, a documentação técnica no repositório (`docs/`) e as notas de release foram atualizados para refletir a mudança. (A documentação no Confluence é **proposta**, TO-BE Sprints 4-5.)
+- **Issue do GitLab Fechada:** A issue do GitLab vinculada (`Refs #N`) foi movida para "Concluído" ou equivalente, com links para o MR e o pipeline. (O fechamento da história no Jira é **proposto**.)
 - **Deploy em Staging:** O artefato foi implantado com sucesso no ambiente de staging e passou nos testes de smoke.
-- **Rastreabilidade Completa:** A cadeia Notion → Jira → GitLab está intacta e verificável, com a chave da issue presente em commits e MRs.
+- **Rastreabilidade Completa:** A cadeia **issue do GitLab → commits/MR (`Refs #N`) → pipeline** está intacta e verificável, com a referência da issue presente em commits e MRs. (A extensão Notion → Jira → GitLab é **proposta**, TO-BE Sprints 4-5.)
 
 Somente após o cumprimento integral desses critérios a funcionalidade é elegível para promoção à produção.
 
