@@ -61,9 +61,27 @@ dados); o snapshot comitado é a fonte de verdade até o CI rodar.
 | **Aceite** | **Não medido** nesta janela: `main` teve **0 falhas** (nada a recuperar) e as falhas de `develop` são de-risking, não incidentes de produção.                      |
 | **Valor**  | `null` (`nao-medido`). Quando houver incidente real em produção, o coletor passa a pareá-lo com o deploy de recuperação seguinte e calcula a mediana das durações. |
 
-## Recalibração da detecção de anomalia
+## Recalibração da detecção de anomalia (subtask 2.5.4)
 
-Os thresholds da detecção de anomalia do Painel Gerencial (`services/manager.ts`)
-foram **recalibrados sobre esta série real** (CFR de `develop`, amostra de
-pipelines, lead time), não mais sobre mocks. Ver subtask 2.5.4 e o bloco de base
-documentado no próprio serviço.
+Os thresholds da detecção de anomalia do Painel Gerencial (`services/manager.ts`,
+constante `ANOMALY_CALIBRATION`) foram **recalibrados sobre esta série real** — não
+mais sobre mocks. Base de calibração (snapshot 2026-05-29):
+
+| Parâmetro                  | Antes (mock) | Depois (série real)                | Por quê                                                                                           |
+| -------------------------- | ------------ | ---------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Threshold de falha (DEV)   | 10% fixo     | 60.9% (baseline 45.9% + margem 15) | 10% fixo disparava **sempre** no de-risking (45.9% de falha na amostra) — falso-positivo crônico. |
+| Threshold de falha (PROD)  | —            | 1% (qualquer falha em `main`)      | Produção é intolerante: `main` tem CFR 0%; qualquer falha é anomalia real.                        |
+| Item envelhecido           | 10 dias      | 8 dias                             | Calibrado à escala real de lead time (cauda ~7.6 dias / 182.4h).                                  |
+| Amostra mínima estatística | (sem guarda) | 8 pontos                           | σ é instável com poucos pontos; a série agregada real é curta → não emitir ruído.                 |
+
+**Efeito verificado sobre o snapshot real** (`fetchAllManagerMetrics`):
+
+- Falha de pipeline 45.9% → **não dispara** (abaixo do baseline calibrado): some o
+  falso-positivo crônico do de-risking.
+- Lead time de cauda (7.6d vs média 1.14d) → **dispara** alerta de cycle time:
+  sinal genuíno de MR de vida longa.
+- CFR `develop` 45% vs normal 15% → **dispara** congestionamento de estágio: sinal real.
+- Detector estatístico com 3 pontos < 8 → **vazio** (honesto sobre a amostra curta).
+
+A base completa fica versionada no próprio serviço (doc-comment de
+`ANOMALY_CALIBRATION`) para auditoria.

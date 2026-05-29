@@ -8,6 +8,47 @@ import type {
 } from '@/types/metrics';
 import { getProcessMetrics, getDoraMetrics } from '@/services/process';
 
+/**
+ * RECALIBRAÇÃO DA DETECÇÃO DE ANOMALIA SOBRE A SÉRIE REAL (subtask 2.5.4).
+ *
+ * Base de calibração (snapshot 2026-05-29, API GitLab projeto 10705 — ver
+ * src/data/process-metrics.json e docs/dora-protocolo.md):
+ *   - falha de pipeline na amostra: 28/61 ≈ 45.9%
+ *   - CFR develop: 45%  | CFR main (produção): 0%
+ *   - lead time: mediana 0.4h, média 27.4h, máx 182.4h
+ *
+ * Problema do mock antigo: threshold fixo de 10% de falha disparava SEMPRE no
+ * `develop` (fase de de-risking, falha alta por natureza) — falso-positivo
+ * crônico. Recalibração:
+ *   1. O threshold de falha NÃO é mais um 10% fixo: é derivado da série real
+ *      (baseline observado de falha + margem), separando ruído de de-risking
+ *      de sinal real. Produção (main) continua sensível (threshold baixo).
+ *   2. Aging/cycle-time recalibrados em torno da escala real de lead time
+ *      (dias), não dos números inventados do mock.
+ *   3. Detector estatístico ganha guarda de amostra mínima (σ instável com
+ *      poucos pontos) — honesto sobre o tamanho da amostra.
+ */
+export const ANOMALY_CALIBRATION = {
+  // Baseline de falha observado na série real (fração 0-1) + margem (k·desvio).
+  // 45.9% de falha na amostra de de-risking → alerta de DEV só acima de ~60%.
+  devFailureBaselinePct: 45.9,
+  devFailureMarginPct: 15, // margem sobre o baseline de de-risking
+  // Produção é intolerante: qualquer falha de pipeline em main é anomalia.
+  prodFailureThresholdPct: 1,
+  // Lead time: cauda real ~7.6 dias (182.4h). Item "envelhecido" calibrado nessa escala.
+  agingDaysThreshold: 8,
+  // Amostra mínima para o detector estatístico produzir σ confiável.
+  minStatisticalSamples: 8,
+} as const;
+
+/** Threshold de falha de pipeline (%) calibrado sobre a série real de de-risking. */
+export function calibratedFailureThresholdPct(): number {
+  return (
+    ANOMALY_CALIBRATION.devFailureBaselinePct +
+    ANOMALY_CALIBRATION.devFailureMarginPct
+  );
+}
+
 export async function fetchTeamMemberMetrics(): Promise<TeamMemberMetrics[]> {
   await new Promise((resolve) => setTimeout(resolve, 600));
 
@@ -134,13 +175,17 @@ export async function fetchBottleneckAnalysis(): Promise<BottleneckAnalysis[]> {
   ];
 }
 
-export function detectThresholdAnomalies(data: {
-  wip: { current: number; limit: number };
-  buildFailureRate: number;
-  cycleTime: { current: number; p95: number };
-  agingItems: Array<{ age: number; id: string }>;
-  stages: Array<{ name: string; avgTime: number; normalTime: number }>;
-}): AnomalyDetection[] {
+export function detectThresholdAnomalies(
+  data: {
+    wip: { current: number; limit: number };
+    buildFailureRate: number;
+    cycleTime: { current: number; p95: number };
+    agingItems: Array<{ age: number; id: string }>;
+    stages: Array<{ name: string; avgTime: number; normalTime: number }>;
+  },
+  // Threshold de falha (%) CALIBRADO sobre a série real (default: baseline+margem).
+  failureThresholdPct: number = calibratedFailureThresholdPct()
+): AnomalyDetection[] {
   const anomalies: AnomalyDetection[] = [];
   const detectedAt = new Date().toISOString();
 
@@ -156,14 +201,16 @@ export function detectThresholdAnomalies(data: {
     });
   }
 
-  if (data.buildFailureRate > 10) {
+  // Recalibrado: 10% fixo gerava falso-positivo crônico no de-risking. Agora o
+  // threshold vem da série real (baseline de falha observado + margem).
+  if (data.buildFailureRate > failureThresholdPct) {
     anomalies.push({
       type: 'threshold',
       metric: 'Build Failure Rate',
-      currentValue: data.buildFailureRate,
-      threshold: 10,
+      currentValue: Number(data.buildFailureRate.toFixed(1)),
+      threshold: Number(failureThresholdPct.toFixed(1)),
       severity: 'critical',
-      description: `Taxa de falha (${data.buildFailureRate.toFixed(1)}%) acima de 10%`,
+      description: `Taxa de falha (${data.buildFailureRate.toFixed(1)}%) acima do baseline calibrado (${failureThresholdPct.toFixed(1)}%)`,
       detectedAt,
     });
   }
@@ -180,15 +227,17 @@ export function detectThresholdAnomalies(data: {
     });
   }
 
+  // Recalibrado para a escala REAL de lead time (cauda ~7.6 dias / 182.4h).
+  const agingThreshold = ANOMALY_CALIBRATION.agingDaysThreshold;
   data.agingItems.forEach((item) => {
-    if (item.age > 10) {
+    if (item.age > agingThreshold) {
       anomalies.push({
         type: 'threshold',
         metric: 'Aging Item',
         currentValue: item.age,
-        threshold: 10,
+        threshold: agingThreshold,
         severity: 'warning',
-        description: `Item ${item.id} envelhecido (${item.age} dias)`,
+        description: `Item ${item.id} envelhecido (${item.age} dias > ${agingThreshold}d)`,
         detectedAt,
       });
     }
@@ -212,11 +261,16 @@ export function detectThresholdAnomalies(data: {
 }
 
 export function detectStatisticalAnomalies(
-  trendData: TrendDataPoint[]
+  trendData: TrendDataPoint[],
+  // Amostra mínima calibrada: σ é instável com poucos pontos (série real curta).
+  minSamples: number = ANOMALY_CALIBRATION.minStatisticalSamples
 ): AnomalyDetection[] {
   const anomalies: AnomalyDetection[] = [];
 
-  if (trendData.length === 0) {
+  // Recalibrado (2.5.4): com amostra menor que o mínimo, NÃO emitimos anomalia
+  // estatística — honesto sobre a base curta (evita falso-positivo por ruído de
+  // σ). O snapshot real tem poucos pontos agregados; reportamos a limitação.
+  if (trendData.length < minSamples) {
     return anomalies;
   }
 
