@@ -17,3 +17,17 @@
 | Deploy staging | `deploy_staging` (deploy) | id=100 | `deploy-staging.json` + Environment |
 | Deploy prod | `deploy_prod` (deploy, manual) | id=100 | `deploy-prod.json` + Environment |
 | Release | `release` (deploy, tag `v*`) | id=100 | GitLab Release (checksum/SBOM) |
+
+## 2. Contratos operacionais por integração
+
+> Resposta direta ao feedback S2 item 1: "sem contrato operacional fechado por
+> integração (gatilho, dado de entrada, saída esperada e critério de falha)".
+
+| Integração | Gatilho | Dado de entrada | Saída esperada | Critério de falha por interface |
+|---|---|---|---|---|
+| `push/MR → build SITL` | push ou abertura de MR | ref git + `PX4_TAG` | binário `px4_sitl` | exit≠0 do `make` / timeout 55 min |
+| `build → missão` | build concluído | binário + `mavsdk_server` | `.ulg` gerado | sem heartbeat em 30 s / arm falha / missão estoura `max_duration_s` |
+| `missão → métricas` | `.ulg` presente | `.ulg` | `metrics.json` (6 KPIs) | `.ulg` ausente / erro de parsing pyulog |
+| `métricas → quality gate` | `metrics.json` presente | `metrics.json` + `quality_gates.yaml` | `exit 0` (pass) / `≠0` (fail) | qualquer threshold violado |
+| `gate verde → deploy staging` | pipeline verde em develop/main | artefato por `$CI_COMMIT_SHA` | `deploy-staging.json` + Environment | artefato ausente |
+| `staging → prod` | clique manual (main) | mesmo artefato (mesmo SHA) | `deploy-prod.json` | aprovação negada / artefato divergente |
