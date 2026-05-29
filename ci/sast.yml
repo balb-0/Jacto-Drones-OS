@@ -37,3 +37,53 @@ trufflehog:
     # exit code quando encontra algo, tornando o achado auditável no pipeline.
     - trufflehog filesystem "$CI_PROJECT_DIR" --only-verified --fail
   allow_failure: true
+
+# Trivy — scanner de vulnerabilidades (Slide 21 da Aula 05). Portado do hook
+# Husky pre-push, que buildava a imagem (`docker build`) e rodava `trivy image`
+# via socket. Sem daemon/registry (ADR-0006) trocamos por dois modos sem Docker:
+#   - `trivy fs`     → CVEs em dependências e arquivos do projeto (requirements,
+#                       lockfiles, libs/);
+#   - `trivy config` → misconfigurações de IaC/Dockerfile (o mesmo Dockerfile que
+#                       o pre-push buildava, agora analisado estaticamente).
+# CRITICAL,HIGH como no hook original. `--exit-code 1` torna o achado auditável
+# (job amarelo via allow_failure, nunca verde silencioso).
+trivy-fs:
+  stage: sast
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  variables:
+    GIT_STRATEGY: fetch
+    TRIVY_NO_PROGRESS: "true"
+    TRIVY_CACHE_DIR: "$CI_PROJECT_DIR/.trivycache"
+  cache:
+    key: trivy-db
+    paths: [.trivycache/]
+  script:
+    - 'echo "### [1/2] trivy fs — CVEs em dependencias/arquivos (CRITICAL,HIGH)"'
+    - trivy fs --severity CRITICAL,HIGH --exit-code 1 "$CI_PROJECT_DIR"
+    - 'echo "### [2/2] trivy config — misconfig de IaC/Dockerfile (CRITICAL,HIGH)"'
+    - trivy config --severity CRITICAL,HIGH --exit-code 1 "$CI_PROJECT_DIR"
+  allow_failure: true
+
+# commitlint — Conventional Commits (portado do hook Husky commit-msg). No hook,
+# `commitlint --edit` validava só a mensagem em digitação; no MR validamos o
+# RANGE `origin/develop..HEAD` — apenas os commits do MR, NUNCA o histórico
+# antigo (que é anterior à adoção do commitlint e quebraria a checagem).
+# Usa o commitlint.config.js versionado na raiz (type-enum + references-empty).
+commitlint:
+  stage: sast
+  image: node:20-slim
+  variables:
+    GIT_STRATEGY: fetch
+    GIT_DEPTH: "0"   # histórico completo: precisamos do merge-base com develop
+  before_script:
+    - apt-get update >/dev/null && apt-get install -y --no-install-recommends git >/dev/null
+    - npm install --no-save --no-audit --no-fund @commitlint/cli @commitlint/config-conventional
+  script:
+    - 'echo "### commitlint — valida apenas os commits do MR (origin/develop..HEAD)"'
+    - git fetch --quiet origin develop
+    # --from/--to delimita o range do MR; sem isto o commitlint pegaria commits
+    # antigos (pré-commitlint) e falharia por motivo alheio a este MR.
+    - npx commitlint --from origin/develop --to HEAD --verbose
+  allow_failure: true
