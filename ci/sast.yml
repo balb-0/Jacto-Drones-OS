@@ -1,0 +1,39 @@
+# ─────────────────────────────────────────────────────────────────────────
+# TG5 — Integridade do pipeline: secrets + SAST server-side (@Lucca)
+#
+# Porta os hooks Husky CLIENT-side (puláveis com `git --no-verify`) para jobs
+# de CI SERVER-side (não puláveis): a integridade deixa de depender da máquina
+# do dev. Espelha o eixo "integridade" cobrado pelo orientador Reginaldo
+# (ADR-0004 GPG em main, ADR-0007 SAST/Semgrep).
+#
+# Restrições da instância (ADR-0006): runner compartilhado id=100 é
+# docker-executor SEM socket/privilégio → nada de `docker build`/`docker run`
+# (o pre-push Husky buildava imagem + `trivy image`). Aqui a imagem pública é o
+# RUNTIME do job e os scanners rodam em modo FILESYSTEM (`trivy fs`/`trivy
+# config`, trufflehog `filesystem`), sem daemon nem registry.
+#
+# Sprint 3: todos os jobs são INFORMATIVOS (`allow_failure: true`) — publicam
+# achados sem bloquear o merge. Viram BLOQUEANTES nas Sprints 4-5 (ADR-0007),
+# quando o runner dedicado sonar-00 (id=133) estiver amarrado ao gate.
+# ─────────────────────────────────────────────────────────────────────────
+
+# TruffleHog — scanner de secrets (Slide 10 da Aula 05). Portado do hook Husky
+# pre-commit: lá rodava `trufflehog git file:///repo --since-commit HEAD
+# --only-verified` via socket; aqui faz scan de FILESYSTEM da árvore do checkout
+# (não precisa de socket nem de histórico git completo). `--fail` faz o job
+# retornar !=0 quando há segredo verificado → o achado vira visível mesmo com
+# allow_failure (job amarelo, não verde silencioso).
+trufflehog:
+  stage: sast
+  image:
+    name: trufflesecurity/trufflehog:latest
+    entrypoint: [""]
+  variables:
+    GIT_STRATEGY: fetch
+  script:
+    - 'echo "### TruffleHog — scan de secrets (filesystem) sobre $CI_PROJECT_DIR"'
+    # filesystem: varre os arquivos do checkout. --only-verified reduz ruído
+    # (apenas segredos que a TruffleHog confirma como ativos); --fail eleva o
+    # exit code quando encontra algo, tornando o achado auditável no pipeline.
+    - trufflehog filesystem "$CI_PROJECT_DIR" --only-verified --fail
+  allow_failure: true
