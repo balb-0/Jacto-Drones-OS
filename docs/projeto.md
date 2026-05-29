@@ -438,6 +438,23 @@ Tempos e métricas extraídos diretamente dos logs do GitLab CI e do artefato `r
 - **Dados AS-IS:** Extraídos do TAPI Seção B.5 (Gargalos operacionais de logs)<a id="ref7-link" href="#ref7"><sup>[7]</sup></a>.
 - **Dados TO-BE medidos:** Logs do pipeline `#30535` (GitLab CI, `develop` @ `c967ad6`); artefato `reports/metrics.json` do job `sitl-mission-metrics`; saída do `quality-gates` (5/5); coleta DORA via API GitLab (projeto `10705`).
 
+**Evidências visuais da esteira CI/CD (Sprint 3).** As três figuras mostram a malha fechada em três momentos: a validação contínua no MR → a realimentação automática no próprio MR → a promoção controlada a produção.
+
+<div align="center">
+  <img src="../img/pipeline-ci-mr-quality-gates.png" alt="Pipeline de CI de um merge request da branch feat/quality-gates, com status Passed"><br>
+  <sub><strong>Figura 1 — CI no Merge Request</strong> (branch <code>feat/quality-gates</code>): pipeline <em>Passed</em>. O <strong>quality gate</strong> é aprovado e o <code>quality-gates-mr-comment</code> roda; o <strong>gate humano é opcional</strong> (<code>quality-gates-human-approval</code>, <em>manual</em>) e por isso <strong>não bloqueia</strong> o status verde do MR. A branch executa apenas seu próprio fragmento (<code>lint/build/test/gate</code>) — efeito do <code>include</code> por <em>concern</em> (glob <code>ci/*.yml</code>); <code>sast</code> chega pela branch de integridade e <code>deploy</code> só roda em <code>develop</code>/<code>main</code>.</sub>
+</div>
+
+<div align="center">
+  <img src="../img/comentario-bot-mr-gates.png" alt="Comentário automático do pipeline no merge request com a tabela 5/5 quality gates"><br>
+  <sub><strong>Figura 2 — Comentário automático no MR</strong> (TG6.4 — "rastro que ensina"): o pipeline posta a tabela <strong>5/5 quality gates</strong> com <em>actual × threshold</em> (cobertura 0,9853 ≥ 0,90; aceleração 11,04 ≤ 15,0; duração 78,9 ≤ 180 s; σ-altitude 0,682 ≤ 1,0; SAST <em>skipped</em>). É a prova direta do <strong>fechamento do feedback S2 (item 2)</strong>: o indicador aparece com sua evidência no entorno imediato do MR. Publicado via token de serviço impessoal (<a href="decisoes/0008-gate-humano-aprovacao-manual.md">ADR-0008</a>). <em>(Pequenas diferenças de valores entre execuções são esperadas — o SITL não é determinístico; cada run regenera o <code>.ulg</code>.)</em></sub>
+</div>
+
+<div align="center">
+  <img src="../img/pipeline-cd-main-v0.3.0.png" alt="Pipeline de CD no merge develop para main (release v0.3.0), com os gates manuais de produção"><br>
+  <sub><strong>Figura 3 — CD em produção</strong> (merge <code>develop → main</code>, commit <code>0b63bde5</code>, release <strong>v0.3.0</strong>): os seis stages automáticos concluem com sucesso, incluindo o <strong>quality gate bloqueante</strong> e o <code>deploy_staging</code>. O estado <em>Blocked</em> <strong>não é falha</strong>: <code>deploy_prod</code> (e o gate humano) são <strong>manuais</strong> — a promoção a produção exige aprovação humana explícita ("quem aperta o botão"). Contraste com a Figura 1: no MR o gate humano é opcional e o pipeline passa; em <code>main</code> o deploy de produção bloqueia até a aprovação. Semgrep/Trivy em amarelo são achados informativos (<code>allow_failure</code>; bloqueantes nas Sprints 4-5, <a href="decisoes/0007-sast-semgrep.md">ADR-0007</a>).</sub>
+</div>
+
 ### 8.1.2 🎯 Meta / PROJETADO para sprints futuras (NÃO medido nesta sprint)
 
 Os indicadores abaixo **não foram medidos** na Sprint 3: dependem de instrumentação ou de insumos de produção que ainda não existem no escopo do protótipo. Permanecem como **meta projetada** explícita — **nenhum** valor desta tabela deve ser lido como resultado obtido.
