@@ -459,8 +459,16 @@ O texto abaixo é **aderente** às tabelas de §8.1: descreve como "medido" apen
 
 ## 8.3 Tabela de Fontes e Auditabilidade
 
-| Documento/Evento | Referência Técnica | Data |
+Cada afirmação quantitativa de §8.1 tem fonte auditável no entorno imediato (commit, MR, job de pipeline ou artefato versionado). As fontes da **Sprint 3** abaixo são as que sustentam os números medidos.
+
+| Documento/Evento | Referência Técnica (auditável) | Data |
 | :--- | :--- | :--- |
-| **Requisitos Iniciais** | TAPI_ESMD10_V01.pdf (Reginaldo Arakaki) [7] | 14/05/2026 |
-| **Métricas de Esteira** | Logs do GitLab CI (Sprint 2) | 15/05/2026 |
+| **Requisitos Iniciais** | TAPI_ESMD10_V01.pdf (Reginaldo Arakaki)<a href="#ref7"><sup>[7]</sup></a> | 14/05/2026 |
 | **Validação Stakeholder** | Sprint Review (Vinícius Lopes — Jacto) | 30/04/2026 |
+| **Métricas de missão (medidas)** | Pipeline `#30535` (`develop` @ `c967ad6`, VERDE) + pipeline `#30154`; artefato `reports/metrics.json` do job `sitl-mission-metrics` ([`ci/sitl-metrics.yml`](../ci/sitl-metrics.yml)) | Sprint 3 |
+| **Veredito dos quality gates (5/5)** | Job `quality-gates` BLOQUEANTE — [`scripts/quality_gates.py`](../scripts/quality_gates.py) + thresholds em [`quality_gates.yaml`](../quality_gates.yaml) ([ADR-0005](decisoes/0005-thresholds-quality-gates.md)) | Sprint 3 |
+| **Cobertura 98% (`libs/`)** | `pytest --cov` em `tests/unit`; gate ratchet ≥ 0,90 ([`quality_gates.yaml`](../quality_gates.yaml)) | Sprint 3 |
+| **DORA medido** | Coleta via API GitLab (projeto `10705`) — [`scripts/collect_gitlab_metrics.py`](../scripts/collect_gitlab_metrics.py); 21 MRs *merged* | Sprint 3 |
+| **Deploy simulado (staging)** | Job de deploy ([`ci/deploy.yml`](../ci/deploy.yml)); artefato imutável por `$CI_COMMIT_SHA`, sem Container Registry ([ADR-0006](decisoes/0006-promocao-sem-registry.md)) | Sprint 3 |
+| **Camada 1 da Sprint 3 (código que sustenta o pipeline)** | MRs `!25`–`!28` (esteira real): deploy/CD (commit `b847a13`), SITL + métricas + testes (`7055b80`), quality gates (`b441a72`), dashboards QoP/QoS com dados reais (`2a523b6`, `69d8949`), SAST/integridade (`c967ad6`) | Sprint 3 |
+| **Dashboards com dados reais** | [`dashboard-implementation-report.md`](dashboard-implementation-report.md); fonte `reports/metrics.json` + coleta DORA (substituem mocks) | Sprint 3 |
