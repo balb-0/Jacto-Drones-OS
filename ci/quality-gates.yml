@@ -1,0 +1,42 @@
+# ─────────────────────────────────────────────────────────────────────────
+# TG6 — Quality Gates: enforcement no stage `gate` (@Fernando)
+#
+# Avaliador versionado (scripts/quality_gates.py) consome os artefatos dos
+# stages anteriores e BLOQUEIA o merge se qualquer threshold do
+# quality_gates.yaml for violado.
+#
+# Por que SEM `needs:` (e sem `dependencies:`): o stage `gate` roda DEPOIS de
+# `build` e `test`, então herda por ordem de stage o coverage.xml (job
+# unit-tests) e o reports/metrics.json (job sitl-mission-metrics). Declarar
+# `needs:` criaria um DAG que poderia ANTECIPAR o gate e contornar jobs
+# intermediários (DAG-bypass) — erro já corrigido na Camada 0 (vide ci/deploy.yml
+# e ADR-0006). Aqui o gate é o portão: ninguém passa por fora dele.
+#
+# SEM allow_failure (default false) ⇒ job BLOQUEANTE. Com o metrics.json real
+# do pipeline, os gates PASSAM (cov ~98% > 0.90; accel 11.01 < 15; dur 78.83 <
+# 180; std 0.688 < 1.0; SAST skip). Thresholds e ratchet: ADR-0005.
+# ─────────────────────────────────────────────────────────────────────────
+
+quality-gates:
+  stage: gate
+  image: python:3.12-slim
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip"
+  cache:
+    key: pip-quality-gates
+    paths: [.pip/]
+  before_script:
+    - pip install --quiet pyyaml
+  script:
+    # Herda coverage.xml (stage build) e reports/metrics.json (stage test) por
+    # ordem de stage — sem needs/dependencies (anti DAG-bypass).
+    - python scripts/quality_gates.py
+        --gates quality_gates.yaml
+        --metrics reports/metrics.json
+        --coverage coverage.xml
+        --output reports/quality_gates_result.json
+  artifacts:
+    when: always
+    paths:
+      - reports/quality_gates_result.json
+    expire_in: 30 days
