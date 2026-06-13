@@ -144,19 +144,19 @@ def pipeline_sample(pipelines: list[dict]) -> dict:
     }
 
 
-def collect(host: str, project: str, token: str) -> dict:
-    """Orquestra as consultas à API e monta o payload de processo."""
-    LOG.info("coletando pipelines de %s projeto %s", host, project)
-    pipelines = _api_get(host, project, "pipelines", token)
-    LOG.info("coletando deployments")
-    deployments = _api_get(host, project, "deployments", token)
-    LOG.info("coletando merge_requests merged")
-    merged_mrs = _api_get(host, project, "merge_requests", token, {"state": "merged"})
+def _build_process_payload(
+    pipelines: list[dict], deployments: list[dict], merged_mrs: list[dict], fonte: str
+) -> dict:
+    """Monta o payload de processo a partir das listas brutas (puro, sem I/O).
 
+    Separado de `collect` para permitir reauditoria offline (`--from-evidence`):
+    as mesmas funções de cálculo operam sobre o snapshot bruto versionado em
+    `evidence/raw/`, sem token. Resposta ao feedback da Sprint 3 (G1).
+    """
     return {
         "_meta": {
             "coletado_em": datetime.now(timezone.utc).date().isoformat(),
-            "fonte": f"API GitLab {host} projeto {project}",
+            "fonte": fonte,
         },
         "deployment_frequency": deployment_frequency(deployments),
         "lead_time_for_changes_h": lead_time_for_changes(merged_mrs),
@@ -171,6 +171,36 @@ def collect(host: str, project: str, token: str) -> dict:
             "Reportar com janela e nota."
         ),
     }
+
+
+def collect(host: str, project: str, token: str) -> dict:
+    """Orquestra as consultas à API e monta o payload de processo."""
+    LOG.info("coletando pipelines de %s projeto %s", host, project)
+    pipelines = _api_get(host, project, "pipelines", token)
+    LOG.info("coletando deployments")
+    deployments = _api_get(host, project, "deployments", token)
+    LOG.info("coletando merge_requests merged")
+    merged_mrs = _api_get(host, project, "merge_requests", token, {"state": "merged"})
+    return _build_process_payload(
+        pipelines, deployments, merged_mrs, f"API GitLab {host} projeto {project}"
+    )
+
+
+def collect_from_evidence(evidence_dir: Path) -> dict:
+    """Reauditoria OFFLINE: recomputa o payload a partir de `evidence/raw/*.json`.
+
+    Sem token, sem rede — lê o snapshot bruto da API versionado no repo e aplica
+    as mesmas funções de cálculo. Responde diretamente ao feedback da Sprint 3
+    (avaliador): "não consegui reexecutar a validação pela API sem credencial".
+    Agora qualquer terceiro reaudita os números DORA a partir do que está comitado.
+    """
+    raw = Path(evidence_dir)
+    pipelines = json.loads((raw / "pipelines.json").read_text())
+    deployments = json.loads((raw / "deployments.json").read_text())
+    merged_mrs = json.loads((raw / "merge_requests.json").read_text())
+    return _build_process_payload(
+        pipelines, deployments, merged_mrs, "evidence/raw/ (snapshot bruto da API, reauditavel sem credencial)"
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -260,12 +290,18 @@ def main() -> None:
         level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s %(message)s"
     )
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    p.add_argument("--project", required=True, help="id ou path do projeto GitLab")
+    p.add_argument("--project", help="id ou path do projeto GitLab (modo API)")
     p.add_argument("--host", default="https://git.inteli.edu.br")
     p.add_argument(
         "--token",
         default=os.environ.get("GITLAB_TOKEN") or os.environ.get("CI_JOB_TOKEN"),
         help="token de API (default: env GITLAB_TOKEN / CI_JOB_TOKEN). NUNCA comitar.",
+    )
+    p.add_argument(
+        "--from-evidence",
+        type=Path,
+        metavar="DIR",
+        help="reauditoria OFFLINE: recomputa do snapshot bruto em DIR (ex.: evidence/raw) sem token.",
     )
     p.add_argument("--output", required=True, type=Path, help="JSON de processo de saída")
     p.add_argument(
@@ -273,15 +309,22 @@ def main() -> None:
     )
     args = p.parse_args()
 
-    if not args.token:
-        LOG.error(
-            "sem token (GITLAB_TOKEN/CI_JOB_TOKEN); coletor nao inventa dados. "
-            "O snapshot comitado em %s e a fonte de verdade ate o CI rodar.",
-            args.output,
-        )
-        sys.exit(2)
-
-    data = collect(args.host, args.project, args.token)
+    if args.from_evidence:
+        LOG.info("modo reauditoria offline a partir de %s (sem token)", args.from_evidence)
+        data = collect_from_evidence(args.from_evidence)
+    else:
+        if not args.token:
+            LOG.error(
+                "sem token (GITLAB_TOKEN/CI_JOB_TOKEN); coletor nao inventa dados. "
+                "O snapshot comitado em %s e a fonte de verdade ate o CI rodar. "
+                "Para reauditar OFFLINE sem token: --from-evidence evidence/raw",
+                args.output,
+            )
+            sys.exit(2)
+        if not args.project:
+            LOG.error("modo API exige --project")
+            sys.exit(2)
+        data = collect(args.host, args.project, args.token)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
     LOG.info("wrote %s", args.output)
