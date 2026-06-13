@@ -1,0 +1,233 @@
+[
+  {
+    "iid": 36,
+    "state": "merged",
+    "created_at": "2026-06-13T02:49:41.504Z",
+    "merged_at": "2026-06-13T02:57:06.267Z",
+    "title": "feat: Sprint 4 — integra Flight Replay no main (v0.4.0)"
+  },
+  {
+    "iid": 35,
+    "state": "merged",
+    "created_at": "2026-05-29T21:52:33.846Z",
+    "merged_at": "2026-05-29T21:52:39.703Z",
+    "title": "docs: evidências visuais da esteira CI/CD (hotfix de doc pós-v0.3.0)"
+  },
+  {
+    "iid": 34,
+    "state": "merged",
+    "created_at": "2026-05-29T21:52:06.348Z",
+    "merged_at": "2026-05-29T21:52:12.062Z",
+    "title": "docs(projeto): evidências visuais da esteira CI/CD (§8)"
+  },
+  {
+    "iid": 33,
+    "state": "merged",
+    "created_at": "2026-05-29T18:18:46.680Z",
+    "merged_at": "2026-05-29T18:24:11.373Z",
+    "title": "Release v0.3.0 — Sprint 3: Configuração da Esteira de CD"
+  },
+  {
+    "iid": 32,
+    "state": "merged",
+    "created_at": "2026-05-29T18:17:21.004Z",
+    "merged_at": "2026-05-29T18:17:47.079Z",
+    "title": "chore(gestao): fechamento Sprint 3 — consolida validação S2 + gestão"
+  },
+  {
+    "iid": 31,
+    "state": "merged",
+    "created_at": "2026-05-29T13:52:49.828Z",
+    "merged_at": "2026-05-29T13:53:28.930Z",
+    "title": "TG4''.4 — validação a posteriori do feedback S2"
+  },
+  {
+    "iid": 30,
+    "state": "merged",
+    "created_at": "2026-05-29T13:52:47.432Z",
+    "merged_at": "2026-05-29T13:53:20.488Z",
+    "title": "TG4''.5/TG4' — coerência (o que roda vs proposta) + gestão/index"
+  },
+  {
+    "iid": 29,
+    "state": "merged",
+    "created_at": "2026-05-29T13:52:45.858Z",
+    "merged_at": "2026-05-29T13:53:24.530Z",
+    "title": "TG3 — Avaliação dos Resultados com KPIs medidos (medido × projetado)"
+  },
+  {
+    "iid": 28,
+    "state": "merged",
+    "created_at": "2026-05-29T11:32:10.733Z",
+    "merged_at": "2026-05-29T12:14:41.385Z",
+    "title": "TG6 — Quality Gates: avaliador + enforcement + comentário no MR + gate humano"
+  },
+  {
+    "iid": 27,
+    "state": "merged",
+    "created_at": "2026-05-29T09:59:35.192Z",
+    "merged_at": "2026-05-29T12:14:45.635Z",
+    "title": "TG2.4/2.3 — Dashboard QoS com dados reais + comentário de KPIs no MR"
+  },
+  {
+    "iid": 26,
+    "state": "merged",
+    "created_at": "2026-05-29T09:59:33.936Z",
+    "merged_at": "2026-05-29T12:14:43.261Z",
+    "title": "TG2.5 — Dashboard QoP/Gerencial com dados reais + DORA medido"
+  },
+  {
+    "iid": 25,
+    "state": "merged",
+    "created_at": "2026-05-29T09:59:32.701Z",
+    "merged_at": "2026-05-29T12:30:51.859Z",
+    "title": "TG5 — Integridade: secrets/SAST server-side (Husky → CI) + ADRs 0004/0007"
+  },
+  {
+    "iid": 23,
+    "state": "merged",
+    "created_at": "2026-05-29T02:47:15.666Z",
+    "merged_at": "2026-05-29T03:01:20.498Z",
+    "title": "Camada 0a · Serviços de Deploy: pipeline CD real + promoção/release (TG1)"
+  },
+  {
+    "iid": 22,
+    "state": "merged",
+    "created_at": "2026-05-29T02:47:14.209Z",
+    "merged_at": "2026-05-29T03:19:37.823Z",
+    "title": "Camada 0b · PX4 SITL real + métricas + testes + gates base (TG2/4'/6)"
+  },
+  {
+    "iid": 21,
+    "state": "merged",
+    "created_at": "2026-05-16T14:49:23.662Z",
+    "merged_at": "2026-05-16T14:49:28.260Z",
+    "title": "chore(docs): aprofunda AS-IS, reformula ADRs, abre ADR-0003 prospectivo"
+  },
+  {
+    "iid": 20,
+    "state": "merged",
+    "created_at": "2026-05-16T14:27:19.848Z",
+    "merged_at": "2026-05-16T14:28:39.714Z",
+    "title": "chore(docs): enxuga melhoria-projeto e melhora evidência ao entorno"
+  },
+  {
+    "iid": 19,
+    "state": "merged",
+    "created_at": "2026-05-16T03:07:40.964Z",
+    "merged_at": "2026-05-16T03:07:56.073Z",
+    "title": "chore(docs): pequenas correções de coerência inter-documento"
+  },
+  {
+    "iid": 18,
+    "state": "merged",
+    "created_at": "2026-05-16T02:56:54.350Z",
+    "merged_at": "2026-05-16T02:57:39.593Z",
+    "title": "release: Sprint 2 — Configuração Esteira de CI"
+  },
+  {
+    "iid": 17,
+    "state": "merged",
+    "created_at": "2026-05-16T02:54:46.996Z",
+    "merged_at": "2026-05-16T02:56:21.411Z",
+    "title": "feat(docs): integra Avaliação dos Resultados (§8) — Task 3.1"
+  },
+  {
+    "iid": 16,
+    "state": "merged",
+    "created_at": "2026-05-16T02:54:08.455Z",
+    "merged_at": "2026-05-16T02:56:03.004Z",
+    "title": "feat(tests): integra testes funcionais do MVP — Task 2.1"
+  },
+  {
+    "iid": 13,
+    "state": "merged",
+    "created_at": "2026-05-14T20:16:08.330Z",
+    "merged_at": "2026-05-15T11:58:23.064Z",
+    "title": "docs: adiciona mapa integracao"
+  },
+  {
+    "iid": 12,
+    "state": "merged",
+    "created_at": "2026-05-14T20:06:51.850Z",
+    "merged_at": "2026-05-14T20:07:38.224Z",
+    "title": "Revert \"Merge branch 'docs/ci' into 'main'\""
+  },
+  {
+    "iid": 11,
+    "state": "merged",
+    "created_at": "2026-05-14T19:33:46.401Z",
+    "merged_at": "2026-05-14T19:58:14.088Z",
+    "title": "docs: adiciona mapa de cobertura de funcioliadades/nao funcionalidades"
+  },
+  {
+    "iid": 10,
+    "state": "merged",
+    "created_at": "2026-05-13T15:53:23.783Z",
+    "merged_at": "2026-05-14T13:35:25.437Z",
+    "title": "feat: add managerial dashboard page with anomalies, bottlenecks, and team..."
+  },
+  {
+    "iid": 9,
+    "state": "merged",
+    "created_at": "2026-05-13T13:30:36.752Z",
+    "merged_at": "2026-05-13T13:53:38.910Z",
+    "title": "FEAT | Implement QoS and QoP dashboard sections"
+  },
+  {
+    "iid": 8,
+    "state": "merged",
+    "created_at": "2026-05-05T22:12:42.823Z",
+    "merged_at": "2026-05-13T12:34:05.918Z",
+    "title": "Feat controle malha fechada"
+  },
+  {
+    "iid": 7,
+    "state": "merged",
+    "created_at": "2026-05-05T17:50:24.246Z",
+    "merged_at": "2026-05-12T13:11:36.982Z",
+    "title": "Docs mapa integracao"
+  },
+  {
+    "iid": 6,
+    "state": "merged",
+    "created_at": "2026-05-02T02:25:54.703Z",
+    "merged_at": "2026-05-07T21:37:36.160Z",
+    "title": "docs | plano de DesignOps (Ponderada Stateri)"
+  },
+  {
+    "iid": 5,
+    "state": "merged",
+    "created_at": "2026-05-01T23:52:11.639Z",
+    "merged_at": "2026-05-01T23:53:47.943Z",
+    "title": "sprint 1"
+  },
+  {
+    "iid": 4,
+    "state": "merged",
+    "created_at": "2026-04-29T12:34:09.724Z",
+    "merged_at": "2026-04-30T00:26:16.172Z",
+    "title": "docs: secao 5, esteira"
+  },
+  {
+    "iid": 3,
+    "state": "merged",
+    "created_at": "2026-04-29T12:30:04.075Z",
+    "merged_at": "2026-04-30T00:24:31.113Z",
+    "title": "DOCS | Refêrencias e Evidencias do Parceiro"
+  },
+  {
+    "iid": 2,
+    "state": "merged",
+    "created_at": "2026-04-28T14:25:24.009Z",
+    "merged_at": "2026-04-29T11:25:44.239Z",
+    "title": "feat arquitetura produto"
+  },
+  {
+    "iid": 1,
+    "state": "merged",
+    "created_at": "2026-04-28T05:24:03.777Z",
+    "merged_at": "2026-04-28T11:52:31.042Z",
+    "title": "gestão de configuração inicial"
+  }
+]
