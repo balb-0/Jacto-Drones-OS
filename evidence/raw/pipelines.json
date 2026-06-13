@@ -1,0 +1,902 @@
+[
+  {
+    "id": 39718,
+    "status": "pending",
+    "ref": "develop",
+    "sha": "ff9d2c9de5fe105263ef605839e9f640ab4bb813",
+    "created_at": "2026-06-13T03:03:30.482Z",
+    "updated_at": "2026-06-13T03:03:30.940Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/39718"
+  },
+  {
+    "id": 39717,
+    "status": "skipped",
+    "ref": "develop",
+    "sha": "ff9d2c9de5fe105263ef605839e9f640ab4bb813",
+    "created_at": "2026-06-13T03:03:29.571Z",
+    "updated_at": "2026-06-13T03:03:29.571Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/39717"
+  },
+  {
+    "id": 39710,
+    "status": "success",
+    "ref": "v0.4.0",
+    "sha": "d27481ef9cdd6b066d3c73a50580061fc5ad78df",
+    "created_at": "2026-06-13T02:57:25.617Z",
+    "updated_at": "2026-06-13T03:09:28.942Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/39710"
+  },
+  {
+    "id": 39709,
+    "status": "manual",
+    "ref": "main",
+    "sha": "d27481ef9cdd6b066d3c73a50580061fc5ad78df",
+    "created_at": "2026-06-13T02:57:07.346Z",
+    "updated_at": "2026-06-13T03:08:32.309Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/39709"
+  },
+  {
+    "id": 39697,
+    "status": "success",
+    "ref": "develop",
+    "sha": "6d2a93790cd114171e32be9882348887c18e1d28",
+    "created_at": "2026-06-13T02:50:12.786Z",
+    "updated_at": "2026-06-13T02:57:05.000Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/39697"
+  },
+  {
+    "id": 39695,
+    "status": "skipped",
+    "ref": "develop",
+    "sha": "6d2a93790cd114171e32be9882348887c18e1d28",
+    "created_at": "2026-06-13T02:49:02.970Z",
+    "updated_at": "2026-06-13T02:49:02.970Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/39695"
+  },
+  {
+    "id": 39665,
+    "status": "skipped",
+    "ref": "entrega/ponderada-designops-reach-fernando",
+    "sha": "679ba62baad2b75d50d5fd9ae1945192e4e31142",
+    "created_at": "2026-06-13T02:08:34.506Z",
+    "updated_at": "2026-06-13T02:08:34.506Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/39665"
+  },
+  {
+    "id": 38775,
+    "status": "success",
+    "ref": "feat/apresentacao",
+    "sha": "6d2a93790cd114171e32be9882348887c18e1d28",
+    "created_at": "2026-06-12T01:58:58.397Z",
+    "updated_at": "2026-06-12T04:00:36.418Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/38775"
+  },
+  {
+    "id": 30796,
+    "status": "manual",
+    "ref": "main",
+    "sha": "e4636926376b03f233bb5967b10ea7d9901ffdb9",
+    "created_at": "2026-05-29T21:52:40.474Z",
+    "updated_at": "2026-05-29T22:59:00.400Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30796"
+  },
+  {
+    "id": 30795,
+    "status": "success",
+    "ref": "develop",
+    "sha": "a646ce4b044c3e4a1567ff3cc1b112119c326f25",
+    "created_at": "2026-05-29T21:52:12.523Z",
+    "updated_at": "2026-05-29T22:58:23.158Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30795"
+  },
+  {
+    "id": 30794,
+    "status": "skipped",
+    "ref": "chore/evidencia-visual-sprint3",
+    "sha": "107d20a503336cc2158e6d24448e3ca96e61fa49",
+    "created_at": "2026-05-29T21:51:21.932Z",
+    "updated_at": "2026-05-29T21:51:21.932Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30794"
+  },
+  {
+    "id": 30752,
+    "status": "manual",
+    "ref": "main",
+    "sha": "0b63bde5efee1cde1f41dd3ef2b799caa92138a5",
+    "created_at": "2026-05-29T18:24:20.153Z",
+    "updated_at": "2026-05-29T18:35:38.851Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30752"
+  },
+  {
+    "id": 30751,
+    "status": "success",
+    "ref": "v0.3.0",
+    "sha": "0b63bde5efee1cde1f41dd3ef2b799caa92138a5",
+    "created_at": "2026-05-29T18:24:20.126Z",
+    "updated_at": "2026-05-29T18:33:50.460Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30751"
+  },
+  {
+    "id": 30750,
+    "status": "success",
+    "ref": "develop",
+    "sha": "fe64a9715e35084a765755b5148129a893420018",
+    "created_at": "2026-05-29T18:17:47.463Z",
+    "updated_at": "2026-05-29T18:23:29.503Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30750"
+  },
+  {
+    "id": 30749,
+    "status": "skipped",
+    "ref": "chore/fechamento-sprint3",
+    "sha": "dc5bf5a54070bce35d1f3ba9d2ac14a41f454090",
+    "created_at": "2026-05-29T18:16:46.538Z",
+    "updated_at": "2026-05-29T18:16:46.538Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30749"
+  },
+  {
+    "id": 30606,
+    "status": "success",
+    "ref": "develop",
+    "sha": "275bd3bf996638cb37b6dc6a26b7fa4f8307f763",
+    "created_at": "2026-05-29T13:53:29.333Z",
+    "updated_at": "2026-05-29T14:04:50.570Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30606"
+  },
+  {
+    "id": 30605,
+    "status": "canceled",
+    "ref": "develop",
+    "sha": "788c756fd74dbf94ae909bca811fc8b9903cf84f",
+    "created_at": "2026-05-29T13:53:25.590Z",
+    "updated_at": "2026-05-29T13:53:30.198Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30605"
+  },
+  {
+    "id": 30604,
+    "status": "success",
+    "ref": "develop",
+    "sha": "dafc99e8d76974234d987d21afcc6bac0f0a1b89",
+    "created_at": "2026-05-29T13:53:21.216Z",
+    "updated_at": "2026-05-29T14:02:24.836Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30604"
+  },
+  {
+    "id": 30600,
+    "status": "skipped",
+    "ref": "chore/validacao-feedback-s2",
+    "sha": "fc6243c9b23f99c532e633ecf7dbd7db7f007b4a",
+    "created_at": "2026-05-29T13:51:54.495Z",
+    "updated_at": "2026-05-29T13:51:54.495Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30600"
+  },
+  {
+    "id": 30599,
+    "status": "skipped",
+    "ref": "docs/coerencia-e-debitos",
+    "sha": "618890408539c1b868a038da08ec96d081245731",
+    "created_at": "2026-05-29T13:51:50.316Z",
+    "updated_at": "2026-05-29T13:51:50.316Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30599"
+  },
+  {
+    "id": 30598,
+    "status": "skipped",
+    "ref": "docs/coerencia-e-debitos",
+    "sha": "775268d465c67df2fd83750bf4691aab6a41b92b",
+    "created_at": "2026-05-29T13:51:49.667Z",
+    "updated_at": "2026-05-29T13:51:49.667Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30598"
+  },
+  {
+    "id": 30597,
+    "status": "skipped",
+    "ref": "docs/coerencia-e-debitos",
+    "sha": "1db4e0a8d26771db362d5238a896251ca75d89ac",
+    "created_at": "2026-05-29T13:51:49.560Z",
+    "updated_at": "2026-05-29T13:51:49.560Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30597"
+  },
+  {
+    "id": 30596,
+    "status": "skipped",
+    "ref": "docs/avaliacao-resultados",
+    "sha": "1bc4ace8d699db2bbea4a2fc9d6c88b8b19ff9e8",
+    "created_at": "2026-05-29T13:51:44.553Z",
+    "updated_at": "2026-05-29T13:51:44.553Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30596"
+  },
+  {
+    "id": 30595,
+    "status": "skipped",
+    "ref": "docs/avaliacao-resultados",
+    "sha": "32df72f55e15b17049745cc63973859533e93724",
+    "created_at": "2026-05-29T13:51:44.279Z",
+    "updated_at": "2026-05-29T13:51:44.279Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30595"
+  },
+  {
+    "id": 30535,
+    "status": "success",
+    "ref": "develop",
+    "sha": "c967ad653d2b859b786298a7ff1be6931d87d933",
+    "created_at": "2026-05-29T12:30:52.687Z",
+    "updated_at": "2026-05-29T13:01:08.476Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30535"
+  },
+  {
+    "id": 30524,
+    "status": "success",
+    "ref": "develop",
+    "sha": "69d8949701019ab04ec8b8146086c187eea1300d",
+    "created_at": "2026-05-29T12:14:47.011Z",
+    "updated_at": "2026-05-29T12:35:13.455Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30524"
+  },
+  {
+    "id": 30523,
+    "status": "canceled",
+    "ref": "develop",
+    "sha": "2a523b677b109d1fb54a4cac8a67df4a22f2da04",
+    "created_at": "2026-05-29T12:14:44.075Z",
+    "updated_at": "2026-05-29T12:14:48.112Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30523"
+  },
+  {
+    "id": 30522,
+    "status": "canceled",
+    "ref": "develop",
+    "sha": "b441a72604d62a86d29fcdc697d9332d90d86000",
+    "created_at": "2026-05-29T12:14:42.356Z",
+    "updated_at": "2026-05-29T12:14:44.688Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30522"
+  },
+  {
+    "id": 30521,
+    "status": "success",
+    "ref": "feat/sast-integridade",
+    "sha": "5a4661b4c3165b66413168d96b37855ed4816e1b",
+    "created_at": "2026-05-29T12:13:29.915Z",
+    "updated_at": "2026-05-29T12:30:50.877Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30521"
+  },
+  {
+    "id": 30508,
+    "status": "success",
+    "ref": "feat/dashboard-qos",
+    "sha": "2bc614ece3054c3d95e810af0d9d8b7a3996e6b2",
+    "created_at": "2026-05-29T11:34:24.194Z",
+    "updated_at": "2026-05-29T12:00:09.860Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30508"
+  },
+  {
+    "id": 30507,
+    "status": "success",
+    "ref": "feat/dashboard-qop-manager",
+    "sha": "bd756f77cb030b2801a77eb1d7ce19b811a4d627",
+    "created_at": "2026-05-29T11:34:23.137Z",
+    "updated_at": "2026-05-29T11:56:14.957Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30507"
+  },
+  {
+    "id": 30506,
+    "status": "success",
+    "ref": "feat/sast-integridade",
+    "sha": "9e1545cb275afc750ba31d22a79b2a8e35dc0f41",
+    "created_at": "2026-05-29T11:34:21.854Z",
+    "updated_at": "2026-05-29T11:53:25.424Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30506"
+  },
+  {
+    "id": 30505,
+    "status": "success",
+    "ref": "feat/quality-gates",
+    "sha": "fe4ae95180280436fe44ea813984460812fecd7a",
+    "created_at": "2026-05-29T11:34:20.570Z",
+    "updated_at": "2026-05-29T11:51:36.411Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30505"
+  },
+  {
+    "id": 30503,
+    "status": "skipped",
+    "ref": "feat/quality-gates",
+    "sha": "fe4ae95180280436fe44ea813984460812fecd7a",
+    "created_at": "2026-05-29T11:32:10.553Z",
+    "updated_at": "2026-05-29T11:32:10.553Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30503"
+  },
+  {
+    "id": 30502,
+    "status": "skipped",
+    "ref": "feat/quality-gates",
+    "sha": "a85c50e92f3ba22ad0b854a7ce479f3d452f8b13",
+    "created_at": "2026-05-29T11:32:09.984Z",
+    "updated_at": "2026-05-29T11:32:09.984Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30502"
+  },
+  {
+    "id": 30399,
+    "status": "skipped",
+    "ref": "feat/dashboard-qos",
+    "sha": "2bc614ece3054c3d95e810af0d9d8b7a3996e6b2",
+    "created_at": "2026-05-29T09:52:25.926Z",
+    "updated_at": "2026-05-29T09:52:25.926Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30399"
+  },
+  {
+    "id": 30398,
+    "status": "skipped",
+    "ref": "feat/dashboard-qos",
+    "sha": "ca8ee7482cadbdb1f78fe123a718f597c82695d0",
+    "created_at": "2026-05-29T09:52:25.928Z",
+    "updated_at": "2026-05-29T09:52:25.928Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30398"
+  },
+  {
+    "id": 30397,
+    "status": "skipped",
+    "ref": "feat/dashboard-qop-manager",
+    "sha": "bd756f77cb030b2801a77eb1d7ce19b811a4d627",
+    "created_at": "2026-05-29T09:52:24.198Z",
+    "updated_at": "2026-05-29T09:52:24.198Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30397"
+  },
+  {
+    "id": 30396,
+    "status": "skipped",
+    "ref": "feat/sast-integridade",
+    "sha": "9e1545cb275afc750ba31d22a79b2a8e35dc0f41",
+    "created_at": "2026-05-29T09:52:23.697Z",
+    "updated_at": "2026-05-29T09:52:23.697Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30396"
+  },
+  {
+    "id": 30395,
+    "status": "skipped",
+    "ref": "feat/quality-gates",
+    "sha": "a85c50e92f3ba22ad0b854a7ce479f3d452f8b13",
+    "created_at": "2026-05-29T09:52:19.987Z",
+    "updated_at": "2026-05-29T09:52:19.987Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30395"
+  },
+  {
+    "id": 30394,
+    "status": "skipped",
+    "ref": "feat/quality-gates",
+    "sha": "fe4ae95180280436fe44ea813984460812fecd7a",
+    "created_at": "2026-05-29T09:52:19.853Z",
+    "updated_at": "2026-05-29T09:52:19.853Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30394"
+  },
+  {
+    "id": 30154,
+    "status": "success",
+    "ref": "develop",
+    "sha": "7055b802857ff4b5568b47f69f6733d6b7e68a49",
+    "created_at": "2026-05-29T03:19:39.243Z",
+    "updated_at": "2026-05-29T03:34:14.253Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30154"
+  },
+  {
+    "id": 30140,
+    "status": "failed",
+    "ref": "develop",
+    "sha": "b847a134eb6ecd67a9d004be06282e89c71531c4",
+    "created_at": "2026-05-29T03:01:21.456Z",
+    "updated_at": "2026-05-29T03:01:21.456Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30140"
+  },
+  {
+    "id": 30132,
+    "status": "success",
+    "ref": "feat/sitl-metrics-tests",
+    "sha": "c779ddb3facd74fe09e814ec4755a3afa4f84ca4",
+    "created_at": "2026-05-29T02:49:57.655Z",
+    "updated_at": "2026-05-29T03:17:17.089Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30132"
+  },
+  {
+    "id": 30129,
+    "status": "failed",
+    "ref": "refs/merge-requests/23/head",
+    "sha": "3542d044864ce8b4d91ae35058c7a33408d0ec54",
+    "created_at": "2026-05-29T02:47:16.339Z",
+    "updated_at": "2026-05-29T02:47:16.339Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30129"
+  },
+  {
+    "id": 30123,
+    "status": "success",
+    "ref": "feat/sitl-metrics-tests",
+    "sha": "d9bd4392def8fec538d115804a5ef3a4f54e2a9f",
+    "created_at": "2026-05-29T02:40:28.311Z",
+    "updated_at": "2026-05-29T02:44:19.288Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30123"
+  },
+  {
+    "id": 30120,
+    "status": "skipped",
+    "ref": "feat/deploy-cd-pipeline",
+    "sha": "3542d044864ce8b4d91ae35058c7a33408d0ec54",
+    "created_at": "2026-05-29T02:36:09.870Z",
+    "updated_at": "2026-05-29T02:36:09.870Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30120"
+  },
+  {
+    "id": 30119,
+    "status": "skipped",
+    "ref": "feat/deploy-cd-pipeline",
+    "sha": "94334c8da128f69377c17ba86a4eaddfe0dbd20c",
+    "created_at": "2026-05-29T02:36:08.662Z",
+    "updated_at": "2026-05-29T02:36:08.662Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30119"
+  },
+  {
+    "id": 30100,
+    "status": "success",
+    "ref": "tmp/integ-camada0",
+    "sha": "454bd4fb52f15a0f7589f41f177b9e07a1331548",
+    "created_at": "2026-05-29T02:18:40.055Z",
+    "updated_at": "2026-05-29T02:23:05.648Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30100"
+  },
+  {
+    "id": 30099,
+    "status": "skipped",
+    "ref": "feat/sitl-metrics-tests",
+    "sha": "0c970e778b2cb84945e45dff97b3ae018e17e5a9",
+    "created_at": "2026-05-29T02:18:36.198Z",
+    "updated_at": "2026-05-29T02:18:36.198Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30099"
+  },
+  {
+    "id": 30089,
+    "status": "skipped",
+    "ref": "feat/deploy-cd-pipeline",
+    "sha": "9400900ecbf3347fae2d0c6f2a917e10e6c41f49",
+    "created_at": "2026-05-29T02:10:09.567Z",
+    "updated_at": "2026-05-29T02:10:09.567Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30089"
+  },
+  {
+    "id": 30088,
+    "status": "success",
+    "ref": "tmp/integ-camada0",
+    "sha": "c064183f91701f27b421ca8803cb669699147511",
+    "created_at": "2026-05-29T02:08:11.932Z",
+    "updated_at": "2026-05-29T02:14:13.453Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30088"
+  },
+  {
+    "id": 30087,
+    "status": "canceled",
+    "ref": "tmp/integ-camada0",
+    "sha": "c064183f91701f27b421ca8803cb669699147511",
+    "created_at": "2026-05-29T02:08:11.368Z",
+    "updated_at": "2026-05-29T02:10:07.546Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30087"
+  },
+  {
+    "id": 30081,
+    "status": "failed",
+    "ref": "tmp/integ-camada0",
+    "sha": "b2e4a4af7e2d3b3da75fd6af15a95789af51ddf4",
+    "created_at": "2026-05-29T02:02:07.933Z",
+    "updated_at": "2026-05-29T02:02:07.933Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30081"
+  },
+  {
+    "id": 30080,
+    "status": "canceled",
+    "ref": "feat/sitl-metrics-tests",
+    "sha": "786b2e5c10faef1f0619c7121777d69ab411535c",
+    "created_at": "2026-05-29T02:01:25.090Z",
+    "updated_at": "2026-05-29T02:10:08.231Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30080"
+  },
+  {
+    "id": 30078,
+    "status": "failed",
+    "ref": "feat/deploy-cd-pipeline",
+    "sha": "00d353d4a15e34d875773394db3451b0b963ba35",
+    "created_at": "2026-05-29T01:56:15.648Z",
+    "updated_at": "2026-05-29T01:56:15.648Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30078"
+  },
+  {
+    "id": 30076,
+    "status": "success",
+    "ref": "feat/deploy-cd-pipeline",
+    "sha": "01cffb5cc1e7dc8cdf7fd36197c37cc936e61d49",
+    "created_at": "2026-05-29T01:55:30.352Z",
+    "updated_at": "2026-05-29T01:57:02.951Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30076"
+  },
+  {
+    "id": 30065,
+    "status": "success",
+    "ref": "spike/sitl-mission",
+    "sha": "eff91e92f61045c5e95852aacd38a729c89faafb",
+    "created_at": "2026-05-29T01:46:09.280Z",
+    "updated_at": "2026-05-29T01:50:17.120Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30065"
+  },
+  {
+    "id": 30040,
+    "status": "success",
+    "ref": "spike/px4-sitl-runner",
+    "sha": "1a78b1f6c1472a525895af7b884c1003d06f8d10",
+    "created_at": "2026-05-29T01:17:45.658Z",
+    "updated_at": "2026-05-29T01:27:35.524Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30040"
+  },
+  {
+    "id": 30004,
+    "status": "success",
+    "ref": "spike/px4-sitl-runner",
+    "sha": "c7feb169e26072756bce6a934d6880ee44710ef5",
+    "created_at": "2026-05-29T00:27:33.521Z",
+    "updated_at": "2026-05-29T00:27:56.324Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30004"
+  },
+  {
+    "id": 30001,
+    "status": "success",
+    "ref": "spike/px4-sitl-runner",
+    "sha": "2e3aac6d2dbe77c8152df34674f673ba6cf73b4f",
+    "created_at": "2026-05-29T00:22:06.043Z",
+    "updated_at": "2026-05-29T00:23:02.800Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/30001"
+  },
+  {
+    "id": 29405,
+    "status": "success",
+    "ref": "chore/limpeza-anotacoes-internas",
+    "sha": "7611505ca4b38de933893d9c819e02e1f55c57c4",
+    "created_at": "2026-05-28T02:38:40.512Z",
+    "updated_at": "2026-05-28T02:39:19.077Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/29405"
+  },
+  {
+    "id": 22743,
+    "status": "success",
+    "ref": "develop",
+    "sha": "ad3f88903cc2df65d4b14c76df07d8c5b1dd48fa",
+    "created_at": "2026-05-16T14:50:12.192Z",
+    "updated_at": "2026-05-16T14:50:56.205Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/22743"
+  },
+  {
+    "id": 22742,
+    "status": "success",
+    "ref": "main",
+    "sha": "ad3f88903cc2df65d4b14c76df07d8c5b1dd48fa",
+    "created_at": "2026-05-16T14:49:28.578Z",
+    "updated_at": "2026-05-16T14:50:11.352Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/22742"
+  },
+  {
+    "id": 22740,
+    "status": "success",
+    "ref": "chore/fernando/profundidade-asis-adrs",
+    "sha": "3dae09c4422f22b183acbd7f644574332cc6e5b2",
+    "created_at": "2026-05-16T14:37:00.264Z",
+    "updated_at": "2026-05-16T14:37:33.633Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/22740"
+  },
+  {
+    "id": 22739,
+    "status": "success",
+    "ref": "develop",
+    "sha": "eb5a88221ffb3eaa606e7537b1402783f235a732",
+    "created_at": "2026-05-16T14:29:25.983Z",
+    "updated_at": "2026-05-16T14:30:10.416Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/22739"
+  },
+  {
+    "id": 22738,
+    "status": "success",
+    "ref": "main",
+    "sha": "eb5a88221ffb3eaa606e7537b1402783f235a732",
+    "created_at": "2026-05-16T14:28:40.130Z",
+    "updated_at": "2026-05-16T14:29:25.413Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/22738"
+  },
+  {
+    "id": 22652,
+    "status": "success",
+    "ref": "chore/fernando/melhoria-projeto-enxuto",
+    "sha": "d74009ad34ec34fe8d230f3d36e03db584c60206",
+    "created_at": "2026-05-16T03:26:55.141Z",
+    "updated_at": "2026-05-16T03:27:29.707Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/22652"
+  },
+  {
+    "id": 22649,
+    "status": "success",
+    "ref": "develop",
+    "sha": "d1a0988325d166a49bbc3016fcb91087495aa9e8",
+    "created_at": "2026-05-16T03:09:04.837Z",
+    "updated_at": "2026-05-16T03:09:48.526Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/22649"
+  },
+  {
+    "id": 22648,
+    "status": "success",
+    "ref": "main",
+    "sha": "d1a0988325d166a49bbc3016fcb91087495aa9e8",
+    "created_at": "2026-05-16T03:07:56.367Z",
+    "updated_at": "2026-05-16T03:08:40.182Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/22648"
+  },
+  {
+    "id": 22646,
+    "status": "success",
+    "ref": "chore/fernando/coerencia-docs",
+    "sha": "3f37735510a5ed784f5380c5f6edda993f3f16c1",
+    "created_at": "2026-05-16T03:06:14.878Z",
+    "updated_at": "2026-05-16T03:07:40.830Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/22646"
+  },
+  {
+    "id": 22644,
+    "status": "success",
+    "ref": "v0.2.0",
+    "sha": "664ecf03ed4fd1246717a6015c52a825bfd269c6",
+    "created_at": "2026-05-16T02:58:06.502Z",
+    "updated_at": "2026-05-16T02:58:53.514Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/22644"
+  },
+  {
+    "id": 22643,
+    "status": "success",
+    "ref": "main",
+    "sha": "664ecf03ed4fd1246717a6015c52a825bfd269c6",
+    "created_at": "2026-05-16T02:57:43.122Z",
+    "updated_at": "2026-05-16T02:58:31.796Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/22643"
+  },
+  {
+    "id": 22641,
+    "status": "success",
+    "ref": "develop",
+    "sha": "2f162759d9c84851fced52f639cf0a434f8ebedd",
+    "created_at": "2026-05-16T02:56:21.988Z",
+    "updated_at": "2026-05-16T02:57:30.050Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/22641"
+  },
+  {
+    "id": 22640,
+    "status": "success",
+    "ref": "develop",
+    "sha": "3fca98cc091907cd354dedede51a29c2ad851dd4",
+    "created_at": "2026-05-16T02:56:03.441Z",
+    "updated_at": "2026-05-16T02:56:57.977Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/22640"
+  },
+  {
+    "id": 22638,
+    "status": "failed",
+    "ref": "refs/merge-requests/17/head",
+    "sha": "b21b660031e5280bd0dc9e3ffcba933353e81b5f",
+    "created_at": "2026-05-16T02:54:47.433Z",
+    "updated_at": "2026-05-16T02:54:47.433Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/22638"
+  },
+  {
+    "id": 22634,
+    "status": "failed",
+    "ref": "feat/fernando/integra-diagnosticos",
+    "sha": "b21b660031e5280bd0dc9e3ffcba933353e81b5f",
+    "created_at": "2026-05-16T02:50:40.736Z",
+    "updated_at": "2026-05-16T02:50:40.736Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/22634"
+  },
+  {
+    "id": 22632,
+    "status": "success",
+    "ref": "feat/fernando/integra-testes-funcionais",
+    "sha": "69b9916945b430283863772ca49a1a8834f98aba",
+    "created_at": "2026-05-16T02:49:20.096Z",
+    "updated_at": "2026-05-16T02:50:20.367Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/22632"
+  },
+  {
+    "id": 22231,
+    "status": "failed",
+    "ref": "develop",
+    "sha": "8c2dbb60fe7e1ddb829d5bf094214e776140691e",
+    "created_at": "2026-05-15T11:58:23.313Z",
+    "updated_at": "2026-05-15T11:58:23.313Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/22231"
+  },
+  {
+    "id": 21997,
+    "status": "success",
+    "ref": "feat/diagnosticos",
+    "sha": "4a45bb5faec42f548865ce610c144d2913d141f6",
+    "created_at": "2026-05-15T00:19:19.955Z",
+    "updated_at": "2026-05-15T00:20:07.351Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/21997"
+  },
+  {
+    "id": 21996,
+    "status": "failed",
+    "ref": "refs/merge-requests/15/head",
+    "sha": "6a69ccd761553eda042fcc898826462393ce8e8a",
+    "created_at": "2026-05-15T00:17:49.059Z",
+    "updated_at": "2026-05-15T00:17:49.059Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/21996"
+  },
+  {
+    "id": 21993,
+    "status": "failed",
+    "ref": "feat/diagnosticos",
+    "sha": "6a69ccd761553eda042fcc898826462393ce8e8a",
+    "created_at": "2026-05-15T00:15:20.489Z",
+    "updated_at": "2026-05-15T00:15:20.489Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/21993"
+  },
+  {
+    "id": 21929,
+    "status": "success",
+    "ref": "docs/testes-funcionais",
+    "sha": "372ae90b88abe41a6e7f4e85ba667c068e796dd4",
+    "created_at": "2026-05-14T20:59:35.804Z",
+    "updated_at": "2026-05-14T21:00:14.839Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/21929"
+  },
+  {
+    "id": 21924,
+    "status": "failed",
+    "ref": "refs/merge-requests/13/head",
+    "sha": "a7cf5aa86156f0283d7a87c9e39a96d3dd978b0b",
+    "created_at": "2026-05-14T20:16:08.803Z",
+    "updated_at": "2026-05-14T20:16:08.803Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/21924"
+  },
+  {
+    "id": 21923,
+    "status": "failed",
+    "ref": "docs/mapa-integração",
+    "sha": "a7cf5aa86156f0283d7a87c9e39a96d3dd978b0b",
+    "created_at": "2026-05-14T20:15:13.935Z",
+    "updated_at": "2026-05-14T20:15:13.935Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/21923"
+  },
+  {
+    "id": 21922,
+    "status": "failed",
+    "ref": "docs/testes-funcionais",
+    "sha": "8c5b84f7ef5d378b6c63dffe72845b9e3705c92c",
+    "created_at": "2026-05-14T20:13:33.076Z",
+    "updated_at": "2026-05-14T20:13:33.076Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/21922"
+  },
+  {
+    "id": 21825,
+    "status": "failed",
+    "ref": "develop",
+    "sha": "8c5b84f7ef5d378b6c63dffe72845b9e3705c92c",
+    "created_at": "2026-05-14T13:35:25.647Z",
+    "updated_at": "2026-05-14T13:35:25.647Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/21825"
+  },
+  {
+    "id": 21818,
+    "status": "failed",
+    "ref": "refs/merge-requests/10/head",
+    "sha": "33cce99ab23cb95e8ad5bd3c06c3bac10cb81c76",
+    "created_at": "2026-05-14T13:14:16.324Z",
+    "updated_at": "2026-05-14T13:14:16.324Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/21818"
+  },
+  {
+    "id": 21523,
+    "status": "failed",
+    "ref": "refs/merge-requests/10/head",
+    "sha": "33cce99ab23cb95e8ad5bd3c06c3bac10cb81c76",
+    "created_at": "2026-05-13T16:03:17.379Z",
+    "updated_at": "2026-05-13T16:03:17.379Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/21523"
+  },
+  {
+    "id": 21522,
+    "status": "failed",
+    "ref": "feat/painel-gerencial-anomalias",
+    "sha": "33cce99ab23cb95e8ad5bd3c06c3bac10cb81c76",
+    "created_at": "2026-05-13T16:03:16.711Z",
+    "updated_at": "2026-05-13T16:03:16.711Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/21522"
+  },
+  {
+    "id": 21521,
+    "status": "failed",
+    "ref": "refs/merge-requests/10/head",
+    "sha": "9297a621a1f91d3ea35d32dc3d3ea0bc19eee0ee",
+    "created_at": "2026-05-13T15:53:24.285Z",
+    "updated_at": "2026-05-13T15:53:24.285Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/21521"
+  },
+  {
+    "id": 21519,
+    "status": "failed",
+    "ref": "feat/painel-gerencial-anomalias",
+    "sha": "9297a621a1f91d3ea35d32dc3d3ea0bc19eee0ee",
+    "created_at": "2026-05-13T15:52:07.832Z",
+    "updated_at": "2026-05-13T15:52:07.832Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/21519"
+  },
+  {
+    "id": 21387,
+    "status": "failed",
+    "ref": "develop",
+    "sha": "253f5e3634a39860e8e1d58016249713530ce436",
+    "created_at": "2026-05-13T13:53:39.093Z",
+    "updated_at": "2026-05-13T13:53:39.093Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/21387"
+  },
+  {
+    "id": 21386,
+    "status": "failed",
+    "ref": "refs/merge-requests/9/head",
+    "sha": "ed8d035fd1594e124c4870e9874e2991ed579e94",
+    "created_at": "2026-05-13T13:52:26.107Z",
+    "updated_at": "2026-05-13T13:52:26.107Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/21386"
+  },
+  {
+    "id": 21385,
+    "status": "failed",
+    "ref": "feat/qos-qop",
+    "sha": "ed8d035fd1594e124c4870e9874e2991ed579e94",
+    "created_at": "2026-05-13T13:52:25.300Z",
+    "updated_at": "2026-05-13T13:52:25.300Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/21385"
+  },
+  {
+    "id": 21361,
+    "status": "failed",
+    "ref": "refs/merge-requests/9/head",
+    "sha": "1158fb56bdf0f090663488de957bde28f28b9e5b",
+    "created_at": "2026-05-13T13:30:37.718Z",
+    "updated_at": "2026-05-13T13:30:37.718Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/21361"
+  },
+  {
+    "id": 21360,
+    "status": "failed",
+    "ref": "feat/qos-qop",
+    "sha": "1158fb56bdf0f090663488de957bde28f28b9e5b",
+    "created_at": "2026-05-13T13:29:38.008Z",
+    "updated_at": "2026-05-13T13:29:38.008Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/21360"
+  },
+  {
+    "id": 21354,
+    "status": "failed",
+    "ref": "develop",
+    "sha": "03452059e272d183ec888bc2920d444c07c832bf",
+    "created_at": "2026-05-13T12:34:06.033Z",
+    "updated_at": "2026-05-13T12:34:06.033Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/21354"
+  },
+  {
+    "id": 20825,
+    "status": "failed",
+    "ref": "refs/merge-requests/8/head",
+    "sha": "f38cf053047b2232b0c28a8e2b81c4797deebad0",
+    "created_at": "2026-05-12T03:58:53.001Z",
+    "updated_at": "2026-05-12T03:58:53.001Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/20825"
+  },
+  {
+    "id": 20824,
+    "status": "failed",
+    "ref": "feat-controle-malha-fechada",
+    "sha": "f38cf053047b2232b0c28a8e2b81c4797deebad0",
+    "created_at": "2026-05-12T03:58:52.390Z",
+    "updated_at": "2026-05-12T03:58:52.390Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/20824"
+  }
+]
