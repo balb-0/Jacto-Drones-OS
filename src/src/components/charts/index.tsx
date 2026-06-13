@@ -18,6 +18,11 @@ import {
   Legend,
 } from 'recharts';
 import { cn } from '@/lib/utils';
+import {
+  tooltipContentStyle,
+  tooltipCursorStroke,
+  tooltipCursorFill,
+} from '@/lib/chart-styles';
 
 interface ChartContainerProps {
   children: React.ReactNode;
@@ -80,22 +85,14 @@ export function TrendLineChart({
           axisLine={true}
         />
         <Tooltip 
-          contentStyle={{ 
-            backgroundColor: 'white', 
-            border: '3px solid #000',
-            borderRadius: '0',
-            boxShadow: '4px 4px 0px #000',
-            fontSize: '12px',
-            fontFamily: 'var(--font-space-mono)',
-            fontWeight: 700,
-            textTransform: 'uppercase'
-          }}
-          itemStyle={{ color: '#000' }}
-          cursor={{ stroke: '#000', strokeWidth: 2, strokeDasharray: '4 4' }}
-          formatter={(value) => [yAxisFormatter(Number(value)), 'VALOR']}
+          contentStyle={tooltipContentStyle}
+          itemStyle={{ color: '#000', fontSize: 13, fontWeight: 700 }}
+          labelStyle={{ fontSize: 14, fontWeight: 900, color: '#000' }}
+          cursor={tooltipCursorStroke}
+          formatter={(value) => [yAxisFormatter(Number(value)), '']}
           labelFormatter={(label) => {
             const date = new Date(label);
-            return `DATA: ${date.toLocaleDateString('pt-BR')}`;
+            return `${date.toLocaleDateString('pt-BR')}`;
           }}
         />
         <DataComponent
@@ -140,18 +137,10 @@ export function ComparisonBarChart({
           strokeWidth={2}
         />
         <Tooltip 
-          contentStyle={{ 
-            backgroundColor: 'white', 
-            border: '3px solid #000',
-            borderRadius: '0',
-            boxShadow: '4px 4px 0px #000',
-            fontSize: '12px',
-            fontFamily: 'var(--font-space-mono)',
-            fontWeight: 700,
-            textTransform: 'uppercase'
-          }}
-          itemStyle={{ color: '#000' }}
-          cursor={{ fill: '#00000010' }}
+          contentStyle={tooltipContentStyle}
+          itemStyle={{ color: '#000', fontSize: 13, fontWeight: 700 }}
+          labelStyle={{ fontSize: 14, fontWeight: 900, color: '#000' }}
+          cursor={tooltipCursorFill}
         />
         <Legend 
           wrapperStyle={{ 
@@ -166,7 +155,7 @@ export function ComparisonBarChart({
           <Bar 
             key={bar.key}
             dataKey={bar.key} 
-            name={bar.name.toUpperCase()}
+            name={bar.name}
             fill={bar.color}
             stroke="#000"
             strokeWidth={3}
@@ -206,17 +195,9 @@ export function DistributionPieChart({
           ))}
         </Pie>
         <Tooltip 
-          contentStyle={{ 
-            backgroundColor: 'white', 
-            border: '3px solid #000',
-            borderRadius: '0',
-            boxShadow: '4px 4px 0px #000',
-            fontSize: '12px',
-            fontFamily: 'var(--font-space-mono)',
-            fontWeight: 700,
-            textTransform: 'uppercase'
-          }}
-          itemStyle={{ color: '#000' }}
+          contentStyle={tooltipContentStyle}
+          itemStyle={{ color: '#000', fontSize: 13, fontWeight: 700 }}
+          labelStyle={{ fontSize: 14, fontWeight: 900, color: '#000' }}
           formatter={(value, name) => [`${value}`, name]}
         />
         <Legend 
@@ -233,3 +214,6 @@ export function DistributionPieChart({
     </ChartContainer>
   );
 }
+
+export { AnimatedLineChart } from './AnimatedLineChart';
+export type { ChannelConfig, AnimatedLineChartProps } from './AnimatedLineChart';

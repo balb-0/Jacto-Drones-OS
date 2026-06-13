@@ -8,7 +8,9 @@ import { motion } from 'framer-motion';
 import { fetchQoSSnapshot } from '@/services/metrics';
 import type { QoSIndicator, QoSSnapshot } from '@/types/mission';
 import { getProtocol } from '@/data/qos-protocol';
-import { Activity, Gauge, Timer, CheckCircle2, AlertTriangle, Info } from 'lucide-react';
+import { Activity, Gauge, Timer, CheckCircle2, AlertTriangle, Info, Play } from 'lucide-react';
+import { FlightReplay } from '@/components/FlightReplay';
+import { ScenarioSelector, type FlightScenario } from '@/components/ScenarioSelector';
 import { cn } from '@/lib/utils';
 
 // Mapa de ícone por indicador — leitura rápida do que cada card representa.
@@ -94,6 +96,7 @@ function IndicatorCard({ indicator }: { indicator: QoSIndicator }) {
 export default function QOSPage() {
   const [snapshot, setSnapshot] = useState<QoSSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
+  const [scenario, setScenario] = useState<FlightScenario>('motor_failure');
 
   useEffect(() => {
     async function loadData() {
@@ -186,6 +189,23 @@ export default function QOSPage() {
               />
             ))}
           </div>
+        </section>
+
+        {/* Flight Replay - Scenario Simulation */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-black border-[3px] border-primary">
+              <Play className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-3xl font-black text-black uppercase italic">FLIGHT REPLAY</h3>
+              <p className="text-sm font-bold text-gray-600 uppercase tracking-tight">
+                SIMULAÇÃO DE VOO — SELECIONE O CENÁRIO
+              </p>
+            </div>
+          </div>
+          <ScenarioSelector selected={scenario} onChange={setScenario} />
+          <FlightReplay scenario={scenario} />
         </section>
 
         {/* Painéis legados (build/defeito/integração) — claramente PROJETADOS */}
