@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "coletado_em": "2026-06-13",
+    "fonte": "evidence/raw/ (snapshot bruto da API, reauditavel sem credencial)"
+  },
+  "deployment_frequency": {
+    "staging_deploys_success": 20,
+    "ambiente": "staging",
+    "nota": "todos success; ambiente staging via deploy_staging (ci/deploy.yml)"
+  },
+  "lead_time_for_changes_h": {
+    "n_mrs_merged": 33,
+    "mediana_h": 0.2,
+    "media_h": 17.7,
+    "min_h": 0.0,
+    "max_h": 182.4
+  },
+  "change_failure_rate": {
+    "develop": {
+      "total": 24,
+      "failed": 5,
+      "cfr_pct": 21
+    },
+    "main": {
+      "total": 7,
+      "failed": 0,
+      "cfr_pct": 0
+    }
+  },
+  "pipelines_amostra_100": {
+    "total": 100,
+    "success": 42,
+    "failed": 26,
+    "skipped": 23,
+    "canceled": 5
+  },
+  "observacao_honesta": "Amostra pequena; muitos failed sao iteracoes de de-risking (spike SITL). CFR alto em develop reflete desenvolvimento, nao producao. Reportar com janela e nota."
+}
