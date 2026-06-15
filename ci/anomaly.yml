@@ -1,0 +1,40 @@
+# ─────────────────────────────────────────────────────────────────────────
+# TG2 — Detecção de anomalias server-side, no stage `gate` (@Calebe)
+#
+# Porta as regras de anomalia do dashboard (src/src/lib/anomaly-detection.ts)
+# para a esteira: o CI passa a enxergar VIBRATION SPIKE / PWM DIVERGENCE /
+# ATTITUDE INSTABILITY sem depender do front. Consome a telemetria de voo
+# (flight-telemetry.json, .points) produzida pelo job `sitl-mission-metrics`
+# (stage test) e publica anomalies.json como artefato.
+#
+# anomalies.json alimenta o quality gate (ci/quality-gates.yml): o
+# scripts/quality_gates.py reprova o merge se houver anomalia CRITICAL (TG2.3).
+#
+# Por que `dependencies:` (e NÃO `needs:`): o job roda no stage `gate`, DEPOIS
+# de `test`, então a ordem de stage já garante que `sitl-mission-metrics` rodou
+# — não há DAG-bypass (mesma regra de ci/quality-gates.yml / ADR-0006). O
+# `dependencies:` aqui só RESTRINGE o download de artefatos a esse único job
+# (evita baixar artefato à toa); não cria aresta de DAG que pudesse ANTECIPAR
+# este job e contornar stages intermediários.
+# ─────────────────────────────────────────────────────────────────────────
+detect-anomalies:
+  stage: gate
+  image: python:3.12-slim
+  # Baixa apenas o artefato flight-telemetry.json do job da missão SITL; a ordem
+  # de stage (test → gate) garante que ele já existe quando este job inicia.
+  dependencies:
+    - sitl-mission-metrics
+  script:
+    - 'echo "### detecta anomalias (regras do dashboard) sobre flight-telemetry.json"'
+    # detect_anomalies.py é stdlib pura (json/argparse) → sem pip install.
+    - python scripts/detect_anomalies.py
+        --input flight-telemetry.json
+        --output anomalies.json
+    - 'echo "--- anomalies.json (resumo) ---"'
+    # Eco curto do total/severidades pro log do job (auditável sem abrir o artefato).
+    - 'python -c "import json; a=json.load(open(''anomalies.json'')); c=sum(1 for x in a if x[''severity'']==''CRITICAL''); print(f''{len(a)} anomalias ({c} CRITICAL)'')"'
+  artifacts:
+    when: always
+    paths:
+      - anomalies.json
+    expire_in: 30 days
