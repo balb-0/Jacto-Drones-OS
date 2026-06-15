@@ -20,6 +20,7 @@ _NOMINAL = {
     "vibration_x_g": 0.2,
     "vibration_y_g": 0.0,
     "vibration_z_g": 0.7,
+    "acceleration_m_s2": 9.6,
 }
 
 
@@ -62,10 +63,27 @@ def test_attitude_instability_warning():
     assert a["severity"] == "WARNING", f"severity {a['severity']} != WARNING"
 
 
+def test_acceleration_spike_warning():
+    # aceleração 11.01 m/s² (> 10) → ACCELERATION SPIKE (WARNING).
+    anomalies = detect_anomalies([_point(acceleration_m_s2=11.01)])
+    assert len(anomalies) == 1, f"esperava 1 anomalia, veio {len(anomalies)}"
+    a = anomalies[0]
+    assert a["type"] == "ACCELERATION SPIKE", f"type {a['type']} != ACCELERATION SPIKE"
+    assert a["severity"] == "WARNING", f"severity {a['severity']} != WARNING"
+    assert a["variables"] == [{"label": "ACCEL", "value": "11.01 m/s²"}], (
+        f"variables fora do contrato do front, veio {a['variables']}"
+    )
+
+
 def test_limiar_e_estritamente_maior():
     # exatamente no limiar NÃO dispara (front usa `> 1.5`, não `>=`).
     anomalies = detect_anomalies([_point(vibration_x_g=1.5)])
     assert anomalies == [], f"vibração == 1.5 g (no limiar) não deveria disparar, veio {anomalies}"
+    # mesma regra de borda para aceleração (front usa `> 10`, não `>=`).
+    accel_no_limiar = detect_anomalies([_point(acceleration_m_s2=10.0)])
+    assert accel_no_limiar == [], (
+        f"aceleração == 10 m/s² (no limiar) não deveria disparar, veio {accel_no_limiar}"
+    )
 
 
 def test_multiplas_regras_no_mesmo_ponto():

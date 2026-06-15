@@ -39,7 +39,7 @@ dashboard. Três fatos moldam o desenho:
 bloqueante.** Concretamente:
 
 1. **Detector puro + CLI (`scripts/detect_anomalies.py`).** `detect_anomalies(points)`
-   é função pura (sem I/O, unit-testável) que aplica as 3 regras portadas de
+   é função pura (sem I/O, unit-testável) que aplica as 4 regras portadas de
    `anomaly-detection.ts` e devolve a lista de anomalias no **mesmo shape do
    front** (`{type, severity, timestamp_ms, variables:[{label,value}]}`). O CLI
    lê `flight-telemetry.json` (`.points`) e grava `anomalies.json`.
@@ -49,6 +49,7 @@ bloqueante.** Concretamente:
    | `VIBRATION SPIKE` | `vibration_x/y/z_g > 1.5 g` (qualquer eixo) | **CRITICAL** |
    | `PWM DIVERGENCE` | `max(pwm1-4) − min(pwm1-4) > 200 µs` | WARNING |
    | `ATTITUDE INSTABILITY` | `abs(roll_deg) > 15°` OU `abs(pitch_deg) > 15°` | WARNING |
+   | `ACCELERATION SPIKE` | `acceleration_m_s2 > 10 m/s²` | WARNING |
 
 2. **Job no stage `gate` (`ci/anomaly.yml`).** `detect-anomalies` consome o
    `flight-telemetry.json` do `sitl-mission-metrics` via `dependencies:` (baixa

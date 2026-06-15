@@ -6,6 +6,7 @@ para que a esteira CI/CD enxergue as anomalias sem depender do dashboard. Regras
 - VIBRATION SPIKE (CRITICAL): vibration_x/y/z_g > 1.5 g em qualquer eixo.
 - PWM DIVERGENCE (WARNING): max(pwm1-4) - min(pwm1-4) > 200 µs.
 - ATTITUDE INSTABILITY (WARNING): abs(roll_deg) > 15° OU abs(pitch_deg) > 15°.
+- ACCELERATION SPIKE (WARNING): acceleration_m_s2 > 10 m/s².
 
 `detect_anomalies(points)` é PURA (sem I/O, testável em unit): recebe a lista de
 pontos (`FlightTelemetryPoint`, dicts com as chaves do front) e devolve a lista
@@ -36,6 +37,7 @@ LOG = logging.getLogger("detect_anomalies")
 VIBRATION_SPIKE_G = 1.5
 PWM_DIVERGENCE_US = 200
 ATTITUDE_INSTABILITY_DEG = 15
+ACCELERATION_SPIKE_M_S2 = 10
 
 
 def _vibration_spike(point: dict[str, Any]) -> dict[str, Any] | None:
@@ -91,8 +93,22 @@ def _attitude_instability(point: dict[str, Any]) -> dict[str, Any] | None:
     return None
 
 
+def _acceleration_spike(point: dict[str, Any]) -> dict[str, Any] | None:
+    """Regra 4 — pico de aceleração: acceleration_m_s2 > 10 m/s² (WARNING)."""
+    accel = point["acceleration_m_s2"]
+    if accel > ACCELERATION_SPIKE_M_S2:
+        return {
+            "type": "ACCELERATION SPIKE",
+            "severity": "WARNING",
+            "variables": [
+                {"label": "ACCEL", "value": f"{accel:.2f} m/s²"},
+            ],
+        }
+    return None
+
+
 # Ordem das regras alinhada ao front (anomaly-detection.ts).
-_RULES = (_vibration_spike, _pwm_divergence, _attitude_instability)
+_RULES = (_vibration_spike, _pwm_divergence, _attitude_instability, _acceleration_spike)
 
 
 def detect_anomalies(points: list[dict[str, Any]]) -> list[dict[str, Any]]:
