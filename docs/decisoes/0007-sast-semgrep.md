@@ -58,6 +58,15 @@ Sprints 4-5.** Junto dele, a camada de secrets/deps em defesa em profundidade.
    true` + remover `allow_failure` dos jobs SAST, quando o gate (TG6) amarrar a
    esteira ao runner `sonar-00`.
 
+> **Atualização Sprint 4 (TG2, 2026-06-14) — ratchet aplicado ao Semgrep.** O job
+> `semgrep` deixou de ser informativo: removido o `allow_failure: true`, ele agora
+> **bloqueia o merge**. Para não virar "falso-vermelho" por achado trivial, o gate
+> reprova **apenas em severidade ALTA** (`semgrep scan --severity ERROR --error`);
+> um passo informativo anterior (todas as severidades, `|| true`) mantém
+> WARNING/INFO visíveis no log sem travar. Os scanners de secrets/deps
+> (`trufflehog`, `trivy-fs`, `gitleaks`) seguem `allow_failure: true` até o baseline
+> de ruído ser calibrado — o aperto é incremental, com dados, não de uma vez.
+
 ## Alternativas consideradas (e rejeitadas para a Sprint 3)
 
 - **SonarQube self-hosted (literal do ADR-006 do demo).** Mantém a história 1:1,

@@ -1,0 +1,21 @@
+{
+  "_meta": {
+    "contrato": "TG2 — lista de anomalias do ultimo run da missao SITL (formato {type, severity, timestamp_ms, variables}).",
+    "estado": "placeholder",
+    "nota": "Placeholder minimo ate o TG2 publicar o anomalies.json real (extraido do .ulg pelo job sitl-mission-metrics). O exemplo abaixo esta ROTULADO como amostra e referencia um pipeline real para demonstrar o link de evidencia.",
+    "fonte_prevista": "reports/anomalies.json — job sitl-mission-metrics (ci/sitl-metrics.yml)",
+    "pipeline_ref": 39697
+  },
+  "anomalies": [
+    {
+      "type": "EXEMPLO — ACCELERATION SPIKE",
+      "severity": "WARNING",
+      "timestamp_ms": 50000,
+      "variables": [
+        { "label": "ACCEL", "value": "11.01 m/s²" },
+        { "label": "AMOSTRA", "value": "placeholder" }
+      ],
+      "evidence_pipeline": 39697
+    }
+  ]
+}
