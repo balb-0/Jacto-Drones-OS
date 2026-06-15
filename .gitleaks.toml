@@ -13,4 +13,7 @@ description = "Falsos-positivos conhecidos (não são credenciais)"
 # não uma credencial. Allowlist por regex resiste a mudança de número de linha.
 regexes = [
   '''px4-sitl-v1162''',
+  # 'acceleration_m_s2' é um nome de canal de telemetria (FlightTelemetryPoint),
+  # flagado como generic-api-key por entropia. Identificador de dado, não credencial.
+  '''acceleration_m_s2''',
 ]
