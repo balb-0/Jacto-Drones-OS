@@ -103,8 +103,15 @@ sitl-mission-metrics:
        fi'
     - 'echo "--- metrics-$CLIENTE.json ---"; cat "reports/metrics-$CLIENTE.json"'
     - 'python3 -c "import json,os; m=json.load(open(f\"reports/metrics-{os.environ[''CLIENTE'']}.json\")); assert m[''max_altitude_m'']>0 and m[''n_samples'']>0, ''metrics degenerado: missao nao voou''; print(''metrics valido'')"'
-    - 'echo "### [6/6] testes SITL (invariantes + baseline) sobre metrics-$CLIENTE.json"'
-    - 'METRICS_JSON="reports/metrics-$CLIENTE.json" PYTHONPATH=. pytest tests/sitl -v'
+    - 'echo "### [6/6] testes SITL sobre metrics-$CLIENTE.json"'
+    # Baseline (test_baseline_thresholds) é calibrado p/ square_50m → só o cliente
+    # canônico roda a suíte completa; clientes demonstrativos rodam apenas os
+    # invariantes físicos (válidos p/ qualquer voo, sem calibração por missão).
+    - 'if [ "$CLIENTE" = "$CANONICAL_CLIENTE" ]; then
+         METRICS_JSON="reports/metrics-$CLIENTE.json" PYTHONPATH=. pytest tests/sitl -v;
+       else
+         METRICS_JSON="reports/metrics-$CLIENTE.json" PYTHONPATH=. pytest tests/sitl/test_physical_invariants.py -v;
+       fi'
     # Cliente de referência também publica metrics.json canônico (sem sufixo):
     # quality-gates/mr-kpis seguem lendo reports/metrics.json sem alteração.
     # Além do metrics, expõe a série real ao front pelo mesmo caminho dos dados
