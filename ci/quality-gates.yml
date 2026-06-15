@@ -37,19 +37,19 @@ quality-gates:
       artifacts: true
     - job: sitl-mission-metrics  # reports/metrics.json (stage test)
       artifacts: true
-    - job: detect-anomalies    # anomalies.json (stage gate, irmão)
+    - job: detect-anomalies    # reports/anomalies.json (stage gate, irmão)
       artifacts: true
   before_script:
     - pip install --quiet pyyaml
   script:
     # coverage.xml (unit-tests), reports/metrics.json (sitl-mission-metrics) e
-    # anomalies.json (detect-anomalies) vêm via needs acima. --anomalies liga o
-    # gate de anomalia (TG2): reprova o merge se houver anomalia CRITICAL.
+    # reports/anomalies.json (detect-anomalies) vêm via needs acima. --anomalies
+    # liga o gate de anomalia (TG2): reprova o merge se houver anomalia CRITICAL.
     - python scripts/quality_gates.py
         --gates quality_gates.yaml
         --metrics reports/metrics.json
         --coverage coverage.xml
-        --anomalies anomalies.json
+        --anomalies reports/anomalies.json
         --output reports/quality_gates_result.json
   artifacts:
     when: always
