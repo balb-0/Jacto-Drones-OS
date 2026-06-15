@@ -79,6 +79,17 @@ export interface PipelineDeploys {
   fonte: string;
 }
 
+/** Tipo de referencia auditavel por numero no GitLab. */
+export type AuditRefKind = 'pipeline' | 'merge_request' | 'tag';
+
+/** Referencia de auditoria por numero (pipeline/MR/tag) com link direto. */
+export interface AuditRef {
+  kind: AuditRefKind;
+  number: number | string;
+  label: string;
+  web_url: string;
+}
+
 export interface PipelineSnapshot {
   _meta: PipelineSnapshotMeta;
   last_run: PipelineLastRun;
@@ -86,4 +97,6 @@ export interface PipelineSnapshot {
   sast: PipelineSast;
   anomalies: PipelineAnomaliesSummary;
   deploys: PipelineDeploys;
+  /** Trilha de auditoria por numero (pipeline/MR/tag) — TG5.3. */
+  audit_refs?: AuditRef[];
 }
