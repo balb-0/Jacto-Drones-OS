@@ -1,0 +1,58 @@
+# Missão do cliente_b (prova de conceito multi-cliente — ADR-0011).
+# Derivada de missions/square_50m.yaml: mesmo schema, MESMO firmware PX4.
+# Perfil "cliente_b" = talhão menor e voo mais baixo/lento (35 m de lado,
+# 8 m de altitude, cruzeiro 4 m/s). Home = default PX4 SITL (Zurique/ETH).
+# home → WP1 → WP2 → WP3 → WP4 → RTL (home).
+
+name: cliente_b_talhao_pequeno_35m
+description: |
+  Cliente B: decolagem vertical até 8 m, quadrado de 35 m de lado a 4 m/s,
+  retorna para home. Envelope de talhão menor e mais conservador que o baseline.
+
+takeoff_altitude_m: 8.0
+cruise_speed_m_s: 4.0
+acceptance_radius_m: 1.5
+
+# Home default do PX4 SITL
+home:
+  latitude: 47.397742
+  longitude: 8.545594
+
+# Waypoints relativos ao home em NED (north_m, east_m, altitude_m)
+waypoints:
+  - name: takeoff
+    type: takeoff
+    altitude_m: 8.0
+
+  - name: wp1_north
+    type: waypoint
+    north_m: 35.0
+    east_m: 0.0
+    altitude_m: 8.0
+
+  - name: wp2_northeast
+    type: waypoint
+    north_m: 35.0
+    east_m: 35.0
+    altitude_m: 8.0
+
+  - name: wp3_east
+    type: waypoint
+    north_m: 0.0
+    east_m: 35.0
+    altitude_m: 8.0
+
+  - name: wp4_home_align
+    type: waypoint
+    north_m: 0.0
+    east_m: 0.0
+    altitude_m: 8.0
+
+  - name: return_to_launch
+    type: rtl
+
+# Limites duros — missão abortada se exceder
+limits:
+  max_duration_s: 160
+  max_altitude_m: 25.0
+  geofence_radius_m: 80.0

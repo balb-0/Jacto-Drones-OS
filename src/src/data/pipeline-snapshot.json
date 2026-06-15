@@ -1,0 +1,103 @@
+{
+  "_meta": {
+    "tipo": "snapshot",
+    "coletado_em": "2026-06-13",
+    "fonte": "evidence/raw/pipelines.json + evidence/raw/deployments.json (API GitLab git.inteli.edu.br projeto 10705)",
+    "nota": "SNAPSHOT versionado do ultimo run consolidado da esteira em develop. Nao e leitura ao vivo: reflete o pacote de evidencias comitado (reauditavel sem credencial via scripts/collect_gitlab_metrics.py --from-evidence). Gates/SAST espelham quality_gates.yaml + o estado documentado em ci/quality-gates.yml."
+  },
+  "last_run": {
+    "pipeline_id": 39697,
+    "ref": "develop",
+    "sha": "6d2a93790cd114171e32be9882348887c18e1d28",
+    "status": "success",
+    "created_at": "2026-06-13T02:50:12.786Z",
+    "updated_at": "2026-06-13T02:57:05.000Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/39697"
+  },
+  "gates": {
+    "verdict": "PASS",
+    "passed": 4,
+    "total": 4,
+    "fonte": "quality_gates.yaml (avaliado por scripts/quality_gates.py no stage gate). Valores do ultimo metrics.json real (src/data/metrics.json).",
+    "checks": [
+      {
+        "id": "coverage",
+        "label": "Coverage de testes (libs)",
+        "value": "~98%",
+        "limit": ">= 90%",
+        "passed": true
+      },
+      {
+        "id": "max_acceleration_m_s2",
+        "label": "Aceleracao maxima",
+        "value": "11.01 m/s²",
+        "limit": "<= 15.0 m/s²",
+        "passed": true
+      },
+      {
+        "id": "max_mission_duration_s",
+        "label": "Duracao da missao",
+        "value": "78.83 s",
+        "limit": "<= 180 s",
+        "passed": true
+      },
+      {
+        "id": "max_std_altitude_cruise_m",
+        "label": "Estabilidade de altitude (σ)",
+        "value": "0.688 m",
+        "limit": "<= 1.0 m",
+        "passed": true
+      }
+    ]
+  },
+  "sast": {
+    "status": "informativo",
+    "require_passed": false,
+    "fonte": "quality_gates.yaml secao sast (require_passed=false nesta sprint) + jobs ci/sast.yml (trufflehog, trivy-fs, gitleaks, semgrep).",
+    "scanners": ["trufflehog", "trivy-fs", "gitleaks", "semgrep"],
+    "nota": "SAST roda no stage sast (secrets + codigo). Bloqueante quando quality_gates.yaml sast.require_passed virar true."
+  },
+  "anomalies": {
+    "count": 1,
+    "fonte": "src/data/anomalies.json (contrato TG2 — placeholder ate o anomalies.json real do job sitl-mission-metrics).",
+    "estado": "placeholder"
+  },
+  "deploys": {
+    "staging_success": 20,
+    "total": 23,
+    "ambiente": "staging",
+    "ultimo_release": {
+      "tag": "v0.4.0",
+      "pipeline_id": 39710,
+      "status": "success",
+      "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/39710"
+    },
+    "fonte": "evidence/raw/deployments.json — deployments status=success no ambiente staging."
+  },
+  "audit_refs": [
+    {
+      "kind": "pipeline",
+      "number": 39697,
+      "label": "Ultimo run develop",
+      "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/39697"
+    },
+    {
+      "kind": "merge_request",
+      "number": 36,
+      "label": "MR Sprint 4 → main (v0.4.0)",
+      "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/merge_requests/36"
+    },
+    {
+      "kind": "tag",
+      "number": "v0.4.0",
+      "label": "Release v0.4.0",
+      "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/tags/v0.4.0"
+    },
+    {
+      "kind": "pipeline",
+      "number": 39710,
+      "label": "Pipeline da release v0.4.0",
+      "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/39710"
+    }
+  ]
+}

@@ -12,6 +12,7 @@ import { Activity, Gauge, Timer, CheckCircle2, AlertTriangle, Info, Play } from 
 import { FlightReplay } from '@/components/FlightReplay';
 import { ScenarioSelector } from '@/components/ScenarioSelector';
 import { DEFAULT_SCENARIO, type FlightScenario } from '@/lib/flight-scenarios';
+import { AnomalyEvidenceLog } from '@/components/AnomalyEvidenceLog';
 import { cn } from '@/lib/utils';
 
 // Mapa de ícone por indicador — leitura rápida do que cada card representa.
@@ -206,7 +207,16 @@ export default function QOSPage() {
             </div>
           </div>
           <ScenarioSelector selected={scenario} onChange={setScenario} />
-          <FlightReplay scenario={scenario} />
+          {/* Flight Replay + LOG DE ANOMALIAS (contrato TG2) lado a lado: o log
+              lista as anomalias do run com link direto p/ evidencia no GitLab. */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+            <div className="xl:col-span-2">
+              <FlightReplay scenario={scenario} />
+            </div>
+            <div className="xl:col-span-1">
+              <AnomalyEvidenceLog />
+            </div>
+          </div>
         </section>
 
         {/* Painéis legados (build/defeito/integração) — claramente PROJETADOS */}

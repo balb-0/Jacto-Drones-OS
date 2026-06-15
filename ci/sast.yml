@@ -12,9 +12,11 @@
 # RUNTIME do job e os scanners rodam em modo FILESYSTEM (`trivy fs`/`trivy
 # config`, trufflehog `filesystem`), sem daemon nem registry.
 #
-# Sprint 3: todos os jobs são INFORMATIVOS (`allow_failure: true`) — publicam
-# achados sem bloquear o merge. Viram BLOQUEANTES nas Sprints 4-5 (ADR-0007),
-# quando o runner dedicado sonar-00 (id=133) estiver amarrado ao gate.
+# Sprint 3: todos os jobs eram INFORMATIVOS (`allow_failure: true`) — publicavam
+# achados sem bloquear o merge. Sprint 4 (TG2, @Lucca): o `semgrep` virou
+# BLOQUEANTE, mas só em SEVERIDADE ALTA (ERROR), para não dar falso-vermelho por
+# achado trivial (ratchet do ADR-0007). Os scanners de secrets/deps
+# (trufflehog, trivy, gitleaks) seguem informativos até calibrar baseline.
 # ─────────────────────────────────────────────────────────────────────────
 
 # TruffleHog — scanner de secrets (Slide 10 da Aula 05). Portado do hook Husky
@@ -123,8 +125,17 @@ gitleaks:
 # funcional do SonarQube do demo (ADR-006 do demo) no nosso eixo de integridade,
 # porém OSS e sem servidor externo: roda como CLI no runner DEDICADO `sonar-00`
 # (id=133). O ruleset `auto` seleciona regras pela linguagem do repo (Python:
-# libs/, scripts/, tests/). `--no-suppress-errors` faz o job retornar !=0 quando
-# há erro interno do scanner, tornando-o auditável (amarelo via allow_failure).
+# libs/, scripts/, tests/).
+#
+# TG2/Sprint 4 — SAST EFETIVO (BLOQUEANTE, @Lucca). Removido o `allow_failure:
+# true`: o Semgrep agora REPROVA o merge. Mas só em SEVERIDADE ALTA (ERROR), para
+# não virar "falso-vermelho" por achado trivial (WARNING/INFO) — gate barulhento
+# ninguém respeita (mesmo princípio do ratchet do ADR-0005/0007). Dois passos:
+#   [1/2] scan INFORMATIVO completo (todas as severidades) → log auditável, NUNCA
+#         derruba o job (`|| true`): WARNING/INFO ficam visíveis sem bloquear.
+#   [2/2] scan BLOQUEANTE só com `--severity ERROR` + `--error` → exit !=0 apenas
+#         quando há achado de severidade alta. Este passo é o gate.
+# Ratchet documentado no ADR-0007 (informativo → bloqueante em severidade alta).
 #
 # ALTERNATIVA — template SAST nativo do GitLab (`Security/SAST.gitlab-ci.yml`,
 # que sob o capô usa o analisador Semgrep do GitLab e emite o relatório
@@ -132,7 +143,7 @@ gitleaks:
 # porque (a) exige `include: template:` no .gitlab-ci.yml root — e a REGRA DE OURO
 # desta esteira é NÃO editar o root (cada concern só ADICIONA seu ci/*.yml via
 # glob); (b) o widget de Security depende de licença Ultimate para o MR. Fica
-# como evolução natural quando o gate virar bloqueante (ADR-0007, Sprints 4-5).
+# como evolução natural.
 semgrep:
   stage: sast
   tags: [sonar-00]            # runner dedicado id=133
@@ -143,8 +154,13 @@ semgrep:
     GIT_STRATEGY: fetch
     SEMGREP_RULES: "auto"     # regras selecionadas pela linguagem do repo
   script:
-    - 'echo "### Semgrep — SAST (runner sonar-00); template nativo do GitLab e alternativa"'
-    # --no-suppress-errors é a flag de `semgrep ci` para falhar em erro interno
-    # (o `--error` anterior pertence a `semgrep scan` → era ignorado/incoerente).
-    - semgrep ci --config "$SEMGREP_RULES" --no-suppress-errors
-  allow_failure: true         # informativo na Sprint 3; bloqueante nas Sprints 4-5
+    - 'echo "### Semgrep — SAST BLOQUEANTE (runner sonar-00); reprova so em severidade alta (ERROR)"'
+    - 'echo "### [1/2] scan informativo (todas as severidades) — visivel no log, nao bloqueia"'
+    # Passo informativo: reporta WARNING/INFO sem derrubar o job (|| true). Dá
+    # visibilidade ao baseline de ruído sem transformá-lo em falso-vermelho.
+    - semgrep scan --config "$SEMGREP_RULES" --no-suppress-errors || true
+    - 'echo "### [2/2] gate: bloqueia so em severidade alta (--severity ERROR --error)"'
+    # Passo bloqueante: --severity ERROR roda só as regras de severidade alta;
+    # --error faz o exit code ser !=0 quando há achado → reprova o merge.
+    - semgrep scan --config "$SEMGREP_RULES" --severity ERROR --error --no-suppress-errors
+  # SEM allow_failure (default false) ⇒ BLOQUEANTE. O gate efetivo é o passo [2/2].
