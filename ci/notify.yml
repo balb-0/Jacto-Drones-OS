@@ -1,0 +1,68 @@
+# ─────────────────────────────────────────────────────────────────────────
+# TG3 — Notificação automática do RESULTADO do pipeline (@Kauan)
+#
+# Fecha o eixo de feedback do demo do avaliador ("notificar o resultado"):
+# quando a esteira QUEBRA (gate reprovado, anomalia/missão SITL, SAST, build),
+# alguém é avisado com o contexto mínimo — projeto, pipeline #, branch, commit,
+# o que falhou e o link.
+#
+# Ambiente pedagógico SEM SMTP próprio (ver ADR-0010). Por isso o desenho tem
+# DOIS caminhos, em degradação graciosa:
+#  - Se a variável CI/CD NOTIFY_WEBHOOK_URL existir (webhook de Slack/Mattermost/
+#    Discord/genérico), o job faz POST (curl) com o payload JSON da mensagem.
+#  - Senão, apenas LOGA a mensagem formatada e referencia o canal nativo
+#    "Pipeline emails" do GitLab (Settings → Integrations → Pipeline emails),
+#    que entrega o resultado por e-mail sem SMTP do projeto — a recomendação
+#    padrão do ADR-0010.
+#
+# O job dispara no RESULTADO, NÃO em todo pipeline:
+#  - rules: when: on_failure ⇒ só roda quando algum job de stage anterior FALHOU
+#    (gate, anomalia/missão, SAST, build). Em pipeline verde, é skipped.
+#  - allow_failure: true ⇒ notificar é cortesia de feedback, NUNCA um gate: se o
+#    webhook/curl falhar ou a var faltar, o pipeline NÃO muda de status por isso.
+#    (O status do pipeline já é "failed" — quem o reprovou foi o job bloqueante.)
+# Sem needs/dependencies: roda no stage `notify` (último), por ordem de stage,
+# depois que o veredito já aconteceu — não antecipa nem contorna nenhum gate.
+# ─────────────────────────────────────────────────────────────────────────
+
+notify:
+  stage: notify
+  image: python:3.12-slim
+  # Cortesia de feedback: nunca bloqueia o pipeline (que já está vermelho).
+  allow_failure: true
+  rules:
+    # Só quando a esteira QUEBROU. on_failure observa as falhas dos stages
+    # anteriores (build/test/sast/gate/deploy); sem isso, rodaria sempre.
+    # Não roda em tags (foco é o resultado do CI de branch/MR).
+    - if: '$CI_COMMIT_TAG'
+      when: never
+    - when: on_failure
+  before_script:
+    # curl não vem na imagem slim; só é necessário no caminho do webhook.
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends curl >/dev/null
+  script:
+    # 1) Monta a mensagem a partir das vars do CI (script puro + testado).
+    #    Texto para o log; JSON para o corpo do POST.
+    - python scripts/notify.py --reason "pipeline reprovado (ver jobs do stage gate/test/sast)" | tee notify-message.txt
+    - python scripts/notify.py --reason "pipeline reprovado (ver jobs do stage gate/test/sast)" --json > notify-payload.json
+    # 2) Sem webhook configurado: degradação graciosa. Loga e aponta o canal
+    #    nativo (Pipeline emails). NÃO é erro — é o modo padrão do ambiente.
+    - |
+      if [ -z "$NOTIFY_WEBHOOK_URL" ]; then
+        echo "NOTIFY_WEBHOOK_URL ausente — notificacao por webhook desativada."
+        echo "Canal nativo: GitLab → Settings → Integrations → 'Pipeline emails'"
+        echo "entrega este resultado por e-mail sem SMTP do projeto (ver ADR-0010)."
+        exit 0
+      fi
+    # 3) Com webhook: POST do payload JSON. --fail-with-body deixa o job AMARELO
+    #    (allow_failure) se o endpoint recusar, sem mascarar nem quebrar nada.
+    - echo "Enviando notificacao para o webhook configurado (NOTIFY_WEBHOOK_URL)…"
+    - 'curl -s --show-error --fail-with-body --request POST --header "Content-Type: application/json" --data @notify-payload.json "$NOTIFY_WEBHOOK_URL"'
+    - echo "Notificacao enviada."
+  artifacts:
+    # Rastro auditável do que foi (ou seria) notificado.
+    paths:
+      - notify-message.txt
+      - notify-payload.json
+    when: always
+    expire_in: 7 days
