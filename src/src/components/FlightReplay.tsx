@@ -9,20 +9,13 @@ import { AnomalyLog } from '@/components/AnomalyLog';
 import { FlightSummary } from '@/components/FlightSummary';
 import { detectAnomalies } from '@/lib/anomaly-detection';
 import type { LoggedAnomaly } from '@/lib/anomaly-detection';
-import type { FlightScenario } from '@/components/ScenarioSelector';
+import { AlertTriangle, Radio } from 'lucide-react';
+import {
+  DEFAULT_SCENARIO,
+  getScenario,
+  type FlightScenario,
+} from '@/lib/flight-scenarios';
 import { cn } from '@/lib/utils';
-
-import motorFailureJson from '@/data/flight-telemetry.json';
-import normalJson from '@/data/flight-telemetry-normal.json';
-import vibrationJson from '@/data/flight-telemetry-vibration.json';
-import batteryJson from '@/data/flight-telemetry-battery.json';
-
-const SCENARIO_DATA: Record<FlightScenario, FlightTelemetryData> = {
-  motor_failure: motorFailureJson as unknown as FlightTelemetryData,
-  normal: normalJson as unknown as FlightTelemetryData,
-  vibration: vibrationJson as unknown as FlightTelemetryData,
-  battery: batteryJson as unknown as FlightTelemetryData,
-};
 
 interface FlightReplayProps {
   scenario?: FlightScenario;
@@ -30,7 +23,9 @@ interface FlightReplayProps {
 
 let anomalyIdCounter = 0;
 
-export function FlightReplay({ scenario = 'motor_failure' }: FlightReplayProps) {
+export function FlightReplay({ scenario = DEFAULT_SCENARIO }: FlightReplayProps) {
+  const activeScenario = getScenario(scenario);
+  const isSynthetic = activeScenario.kind === 'synthetic';
   const [data, setData] = useState<FlightTelemetryData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [prevScenario, setPrevScenario] = useState<FlightScenario>(scenario);
@@ -48,7 +43,7 @@ export function FlightReplay({ scenario = 'motor_failure' }: FlightReplayProps) 
 
   useEffect(() => {
     try {
-      setData(SCENARIO_DATA[scenario]);
+      setData(getScenario(scenario).data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load telemetry data');
     }
@@ -145,8 +140,48 @@ export function FlightReplay({ scenario = 'motor_failure' }: FlightReplayProps) 
     );
   }
 
+  // Texto do aviso sintético: distingue o fallback do cenário primário (log real
+  // ainda não publicado) de um cenário deliberadamente simulado.
+  const syntheticLabel = scenario === 'real' ? 'DADO SINTÉTICO' : 'CENÁRIO SIMULADO';
+
   return (
     <div className="space-y-4">
+      {/* Banner de procedência: deixa explícito se é a missão REAL do SITL ou
+          uma fixture sintética — aderência, sem efeito 'voo real' no simulado. */}
+      <div
+        className={cn(
+          'brutal-card p-3 flex items-center gap-3 flex-wrap border-[3px]',
+          isSynthetic ? 'border-[#b45309]' : 'border-[#15803d]',
+        )}
+        style={{
+          fontFamily: "'Space Mono', monospace",
+          backgroundColor: isSynthetic ? '#fffbeb' : '#f0fdf4',
+        }}
+        role={isSynthetic ? 'alert' : undefined}
+      >
+        {isSynthetic ? (
+          <AlertTriangle className="w-5 h-5 shrink-0" style={{ color: '#b45309' }} />
+        ) : (
+          <Radio className="w-5 h-5 shrink-0" style={{ color: '#15803d' }} />
+        )}
+        <span
+          className="text-xs font-black uppercase tracking-tight"
+          style={{ color: isSynthetic ? '#b45309' : '#15803d' }}
+        >
+          {isSynthetic ? syntheticLabel : 'MISSÃO REAL (SITL)'}
+        </span>
+        <span className="text-[11px] font-bold uppercase tracking-tight text-gray-600">
+          {isSynthetic
+            ? 'Telemetria gerada — não representa voo real'
+            : 'Telemetria do log .ulg da missão square_50m'}
+        </span>
+        {data && (
+          <span className="text-[11px] font-bold tabular-nums text-gray-500 ml-auto">
+            {data.metadata.mission_name} · {data.metadata.airframe} · {data.metadata.total_points} pts
+          </span>
+        )}
+      </div>
+
       <div
         className="brutal-card p-4 flex items-center gap-4 flex-wrap"
         style={{ fontFamily: "'Space Mono', monospace" }}
