@@ -79,7 +79,9 @@ class GatesReport:
 
 def _parse_coverage_xml(path: Path) -> float:
     """Lê coverage.xml (formato Cobertura) e retorna line-rate (0.0-1.0)."""
-    tree = ET.parse(path)
+    # coverage.xml é gerado pelo pytest-cov no próprio pipeline (fonte confiável,
+    # não input externo) — risco de entidade externa/XML bomb não se aplica aqui.
+    tree = ET.parse(path)  # nosemgrep: python.lang.security.use-defused-xml-parse.use-defused-xml-parse
     root = tree.getroot()
     line_rate = root.attrib.get("line-rate")
     if line_rate is None:
