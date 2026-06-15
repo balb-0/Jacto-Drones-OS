@@ -6,17 +6,20 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { Card, MetricCard } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
-import { 
-  fetchBuildMetrics, 
+import {
+  fetchBuildMetrics,
   fetchTestDefectMetrics,
   fetchCycleTimeMetrics,
   fetchThroughputMetrics,
   fetchBacklogHealthMetrics
 } from '@/services/metrics';
-import { 
-  Zap, 
-  TrendingUp, 
-  CheckCircle, 
+import { fetchPipelineSnapshot } from '@/services/pipeline';
+import { PipelineStatus } from '@/components/PipelineStatus';
+import type { PipelineSnapshot } from '@/types/pipeline';
+import {
+  Zap,
+  TrendingUp,
+  CheckCircle,
   Clock,
   ArrowRight,
   GitBranch,
@@ -33,19 +36,23 @@ export default function HomePage() {
     backlogHealth: 0,
     integrationUptime: 0,
   });
+  const [pipeline, setPipeline] = useState<PipelineSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [build, test, cycle, throughput, backlog] = await Promise.all([
-          fetchBuildMetrics(),
-          fetchTestDefectMetrics(),
-          fetchCycleTimeMetrics(),
-          fetchThroughputMetrics(),
-          fetchBacklogHealthMetrics(),
-        ]);
+        const [build, test, cycle, throughput, backlog, pipelineSnap] =
+          await Promise.all([
+            fetchBuildMetrics(),
+            fetchTestDefectMetrics(),
+            fetchCycleTimeMetrics(),
+            fetchThroughputMetrics(),
+            fetchBacklogHealthMetrics(),
+            fetchPipelineSnapshot(),
+          ]);
 
+        setPipeline(pipelineSnap);
         setMetrics({
           buildSuccess: build.successRate,
           testPassRate: (test.passedTests / test.totalTests) * 100,
@@ -115,6 +122,9 @@ export default function HomePage() {
             RELATÓRIO COMPLETO
           </motion.button>
         </div>
+
+        {/* Status do pipeline — snapshot REAL do ultimo run (TG5.1) */}
+        {pipeline && <PipelineStatus snapshot={pipeline} />}
 
         {/* Top Level Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

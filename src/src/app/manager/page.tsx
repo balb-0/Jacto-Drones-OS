@@ -6,6 +6,8 @@ import { Card, MetricCard } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import { fetchAllManagerMetrics } from '@/services/manager';
+import { fetchPipelineSnapshot } from '@/services/pipeline';
+import { ConsolidatedPanel } from '@/components/ConsolidatedPanel';
 import type {
   TeamMemberMetrics,
   AnomalyDetection,
@@ -13,6 +15,7 @@ import type {
   ProcessMetrics,
   DoraMetricsReal,
 } from '@/types/metrics';
+import type { PipelineSnapshot } from '@/types/pipeline';
 import {
   AlertTriangle,
   AlertOctagon,
@@ -49,18 +52,23 @@ export default function ManagerPage() {
   >([]);
   const [process, setProcess] = useState<ProcessMetrics | null>(null);
   const [dora, setDora] = useState<DoraMetricsReal | null>(null);
+  const [pipeline, setPipeline] = useState<PipelineSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const data = await fetchAllManagerMetrics();
+        const [data, pipelineSnap] = await Promise.all([
+          fetchAllManagerMetrics(),
+          fetchPipelineSnapshot(),
+        ]);
         setTeamMembers(data.teamMembers);
         setBottlenecks(data.bottlenecks);
         setThresholdAnomalies(data.thresholdAnomalies);
         setStatisticalAnomalies(data.statisticalAnomalies);
         setProcess(data.process);
         setDora(data.dora);
+        setPipeline(pipelineSnap);
       } finally {
         setLoading(false);
       }
@@ -142,6 +150,12 @@ export default function ManagerPage() {
             </div>
           </div>
         </div>
+
+        {/* "UM LUGAR SO" — visao consolidada (DORA + gates + anomalias +
+            deploys) com trilha de auditoria por numero (TG5.3) */}
+        {dora && pipeline && (
+          <ConsolidatedPanel dora={dora} snapshot={pipeline} />
+        )}
 
         {/* DORA & PROCESSO — dados REAIS coletados da API GitLab */}
         {dora && process && (

@@ -34,14 +34,43 @@ unit-tests:
     expire_in: 30 days
 
 # Missão SITL real → metrics.json → testes de integração (invariantes + baseline).
+#
+# parallel:matrix (ADR-0011 — prova de conceito multi-cliente): o MESMO firmware
+# (mesmo build PX4/imagem/PX4_TAG) roda a missão de cada "cliente"; cada execução
+# extrai um artefato distinto reports/metrics-$CLIENTE.json do seu próprio .ulg
+# real. CLIENTE/MISSION andam juntos na matrix porque o arquivo de missão de cada
+# cliente tem nome próprio. NÃO é multi-tenancy real — ver docs/decisoes/0011.
+# O cliente CANÔNICO (jacto_ref) roda a missão ORIGINAL square_50m, p/ a qual os
+# gates/tests-sitl são calibrados, e é dele que sai o metrics.json do gate; os
+# demais (cliente_a/_b) são demonstrativos não-canônicos (não alimentam o gate).
 sitl-mission-metrics:
   stage: test
   image: px4io/px4-dev-simulation-jammy:2024-05-18
   timeout: 55m
+  parallel:
+    matrix:
+      # Cliente de REFERÊNCIA (canônico): roda a missão ORIGINAL square_50m, para
+      # a qual os thresholds de quality_gates/tests-sitl são calibrados (50m/10m/
+      # 5m/s; baseline do spike: dur ~79s, std ~0.69m). É ele quem gera o
+      # reports/metrics.json (gate) e o flight-telemetry.json canônicos.
+      - CLIENTE: jacto_ref
+        MISSION: missions/square_50m.yaml
+      # Clientes DEMONSTRATIVOS (não-canônicos): mostram a matrix multi-cliente
+      # (ADR-0011) com missões próprias; geram só metrics-$CLIENTE.json sufixado,
+      # NÃO alimentam o gate (suas missões têm geometria/altitude diferentes).
+      - CLIENTE: cliente_a
+        MISSION: missions/cliente_a/talhao_grande_60m.yaml
+      - CLIENTE: cliente_b
+        MISSION: missions/cliente_b/talhao_pequeno_35m.yaml
   variables:
     CCACHE_DIR: "$CI_PROJECT_DIR/.ccache"
     HEADLESS: "1"
     PX4_TAG: "v1.16.2"
+    # Cliente de referência: sua execução (missão square_50m) também publica o
+    # reports/metrics.json canônico (sem sufixo) e o flight-telemetry.json, para
+    # os consumidores existentes (quality-gates, mr-kpis, Flight Replay) seguirem
+    # inalterados — preserva o contrato de artefato E a calibração do gate.
+    CANONICAL_CLIENTE: jacto_ref
   cache:
     key: px4-sitl-v1162
     paths: [.ccache/]
@@ -60,28 +89,40 @@ sitl-mission-metrics:
     - '"$SB" -p 50051 "udp://:14540" >/tmp/mavsdk_server.log 2>&1 &'
     - 'for i in $(seq 1 20); do pgrep -x mavsdk_server >/dev/null 2>&1 && { echo "mavsdk_server vivo"; break; }; sleep 1; done'
     - 'pgrep -x mavsdk_server >/dev/null 2>&1 || { echo "ERRO: mavsdk_server nao subiu"; tail -30 /tmp/mavsdk_server.log; exit 1; }'
-    - 'echo "### [5/6] missão square_50m → .ulg → metrics.json + flight-telemetry.json"'
-    - 'PYTHONPATH=. python3 scripts/run_mission.py --mission missions/square_50m.yaml --system-address "udp://:14540"'
+    - 'echo "### [5/6] missão $CLIENTE ($MISSION) → .ulg → metrics-$CLIENTE.json"'
+    - 'PYTHONPATH=. python3 scripts/run_mission.py --mission "$MISSION" --system-address "udp://:14540"'
     - 'ULG=$(find px4src/build/px4_sitl_default/rootfs/log -name "*.ulg" 2>/dev/null | sort | tail -1); echo "ULG=$ULG"'
     - '[ -n "$ULG" ] || { echo "ERRO: nenhum .ulg gerado — missao nao completou"; tail -50 /tmp/px4.log; exit 1; }'
-    # Uma só leitura do .ulg gera os KPIs (metrics.json, p/ o gate) E a série
-    # temporal real (flight-telemetry.json, p/ o Flight Replay no front).
-    - 'PYTHONPATH=. python3 scripts/extract_metrics.py --ulog "$ULG" --output reports/metrics.json --telemetry-output reports/flight-telemetry.json --mission-name square_50m'
-    - 'echo "--- metrics.json ---"; cat reports/metrics.json'
-    - 'python3 -c "import json; m=json.load(open(''reports/metrics.json'')); assert m[''max_altitude_m'']>0 and m[''n_samples'']>0, ''metrics degenerado: missao nao voou''; print(''metrics.json valido'')"'
-    # Guard anti-falso-verde da série: telemetria precisa ter pontos reais.
-    - 'python3 -c "import json; t=json.load(open(''reports/flight-telemetry.json'')); n=t[''metadata''][''total_points'']; assert n>0 and len(t[''points''])==n, ''flight-telemetry degenerado: missao nao gerou serie''; print(f''flight-telemetry.json valido ({n} pontos)'')"'
-    # Expõe a série real ao front pelo mesmo caminho dos dados versionados
-    # (src/src/data/*.json importados estaticamente pelo FlightReplay).
-    - 'mkdir -p src/src/data && cp reports/flight-telemetry.json src/src/data/flight-telemetry.json'
-    - 'echo "### [6/6] testes SITL (invariantes + baseline) sobre metrics.json"'
-    - 'METRICS_JSON=reports/metrics.json PYTHONPATH=. pytest tests/sitl -v'
+    # O cliente de referência (canônico) extrai, na MESMA leitura do .ulg, os KPIs
+    # (metrics.json, p/ o gate) E a série temporal real (flight-telemetry.json, p/
+    # o Flight Replay no front). Os demais clientes geram só o metrics sufixado.
+    - 'if [ "$CLIENTE" = "$CANONICAL_CLIENTE" ]; then
+         PYTHONPATH=. python3 scripts/extract_metrics.py --ulog "$ULG" --output "reports/metrics-$CLIENTE.json" --telemetry-output reports/flight-telemetry.json --mission-name square_50m;
+       else
+         PYTHONPATH=. python3 scripts/extract_metrics.py --ulog "$ULG" --output "reports/metrics-$CLIENTE.json";
+       fi'
+    - 'echo "--- metrics-$CLIENTE.json ---"; cat "reports/metrics-$CLIENTE.json"'
+    - 'python3 -c "import json,os; m=json.load(open(f\"reports/metrics-{os.environ[''CLIENTE'']}.json\")); assert m[''max_altitude_m'']>0 and m[''n_samples'']>0, ''metrics degenerado: missao nao voou''; print(''metrics valido'')"'
+    - 'echo "### [6/6] testes SITL (invariantes + baseline) sobre metrics-$CLIENTE.json"'
+    - 'METRICS_JSON="reports/metrics-$CLIENTE.json" PYTHONPATH=. pytest tests/sitl -v'
+    # Cliente de referência também publica metrics.json canônico (sem sufixo):
+    # quality-gates/mr-kpis seguem lendo reports/metrics.json sem alteração.
+    # Além do metrics, expõe a série real ao front pelo mesmo caminho dos dados
+    # versionados (src/src/data/*.json importados estaticamente pelo FlightReplay).
+    - 'if [ "$CLIENTE" = "$CANONICAL_CLIENTE" ]; then
+         cp "reports/metrics-$CLIENTE.json" reports/metrics.json; echo "metrics.json canonico <- $CLIENTE";
+         python3 -c "import json; t=json.load(open(''reports/flight-telemetry.json'')); n=t[''metadata''][''total_points'']; assert n>0 and len(t[''points''])==n, ''flight-telemetry degenerado: missao nao gerou serie''; print(f''flight-telemetry.json valido ({n} pontos)'')";
+         mkdir -p src/src/data && cp reports/flight-telemetry.json src/src/data/flight-telemetry.json;
+       fi'
   after_script:
     # cleanup garantido mesmo se os testes falharem (não fica no script[])
     - 'pkill -x px4 2>/dev/null || true; pkill -x mavsdk_server 2>/dev/null || true; pkill -f jmavsim 2>/dev/null || true'
   artifacts:
     when: always
     paths:
+      # um artefato distinto por cliente da matrix (metrics-cliente_a.json, …)
+      - reports/metrics-$CLIENTE.json
+      # metrics.json canônico (existe só na execução do cliente de referência)
       - reports/metrics.json
       - reports/flight-telemetry.json
       - src/src/data/flight-telemetry.json
