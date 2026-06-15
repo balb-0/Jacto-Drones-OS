@@ -158,9 +158,8 @@ semgrep:
     - 'echo "### [1/2] scan informativo (todas as severidades) — visivel no log, nao bloqueia"'
     # Passo informativo: reporta WARNING/INFO sem derrubar o job (|| true). Dá
     # visibilidade ao baseline de ruído sem transformá-lo em falso-vermelho.
-    - semgrep scan --config "$SEMGREP_RULES" --no-suppress-errors || true
+    - semgrep scan --config "$SEMGREP_RULES" || true
     - 'echo "### [2/2] gate: bloqueia so em severidade alta (--severity ERROR --error)"'
     # Passo bloqueante: --severity ERROR roda só as regras de severidade alta;
     # --error faz o exit code ser !=0 quando há achado → reprova o merge.
-    - semgrep scan --config "$SEMGREP_RULES" --severity ERROR --error --no-suppress-errors
-  # SEM allow_failure (default false) ⇒ BLOQUEANTE. O gate efetivo é o passo [2/2].
+    - semgrep scan --config "$SEMGREP_RULES" --severity ERROR --error  # SEM allow_failure (default false) ⇒ BLOQUEANTE. O gate efetivo é o passo [2/2].
