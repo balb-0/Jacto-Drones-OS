@@ -14,6 +14,9 @@ NOSSO `quality_gates.yaml` (TG6.1) e às restrições da instância GitLab:
   `sast.require_passed`. `false` ⇒ gate "skipped" (passa); `true` ⇒ exige um
   relatório SAST (leitura preparada via --sast-report, mas hoje é skip — o
   runner sonar-00 entra na Sprint 4 / TG5).
+- anomalies → (TG2) lê anomalies.json (job ci/anomaly.yml, regras portadas do
+  dashboard) e REPROVA se houver anomalia CRITICAL. Só entra se --anomalies for
+  informado; WARNING é informativo (não trava).
 
 Saída: exit code 0 se todos os gates passam, != 0 se qualquer um falha.
 Imprime relatório em markdown (reaproveitado no comentário do MR — TG6.4) e,
@@ -25,6 +28,7 @@ Uso:
         --metrics reports/metrics.json \\
         --coverage coverage.xml \\
         [--sast-report reports/sast.json] \\
+        [--anomalies anomalies.json] \\
         [--output reports/quality_gates_result.json]
 
 NÃO usa needs: no CI — herda coverage.xml + reports/metrics.json dos stages
@@ -174,6 +178,54 @@ def check_mission_metrics(metrics_json: Path, gates: dict[str, float]) -> list[G
 
 
 # --------------------------------------------------------------------------- #
+# Anomaly gate — reprova se houver anomalia CRITICAL em anomalies.json (TG2)
+# --------------------------------------------------------------------------- #
+
+
+def check_anomalies(anomalies_json: Path) -> GateResult:
+    """Gate de anomalias: reprova (passed=False) se houver CRITICAL.
+
+    Lê anomalies.json (lista produzida por scripts/detect_anomalies.py — TG2,
+    job ci/anomaly.yml). Cada item tem `severity` em {'CRITICAL','WARNING'}.
+    Regra: WARNING é informativo (não trava); CRITICAL bloqueia o merge.
+
+    Fail-closed: arquivo ausente/inválido reprova o gate (como coverage/metrics)
+    — anomalies.json é entrada obrigatória do gate, não pode sumir em silêncio.
+    """
+    if not anomalies_json.is_file():
+        return GateResult(
+            name="anomalies.no_critical",
+            passed=False,
+            actual=None,
+            threshold=0,
+            message=f"anomalies.json não encontrado: {anomalies_json}",
+        )
+    try:
+        anomalies = json.loads(anomalies_json.read_text())
+    except (json.JSONDecodeError, OSError) as exc:
+        return GateResult(
+            name="anomalies.no_critical",
+            passed=False,
+            actual=None,
+            threshold=0,
+            message=f"anomalies.json inválido: {exc}",
+        )
+    n_critical = sum(1 for a in anomalies if a.get("severity") == "CRITICAL")
+    n_warning = sum(1 for a in anomalies if a.get("severity") == "WARNING")
+    passed = n_critical == 0
+    return GateResult(
+        name="anomalies.no_critical",
+        passed=passed,
+        actual=n_critical,
+        threshold=0,
+        message=(
+            f"{n_critical} anomalia(s) CRITICAL (+{n_warning} WARNING informativa) "
+            f"{'≤' if passed else '>'} threshold 0"
+        ),
+    )
+
+
+# --------------------------------------------------------------------------- #
 # SAST gate — chave sast.require_passed (Sonar entra na Sprint 4 / TG5)
 # --------------------------------------------------------------------------- #
 
@@ -233,6 +285,7 @@ def evaluate(
     metrics_json: Path,
     coverage_xml: Path,
     sast_report: Path | None = None,
+    anomalies_json: Path | None = None,
 ) -> GatesReport:
     config = yaml.safe_load(gates_yaml.read_text())
     results: list[GateResult] = []
@@ -244,6 +297,11 @@ def evaluate(
     metrics_config = config.get("mission_metrics", {})
     if metrics_config:
         results.extend(check_mission_metrics(metrics_json, metrics_config))
+
+    # Gate de anomalias (TG2): só entra quando --anomalies é informado. Reprova
+    # se houver anomalia CRITICAL no anomalies.json (job ci/anomaly.yml).
+    if anomalies_json is not None:
+        results.append(check_anomalies(anomalies_json))
 
     sast_config = config.get("sast", {})
     results.append(
@@ -279,10 +337,13 @@ def main() -> None:
     p.add_argument("--metrics", required=True, type=Path)
     p.add_argument("--coverage", required=True, type=Path)
     p.add_argument("--sast-report", type=Path, help="relatório SAST (usado se require_passed=true)")
+    p.add_argument("--anomalies", type=Path, help="anomalies.json (TG2); reprova se houver CRITICAL")
     p.add_argument("--output", type=Path, help="path pra JSON estruturado opcional")
     args = p.parse_args()
 
-    report = evaluate(args.gates, args.metrics, args.coverage, args.sast_report)
+    report = evaluate(
+        args.gates, args.metrics, args.coverage, args.sast_report, args.anomalies
+    )
 
     print(_format_report(report))
 
