@@ -47,20 +47,25 @@ const batteryData = batteryJson as unknown as FlightTelemetryData;
 // Assinatura das fixtures sintéticas geradas por generate_telemetry.py:
 // nome de missão sufixado pelo cenário e 200 amostras a 2.5 Hz. A missão real
 // (square_50m) tem milhares de amostras e nome sem esse sufixo.
-const SYNTHETIC_NAME_RE = /_(motor_failure|normal|vibration|battery)$/;
+const SYNTHETIC_NAME_RE = /_(motor_failure|normal|vibration|battery_degradation)$/;
 const SYNTHETIC_POINTS = 200;
 const SYNTHETIC_SAMPLE_RATE_HZ = 2.5;
+// Missão real do SITL é decimada para ~1500 pontos; fixtures sintéticas têm 200.
+const REAL_POINTS_MIN = 500;
 
 /**
  * Heurística: o flight-telemetry.json ainda é o placeholder sintético (pipeline
- * não publicou o log real)? Conservadora — só marca sintético quando casa a
- * assinatura conhecida das fixtures; qualquer log com outra cara é tratado como
- * real.
+ * não publicou o log real)? Sinal primário é a densidade da série — a missão
+ * real tem ~1500 pontos. Para séries curtas, confirma a assinatura das fixtures
+ * de generate_telemetry.py (nome sufixado pelo cenário OU 200 pts @ 2.5 Hz).
  */
 export function isPlaceholderTelemetry(data: FlightTelemetryData): boolean {
   const meta = data.metadata;
-  if (SYNTHETIC_NAME_RE.test(meta.mission_name)) return true;
-  return meta.total_points === SYNTHETIC_POINTS && meta.sample_rate_hz === SYNTHETIC_SAMPLE_RATE_HZ;
+  if (meta.total_points > REAL_POINTS_MIN) return false;
+  return (
+    SYNTHETIC_NAME_RE.test(meta.mission_name) ||
+    (meta.total_points === SYNTHETIC_POINTS && meta.sample_rate_hz === SYNTHETIC_SAMPLE_RATE_HZ)
+  );
 }
 
 /** true quando o cenário primário está servindo a fixture sintética de fallback. */
