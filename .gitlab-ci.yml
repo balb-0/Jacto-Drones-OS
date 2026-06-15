@@ -18,6 +18,7 @@ stages:
   - sast       # secrets + SAST (ci/sast.yml — @Lucca)
   - gate       # quality gates obrigatórios (ci/quality-gates.yml — @Fernando)
   - deploy     # promoção por ambiente + release (ci/deploy.yml — @Vitor)
+  - notify     # notificação do resultado do pipeline (ci/notify.yml — @Kauan)
 
 include:
   # Glob: inclui todos os fragmentos por concern que EXISTIREM em ci/ — cada

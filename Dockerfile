@@ -15,4 +15,6 @@ COPY --from=build /app/src ./src
 COPY --from=build /app/package*.json ./
 
 EXPOSE 3000
+# Roda como usuário não-root (boa prática de segurança — finding do SAST/semgrep).
+USER node
 CMD ["node", "src/core/index.js"] # Exemplo de ponto de entrada

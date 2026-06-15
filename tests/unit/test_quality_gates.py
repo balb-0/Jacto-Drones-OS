@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 
 from scripts.quality_gates import (
+    check_anomalies,
     check_coverage,
     check_mission_metrics,
     check_sast,
@@ -119,6 +120,73 @@ def test_sast_exige_relatorio_quando_require_passed_true(tmp_path):
 
 
 # --------------------------------------------------------------------------- #
+# Anomaly gate (TG2) — reprova se houver anomalia CRITICAL em anomalies.json
+# --------------------------------------------------------------------------- #
+
+
+def _write_anomalies(path: Path, anomalies: list) -> Path:
+    # Contrato {_meta, anomalies} que o front consome e o gate lê (.anomalies).
+    contract = {
+        "_meta": {
+            "contrato": "TG2 — anomalias do run SITL",
+            "estado": "real",
+            "nota": "fixture de teste",
+            "fonte_prevista": "reports/anomalies.json",
+            "gerado_de": "flight-telemetry.json",
+            "n_anomalias": len(anomalies),
+        },
+        "anomalies": anomalies,
+    }
+    path.write_text(json.dumps(contract))
+    return path
+
+
+def test_anomalies_passa_sem_critical(tmp_path):
+    # lista vazia (missão limpa) ⇒ passa.
+    a = _write_anomalies(tmp_path / "anomalies.json", [])
+    r = check_anomalies(a)
+    assert r.passed, f"anomalies vazio deveria passar, veio {r.message}"
+    assert r.actual == 0, f"actual deveria ser 0 CRITICAL, veio {r.actual}"
+
+
+def test_anomalies_warning_nao_reprova(tmp_path):
+    # WARNING é informativo — não trava o gate.
+    a = _write_anomalies(
+        tmp_path / "anomalies.json",
+        [{"type": "PWM DIVERGENCE", "severity": "WARNING", "timestamp_ms": 10}],
+    )
+    r = check_anomalies(a)
+    assert r.passed, f"só WARNING não deveria reprovar, veio {r.message}"
+
+
+def test_anomalies_critical_reprova(tmp_path):
+    # uma anomalia CRITICAL ⇒ reprova (bloqueia o merge).
+    a = _write_anomalies(
+        tmp_path / "anomalies.json",
+        [{"type": "VIBRATION SPIKE", "severity": "CRITICAL", "timestamp_ms": 10400}],
+    )
+    r = check_anomalies(a)
+    assert not r.passed, "anomalia CRITICAL deveria reprovar o gate"
+    assert r.actual == 1, f"actual deveria contar 1 CRITICAL, veio {r.actual}"
+
+
+def test_anomalies_arquivo_ausente_reprova(tmp_path):
+    # fail-closed: anomalies.json é entrada obrigatória do gate (não pode sumir).
+    r = check_anomalies(tmp_path / "nao-existe.json")
+    assert not r.passed, "anomalies.json ausente deveria reprovar (fail-closed)"
+    assert r.actual is None, "actual deveria ser None quando arquivo ausente"
+
+
+def test_anomalies_contrato_invalido_reprova(tmp_path):
+    # fail-closed: lista nua (contrato antigo, sem {_meta, anomalies}) reprova.
+    p = tmp_path / "anomalies.json"
+    p.write_text(json.dumps([{"type": "X", "severity": "WARNING", "timestamp_ms": 1}]))
+    r = check_anomalies(p)
+    assert not r.passed, "anomalies.json fora do contrato deveria reprovar (fail-closed)"
+    assert r.actual is None, "actual deveria ser None quando contrato inválido"
+
+
+# --------------------------------------------------------------------------- #
 # Falha graciosa: arquivo de entrada ausente
 # --------------------------------------------------------------------------- #
 
@@ -156,3 +224,28 @@ def test_evaluate_falha_quando_coverage_baixa(tmp_path):
     metrics = _write_metrics(tmp_path / "metrics.json")
     report = evaluate(gates, metrics, cov)
     assert not report.all_passed, "coverage 10% deveria reprovar o conjunto"
+
+
+def test_evaluate_com_anomalia_critical_reprova_conjunto(tmp_path):
+    # contrato verde + anomalies.json com CRITICAL ⇒ o conjunto reprova (TG2).
+    gates = Path("quality_gates.yaml")
+    cov = _write_coverage(tmp_path / "coverage.xml", 0.98)
+    metrics = _write_metrics(tmp_path / "metrics.json")
+    anomalies = _write_anomalies(
+        tmp_path / "anomalies.json",
+        [{"type": "VIBRATION SPIKE", "severity": "CRITICAL", "timestamp_ms": 10400}],
+    )
+    report = evaluate(gates, metrics, cov, anomalies_json=anomalies)
+    assert not report.all_passed, "anomalia CRITICAL deveria reprovar o conjunto"
+    assert report.summary.startswith("5/6"), f"esperava 5/6 com anomalia, veio {report.summary}"
+
+
+def test_evaluate_com_anomalies_limpo_segue_verde(tmp_path):
+    # contrato verde + anomalies.json sem CRITICAL ⇒ 6/6 (gate de anomalia entra).
+    gates = Path("quality_gates.yaml")
+    cov = _write_coverage(tmp_path / "coverage.xml", 0.98)
+    metrics = _write_metrics(tmp_path / "metrics.json")
+    anomalies = _write_anomalies(tmp_path / "anomalies.json", [])
+    report = evaluate(gates, metrics, cov, anomalies_json=anomalies)
+    assert report.all_passed, f"anomalies limpo deveria seguir verde: {report.summary}"
+    assert report.summary.startswith("6/6"), f"esperava 6/6, veio {report.summary}"

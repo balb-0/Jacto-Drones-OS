@@ -556,7 +556,7 @@ def main() -> int:
         print(f"  ✓ {path.name}  ({file_size / 1024:.1f} KB)")
 
         if file_size > 100 * 1024:
-            print(f"  ⚠ Warning: exceeds 100KB limit!")
+            print("  ⚠ Warning: exceeds 100KB limit!")
             all_ok = False
 
     if all_ok:
