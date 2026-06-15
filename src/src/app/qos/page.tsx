@@ -10,6 +10,7 @@ import type { QoSIndicator, QoSSnapshot } from '@/types/mission';
 import { getProtocol } from '@/data/qos-protocol';
 import { Activity, Gauge, Timer, CheckCircle2, AlertTriangle, Info, Play } from 'lucide-react';
 import { FlightReplay } from '@/components/FlightReplay';
+import { AnomalyEvidenceLog } from '@/components/AnomalyEvidenceLog';
 import { ScenarioSelector, type FlightScenario } from '@/components/ScenarioSelector';
 import { cn } from '@/lib/utils';
 
@@ -205,7 +206,16 @@ export default function QOSPage() {
             </div>
           </div>
           <ScenarioSelector selected={scenario} onChange={setScenario} />
-          <FlightReplay scenario={scenario} />
+          {/* Flight Replay + LOG DE ANOMALIAS (contrato TG2) lado a lado: o log
+              lista as anomalias do run com link direto p/ evidencia no GitLab. */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+            <div className="xl:col-span-2">
+              <FlightReplay scenario={scenario} />
+            </div>
+            <div className="xl:col-span-1">
+              <AnomalyEvidenceLog />
+            </div>
+          </div>
         </section>
 
         {/* Painéis legados (build/defeito/integração) — claramente PROJETADOS */}
