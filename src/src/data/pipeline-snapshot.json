@@ -73,5 +73,31 @@
       "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/39710"
     },
     "fonte": "evidence/raw/deployments.json — deployments status=success no ambiente staging."
-  }
+  },
+  "audit_refs": [
+    {
+      "kind": "pipeline",
+      "number": 39697,
+      "label": "Ultimo run develop",
+      "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/39697"
+    },
+    {
+      "kind": "merge_request",
+      "number": 36,
+      "label": "MR Sprint 4 → main (v0.4.0)",
+      "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/merge_requests/36"
+    },
+    {
+      "kind": "tag",
+      "number": "v0.4.0",
+      "label": "Release v0.4.0",
+      "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/tags/v0.4.0"
+    },
+    {
+      "kind": "pipeline",
+      "number": 39710,
+      "label": "Pipeline da release v0.4.0",
+      "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/39710"
+    }
+  ]
 }
