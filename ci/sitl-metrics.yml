@@ -40,12 +40,24 @@ unit-tests:
 # extrai um artefato distinto reports/metrics-$CLIENTE.json do seu próprio .ulg
 # real. CLIENTE/MISSION andam juntos na matrix porque o arquivo de missão de cada
 # cliente tem nome próprio. NÃO é multi-tenancy real — ver docs/decisoes/0011.
+# O cliente CANÔNICO (jacto_ref) roda a missão ORIGINAL square_50m, p/ a qual os
+# gates/tests-sitl são calibrados, e é dele que sai o metrics.json do gate; os
+# demais (cliente_a/_b) são demonstrativos não-canônicos (não alimentam o gate).
 sitl-mission-metrics:
   stage: test
   image: px4io/px4-dev-simulation-jammy:2024-05-18
   timeout: 55m
   parallel:
     matrix:
+      # Cliente de REFERÊNCIA (canônico): roda a missão ORIGINAL square_50m, para
+      # a qual os thresholds de quality_gates/tests-sitl são calibrados (50m/10m/
+      # 5m/s; baseline do spike: dur ~79s, std ~0.69m). É ele quem gera o
+      # reports/metrics.json (gate) e o flight-telemetry.json canônicos.
+      - CLIENTE: jacto_ref
+        MISSION: missions/square_50m.yaml
+      # Clientes DEMONSTRATIVOS (não-canônicos): mostram a matrix multi-cliente
+      # (ADR-0011) com missões próprias; geram só metrics-$CLIENTE.json sufixado,
+      # NÃO alimentam o gate (suas missões têm geometria/altitude diferentes).
       - CLIENTE: cliente_a
         MISSION: missions/cliente_a/talhao_grande_60m.yaml
       - CLIENTE: cliente_b
@@ -54,10 +66,11 @@ sitl-mission-metrics:
     CCACHE_DIR: "$CI_PROJECT_DIR/.ccache"
     HEADLESS: "1"
     PX4_TAG: "v1.16.2"
-    # Cliente de referência: sua execução também publica reports/metrics.json
-    # canônico (sem sufixo) para os consumidores existentes (quality-gates,
-    # mr-kpis) seguirem inalterados — preserva o contrato de artefato vigente.
-    CANONICAL_CLIENTE: cliente_a
+    # Cliente de referência: sua execução (missão square_50m) também publica o
+    # reports/metrics.json canônico (sem sufixo) e o flight-telemetry.json, para
+    # os consumidores existentes (quality-gates, mr-kpis, Flight Replay) seguirem
+    # inalterados — preserva o contrato de artefato E a calibração do gate.
+    CANONICAL_CLIENTE: jacto_ref
   cache:
     key: px4-sitl-v1162
     paths: [.ccache/]
