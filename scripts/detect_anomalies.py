@@ -13,7 +13,9 @@ pontos (`FlightTelemetryPoint`, dicts com as chaves do front) e devolve a lista
 de anomalias no MESMO shape do front (`{type, severity, timestamp_ms, variables}`,
 `variables = [{label, value}]`). O CLI lê `flight-telemetry.json` (a chave
 `.points` produzida por scripts/extract_metrics.py — parse_telemetry) e grava
-`anomalies.json` (lista, artefato consumido pelo gate — ci/anomaly.yml).
+`anomalies.json` no CONTRATO que o front consome (src/src/data/anomalies.json):
+OBJETO `{"_meta": {...}, "anomalies": [...]}` (não lista nua), consumido pelo
+gate (ci/anomaly.yml → quality_gates.check_anomalies, que lê `.anomalies`).
 
 Uso:
     python scripts/detect_anomalies.py \\
@@ -159,8 +161,27 @@ def main() -> None:
         len(anomalies) - n_critical,
     )
 
+    # Contrato alinhado ao que o front consome (src/src/data/anomalies.json,
+    # type AnomaliesContract): OBJETO {_meta, anomalies}, não lista nua. O _meta
+    # carrega a procedência (gerado_de, n_anomalias) E os campos que o
+    # AnomalyEvidenceLog lê (estado, fonte_prevista) — ver ADR-0009 / TG5.
+    contract = {
+        "_meta": {
+            "contrato": (
+                "TG2 — lista de anomalias do ultimo run da missao SITL "
+                "(formato {type, severity, timestamp_ms, variables})."
+            ),
+            "estado": "real",
+            "nota": "Gerado por scripts/detect_anomalies.py a partir da telemetria de voo.",
+            "fonte_prevista": "reports/anomalies.json — job detect-anomalies (ci/anomaly.yml)",
+            "gerado_de": str(args.input),
+            "n_anomalias": len(anomalies),
+        },
+        "anomalies": anomalies,
+    }
+
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(anomalies, indent=2, ensure_ascii=False) + "\n")
+    args.output.write_text(json.dumps(contract, indent=2, ensure_ascii=False) + "\n")
     LOG.info("gravou %s", args.output)
     sys.exit(0)
 
