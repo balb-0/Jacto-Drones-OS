@@ -125,7 +125,19 @@ def test_sast_exige_relatorio_quando_require_passed_true(tmp_path):
 
 
 def _write_anomalies(path: Path, anomalies: list) -> Path:
-    path.write_text(json.dumps(anomalies))
+    # Contrato {_meta, anomalies} que o front consome e o gate lê (.anomalies).
+    contract = {
+        "_meta": {
+            "contrato": "TG2 — anomalias do run SITL",
+            "estado": "real",
+            "nota": "fixture de teste",
+            "fonte_prevista": "reports/anomalies.json",
+            "gerado_de": "flight-telemetry.json",
+            "n_anomalias": len(anomalies),
+        },
+        "anomalies": anomalies,
+    }
+    path.write_text(json.dumps(contract))
     return path
 
 
@@ -163,6 +175,15 @@ def test_anomalies_arquivo_ausente_reprova(tmp_path):
     r = check_anomalies(tmp_path / "nao-existe.json")
     assert not r.passed, "anomalies.json ausente deveria reprovar (fail-closed)"
     assert r.actual is None, "actual deveria ser None quando arquivo ausente"
+
+
+def test_anomalies_contrato_invalido_reprova(tmp_path):
+    # fail-closed: lista nua (contrato antigo, sem {_meta, anomalies}) reprova.
+    p = tmp_path / "anomalies.json"
+    p.write_text(json.dumps([{"type": "X", "severity": "WARNING", "timestamp_ms": 1}]))
+    r = check_anomalies(p)
+    assert not r.passed, "anomalies.json fora do contrato deveria reprovar (fail-closed)"
+    assert r.actual is None, "actual deveria ser None quando contrato inválido"
 
 
 # --------------------------------------------------------------------------- #

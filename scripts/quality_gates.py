@@ -15,8 +15,9 @@ NOSSO `quality_gates.yaml` (TG6.1) e às restrições da instância GitLab:
   relatório SAST (leitura preparada via --sast-report, mas hoje é skip — o
   runner sonar-00 entra na Sprint 4 / TG5).
 - anomalies → (TG2) lê anomalies.json (job ci/anomaly.yml, regras portadas do
-  dashboard) e REPROVA se houver anomalia CRITICAL. Só entra se --anomalies for
-  informado; WARNING é informativo (não trava).
+  dashboard) no contrato {_meta, anomalies} e REPROVA se houver anomalia
+  CRITICAL na lista `.anomalies`. Só entra se --anomalies for informado; WARNING
+  é informativo (não trava).
 
 Saída: exit code 0 se todos os gates passam, != 0 se qualquer um falha.
 Imprime relatório em markdown (reaproveitado no comentário do MR — TG6.4) e,
@@ -185,12 +186,14 @@ def check_mission_metrics(metrics_json: Path, gates: dict[str, float]) -> list[G
 def check_anomalies(anomalies_json: Path) -> GateResult:
     """Gate de anomalias: reprova (passed=False) se houver CRITICAL.
 
-    Lê anomalies.json (lista produzida por scripts/detect_anomalies.py — TG2,
-    job ci/anomaly.yml). Cada item tem `severity` em {'CRITICAL','WARNING'}.
-    Regra: WARNING é informativo (não trava); CRITICAL bloqueia o merge.
+    Lê anomalies.json produzido por scripts/detect_anomalies.py (TG2, job
+    ci/anomaly.yml). CONTRATO alinhado ao front: OBJETO `{_meta, anomalies}` —
+    a lista de anomalias vem em `.anomalies` (não é mais lista nua). Cada item
+    tem `severity` em {'CRITICAL','WARNING'}. Regra: WARNING é informativo (não
+    trava); CRITICAL bloqueia o merge.
 
-    Fail-closed: arquivo ausente/inválido reprova o gate (como coverage/metrics)
-    — anomalies.json é entrada obrigatória do gate, não pode sumir em silêncio.
+    Fail-closed: arquivo ausente/inválido (ou sem a lista `.anomalies`) reprova o
+    gate (como coverage/metrics) — é entrada obrigatória, não some em silêncio.
     """
     if not anomalies_json.is_file():
         return GateResult(
@@ -201,7 +204,7 @@ def check_anomalies(anomalies_json: Path) -> GateResult:
             message=f"anomalies.json não encontrado: {anomalies_json}",
         )
     try:
-        anomalies = json.loads(anomalies_json.read_text())
+        data = json.loads(anomalies_json.read_text())
     except (json.JSONDecodeError, OSError) as exc:
         return GateResult(
             name="anomalies.no_critical",
@@ -209,6 +212,18 @@ def check_anomalies(anomalies_json: Path) -> GateResult:
             actual=None,
             threshold=0,
             message=f"anomalies.json inválido: {exc}",
+        )
+    anomalies = data.get("anomalies") if isinstance(data, dict) else None
+    if not isinstance(anomalies, list):
+        return GateResult(
+            name="anomalies.no_critical",
+            passed=False,
+            actual=None,
+            threshold=0,
+            message=(
+                "anomalies.json fora do contrato {_meta, anomalies}: "
+                f"sem lista '.anomalies' em {anomalies_json}"
+            ),
         )
     n_critical = sum(1 for a in anomalies if a.get("severity") == "CRITICAL")
     n_warning = sum(1 for a in anomalies if a.get("severity") == "WARNING")
