@@ -32,8 +32,13 @@ Uso:
         [--anomalies anomalies.json] \\
         [--output reports/quality_gates_result.json]
 
-NÃO usa needs: no CI — herda coverage.xml + reports/metrics.json dos stages
-anteriores por ordem de stage (evita DAG-bypass). Vide ci/quality-gates.yml.
+No CI o job `quality-gates` declara needs: EXPLÍCITO — porque o `anomalies.json`
+vem de `detect-anomalies`, IRMÃO no stage `gate` (ordem de stage não baixaria o
+artefato de um irmão). Como `needs` substitui o download implícito, ele relista
+também os produtores de coverage.xml/reports/metrics.json (unit-tests,
+sitl-mission-metrics). Não é DAG-bypass: os três já antecedem o gate por stage,
+então depender deles não antecipa nem contorna stage intermediário. Vide
+ci/quality-gates.yml e ADR-0009.
 """
 
 from __future__ import annotations
