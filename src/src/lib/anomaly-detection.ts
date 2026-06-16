@@ -30,10 +30,10 @@ export function detectAnomalies(point: FlightTelemetryPoint): Anomaly[] {
     });
   }
 
-  // Rule 2: PWM Divergence — max(pwm1-4) - min(pwm1-4) > 200μs
+  // Rule 2: PWM Divergence — max(pwm1-4) - min(pwm1-4) > 350μs (recalibrado p/ voo real)
   const pwms = [point.pwm1_us, point.pwm2_us, point.pwm3_us, point.pwm4_us];
   const pwmDiff = Math.max(...pwms) - Math.min(...pwms);
-  if (pwmDiff > 200) {
+  if (pwmDiff > 350) {
     anomalies.push({
       type: 'PWM DIVERGENCE',
       severity: 'WARNING',
@@ -47,9 +47,9 @@ export function detectAnomalies(point: FlightTelemetryPoint): Anomaly[] {
     });
   }
 
-  // Rule 3: Attitude Instability — abs(roll) > 15° OR abs(pitch) > 15°
+  // Rule 3: Attitude Instability — abs(roll) > 25° OR abs(pitch) > 25° (recalibrado p/ voo real)
   const { roll_deg, pitch_deg } = point;
-  if (Math.abs(roll_deg) > 15 || Math.abs(pitch_deg) > 15) {
+  if (Math.abs(roll_deg) > 25 || Math.abs(pitch_deg) > 25) {
     anomalies.push({
       type: 'ATTITUDE INSTABILITY',
       severity: 'CRITICAL',
@@ -60,8 +60,8 @@ export function detectAnomalies(point: FlightTelemetryPoint): Anomaly[] {
     });
   }
 
-  // Rule 4: Acceleration Spike — acceleration > 10 m/s²
-  if (point.acceleration_m_s2 > 10) {
+  // Rule 4: Acceleration Spike — acceleration > 18 m/s² (inclui gravidade ~9.8; recalibrado)
+  if (point.acceleration_m_s2 > 18) {
     anomalies.push({
       type: 'ACCELERATION SPIKE',
       severity: 'WARNING',
