@@ -1,18 +1,18 @@
 {
   "_meta": {
     "tipo": "snapshot",
-    "coletado_em": "2026-06-13",
+    "coletado_em": "2026-06-16",
     "fonte": "evidence/raw/pipelines.json + evidence/raw/deployments.json (API GitLab git.inteli.edu.br projeto 10705)",
     "nota": "SNAPSHOT versionado do ultimo run consolidado da esteira em develop. Nao e leitura ao vivo: reflete o pacote de evidencias comitado (reauditavel sem credencial via scripts/collect_gitlab_metrics.py --from-evidence). Gates/SAST espelham quality_gates.yaml + o estado documentado em ci/quality-gates.yml."
   },
   "last_run": {
-    "pipeline_id": 39697,
+    "pipeline_id": 40688,
     "ref": "develop",
-    "sha": "6d2a93790cd114171e32be9882348887c18e1d28",
+    "sha": "ade0085e6317c0614ba96ea0b585efdd54c7062d",
     "status": "success",
-    "created_at": "2026-06-13T02:50:12.786Z",
-    "updated_at": "2026-06-13T02:57:05.000Z",
-    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/39697"
+    "created_at": "2026-06-15T03:45:15.565Z",
+    "updated_at": "2026-06-15T03:57:00.161Z",
+    "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/40688"
   },
   "gates": {
     "verdict": "PASS",
@@ -51,53 +51,52 @@
     ]
   },
   "sast": {
-    "status": "informativo",
-    "require_passed": false,
+    "status": "bloqueante",
+    "require_passed": true,
     "fonte": "quality_gates.yaml secao sast (require_passed=false nesta sprint) + jobs ci/sast.yml (trufflehog, trivy-fs, gitleaks, semgrep).",
-    "scanners": ["trufflehog", "trivy-fs", "gitleaks", "semgrep"],
-    "nota": "SAST roda no stage sast (secrets + codigo). Bloqueante quando quality_gates.yaml sast.require_passed virar true."
+    "scanners": [
+      "trufflehog",
+      "trivy-fs",
+      "gitleaks",
+      "semgrep"
+    ],
+    "nota": "Semgrep BLOQUEANTE (sem allow_failure) no stage sast — achou e o grupo corrigiu 2 findings reais (Dockerfile sem USER nao-root; XML parse sem defusedxml). trufflehog/trivy-fs/gitleaks informativos (allow_failure)."
   },
   "anomalies": {
-    "count": 1,
-    "fonte": "src/data/anomalies.json (contrato TG2 — placeholder ate o anomalies.json real do job sitl-mission-metrics).",
-    "estado": "placeholder"
+    "count": 0,
+    "fonte": "src/data/anomalies.json (real — detect_anomalies.py sobre flight-telemetry square_50m; limiares recalibrados 2026-06-16 contra baseline real).",
+    "estado": "real"
   },
   "deploys": {
     "staging_success": 20,
     "total": 23,
     "ambiente": "staging",
     "ultimo_release": {
-      "tag": "v0.4.0",
-      "pipeline_id": 39710,
-      "status": "success",
-      "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/39710"
+      "tag": "v0.6.0",
+      "pipeline_id": 40692,
+      "status": "manual (jobs automaticos verdes; gate humano + deploy_prod aguardam aprovacao)",
+      "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/40692"
     },
     "fonte": "evidence/raw/deployments.json — deployments status=success no ambiente staging."
   },
   "audit_refs": [
     {
       "kind": "pipeline",
-      "number": 39697,
-      "label": "Ultimo run develop",
-      "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/39697"
+      "number": 40688,
+      "label": "Run develop (Sprint 4 verde: matrix 3x SITL + gate + anomalia + SAST)",
+      "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/40688"
     },
     {
       "kind": "merge_request",
-      "number": 36,
-      "label": "MR Sprint 4 → main (v0.4.0)",
-      "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/merge_requests/36"
+      "number": 43,
+      "label": "MR release Sprint 4 → main (v0.6.0)",
+      "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/merge_requests/43"
     },
     {
       "kind": "tag",
-      "number": "v0.4.0",
-      "label": "Release v0.4.0",
-      "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/tags/v0.4.0"
-    },
-    {
-      "kind": "pipeline",
-      "number": 39710,
-      "label": "Pipeline da release v0.4.0",
-      "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/pipelines/39710"
+      "number": "v0.6.0",
+      "label": "Release v0.6.0",
+      "web_url": "https://git.inteli.edu.br/graduacao/2026-1b/t13/g04/-/tags/v0.6.0"
     }
   ]
 }

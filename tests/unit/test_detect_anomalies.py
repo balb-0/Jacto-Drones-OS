@@ -46,8 +46,8 @@ def test_vibration_spike_critical():
 
 
 def test_pwm_divergence_warning():
-    # spread de PWM = 1750 - 1496 = 254 µs > 200 → PWM DIVERGENCE (WARNING).
-    anomalies = detect_anomalies([_point(pwm2_us=1750)])
+    # spread de PWM = 1900 - 1491 = 409 µs > 350 → PWM DIVERGENCE (WARNING).
+    anomalies = detect_anomalies([_point(pwm2_us=1900)])
     assert len(anomalies) == 1, f"esperava 1 anomalia, veio {len(anomalies)}"
     a = anomalies[0]
     assert a["type"] == "PWM DIVERGENCE", f"type {a['type']} != PWM DIVERGENCE"
@@ -55,8 +55,8 @@ def test_pwm_divergence_warning():
 
 
 def test_attitude_instability_warning():
-    # roll -22° (abs > 15°) → ATTITUDE INSTABILITY (WARNING).
-    anomalies = detect_anomalies([_point(roll_deg=-22.0)])
+    # roll -30° (abs > 25°) → ATTITUDE INSTABILITY (WARNING).
+    anomalies = detect_anomalies([_point(roll_deg=-30.0)])
     assert len(anomalies) == 1, f"esperava 1 anomalia, veio {len(anomalies)}"
     a = anomalies[0]
     assert a["type"] == "ATTITUDE INSTABILITY", f"type {a['type']} != ATTITUDE INSTABILITY"
@@ -64,13 +64,13 @@ def test_attitude_instability_warning():
 
 
 def test_acceleration_spike_warning():
-    # aceleração 11.01 m/s² (> 10) → ACCELERATION SPIKE (WARNING).
-    anomalies = detect_anomalies([_point(acceleration_m_s2=11.01)])
+    # aceleração 20.0 m/s² (> 18, claramente acima do baseline com gravidade) → ACCELERATION SPIKE.
+    anomalies = detect_anomalies([_point(acceleration_m_s2=20.0)])
     assert len(anomalies) == 1, f"esperava 1 anomalia, veio {len(anomalies)}"
     a = anomalies[0]
     assert a["type"] == "ACCELERATION SPIKE", f"type {a['type']} != ACCELERATION SPIKE"
     assert a["severity"] == "WARNING", f"severity {a['severity']} != WARNING"
-    assert a["variables"] == [{"label": "ACCEL", "value": "11.01 m/s²"}], (
+    assert a["variables"] == [{"label": "ACCEL", "value": "20.00 m/s²"}], (
         f"variables fora do contrato do front, veio {a['variables']}"
     )
 
@@ -79,16 +79,16 @@ def test_limiar_e_estritamente_maior():
     # exatamente no limiar NÃO dispara (front usa `> 1.5`, não `>=`).
     anomalies = detect_anomalies([_point(vibration_x_g=1.5)])
     assert anomalies == [], f"vibração == 1.5 g (no limiar) não deveria disparar, veio {anomalies}"
-    # mesma regra de borda para aceleração (front usa `> 10`, não `>=`).
-    accel_no_limiar = detect_anomalies([_point(acceleration_m_s2=10.0)])
+    # mesma regra de borda para aceleração (front usa `> 18`, não `>=`).
+    accel_no_limiar = detect_anomalies([_point(acceleration_m_s2=18.0)])
     assert accel_no_limiar == [], (
-        f"aceleração == 10 m/s² (no limiar) não deveria disparar, veio {accel_no_limiar}"
+        f"aceleração == 18 m/s² (no limiar) não deveria disparar, veio {accel_no_limiar}"
     )
 
 
 def test_multiplas_regras_no_mesmo_ponto():
     # um ponto pode violar mais de uma regra de uma vez (vibração + atitude).
-    anomalies = detect_anomalies([_point(vibration_z_g=2.0, pitch_deg=20.0)])
+    anomalies = detect_anomalies([_point(vibration_z_g=2.0, pitch_deg=30.0)])
     types = sorted(a["type"] for a in anomalies)
     assert types == ["ATTITUDE INSTABILITY", "VIBRATION SPIKE"], (
         f"esperava as duas anomalias no mesmo ponto, veio {types}"

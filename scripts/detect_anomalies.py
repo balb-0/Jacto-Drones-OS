@@ -4,9 +4,14 @@ Porta para Python as MESMAS regras de `src/src/lib/anomaly-detection.ts` (front)
 para que a esteira CI/CD enxergue as anomalias sem depender do dashboard. Regras:
 
 - VIBRATION SPIKE (CRITICAL): vibration_x/y/z_g > 1.5 g em qualquer eixo.
-- PWM DIVERGENCE (WARNING): max(pwm1-4) - min(pwm1-4) > 200 µs.
-- ATTITUDE INSTABILITY (WARNING): abs(roll_deg) > 15° OU abs(pitch_deg) > 15°.
-- ACCELERATION SPIKE (WARNING): acceleration_m_s2 > 10 m/s².
+- PWM DIVERGENCE (WARNING): max(pwm1-4) - min(pwm1-4) > 350 µs.
+- ATTITUDE INSTABILITY (WARNING): abs(roll_deg) > 25° OU abs(pitch_deg) > 25°.
+- ACCELERATION SPIKE (WARNING): acceleration_m_s2 > 18 m/s² (inclui gravidade).
+
+Limiares recalibrados (2026-06-16) contra o voo real de referência square_50m: os
+antigos (>200 µs / >15° / >10 m/s²) vinham da época dos mocks sintéticos e geravam
+falso-positivo em voo normal (a aceleração real inclui a gravidade ~9.8 g; manobras
+normais do square inclinam ~19° e divergem PWM ~280 µs). Voo bom → ~0 anomalias.
 
 `detect_anomalies(points)` é PURA (sem I/O, testável em unit): recebe a lista de
 pontos (`FlightTelemetryPoint`, dicts com as chaves do front) e devolve a lista
@@ -28,6 +33,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -36,10 +42,10 @@ LOG = logging.getLogger("detect_anomalies")
 
 # Limiares espelhados do front (anomaly-detection.ts). Mudá-los aqui exige mudar
 # lá também (par contratual front/CI) — ver ADR-0009.
-VIBRATION_SPIKE_G = 1.5
-PWM_DIVERGENCE_US = 200
-ATTITUDE_INSTABILITY_DEG = 15
-ACCELERATION_SPIKE_M_S2 = 10
+VIBRATION_SPIKE_G = 1.5          # vibração anômala (baseline real square_50m ~0.05 g)
+PWM_DIVERGENCE_US = 350          # divergência de motores (baseline square_50m: max ~280 µs)
+ATTITUDE_INSTABILITY_DEG = 25    # inclinação anômala (manobras normais do square chegam a ~19°)
+ACCELERATION_SPIKE_M_S2 = 18     # acceleration_m_s2 inclui gravidade ~9.8 g (baseline ~11)
 
 
 def _vibration_spike(point: dict[str, Any]) -> dict[str, Any] | None:
@@ -174,6 +180,7 @@ def main() -> None:
             "estado": "real",
             "nota": "Gerado por scripts/detect_anomalies.py a partir da telemetria de voo.",
             "fonte_prevista": "reports/anomalies.json — job detect-anomalies (ci/anomaly.yml)",
+            "pipeline_ref": int(os.environ["CI_PIPELINE_ID"]) if os.environ.get("CI_PIPELINE_ID") else None,
             "gerado_de": str(args.input),
             "n_anomalias": len(anomalies),
         },
