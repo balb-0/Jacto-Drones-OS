@@ -369,3 +369,94 @@ item responde a um desconto da nota avaliada.
 
 ---
 
+## 4. Recomendações
+
+Duas frentes (Treinamento; Arquitetura e Processo). **Canary + push são
+apresentados como recomendações JÁ REALIZADAS no protótipo** (em entrega nesta
+sprint); o roadmap de produção é ancorado nos ADRs e marca o que é fora de escopo.
+
+### 4.1 Treinamento (Arquitetura e Processo)
+
+Dado o time enxuto da Jacto (**~2 eng. + 1 gestora**, §4.0.4), automação de alto
+ROI vale mesmo em escala pequena. O treinamento deve capacitar esse time a operar e
+evoluir a esteira **sem depender do grupo**:
+
+1. **Arquitetura — ler a esteira pelos ADRs.** Os 11 ADRs (`docs/decisoes/`) são o
+   material didático: cada restrição real virou decisão rastreável (ex.: ADR-0006
+   "por que não há Registry", ADR-0009 "por que anomalia é gate"). Treinar o time a
+   **abrir um ADR antes de mudar um `ci/*.yml`** preserva a regra de ouro (não
+   editar o root; cada concern entra por glob).
+2. **Arquitetura — malha fechada como modelo mental.** Treinar o conceito
+   sensor→decisão→ação→feedback (§2.4) para que o engenheiro **calibre thresholds**
+   (`quality_gates.yaml`, ADR-0005) e o **par contratual front↔CI** das regras de
+   anomalia (`anomaly-detection.ts` ↔ `detect_anomalies.py`, ADR-0009) sem
+   reintroduzir divergência.
+3. **Processo — Conventional Commits + `Refs #N` + DoD.** Capacitar no fluxo de
+   rastreabilidade que já roda (issues `#2`–`#7`, commitlint, DoD por track em
+   `docs/mapa-cobertura-integracao.md` §2) — é o que dá auditabilidade fim a fim
+   sem ferramenta paga.
+4. **Processo — leitura de indicadores DORA com honestidade estatística.** Treinar
+   a distinção `main` (produção) × `develop` (de-risking) e o protocolo
+   janela×método×aceite (`docs/dora-protocolo.md`), para o time **não confundir
+   CFR de desenvolvimento com falha de produção** nem inventar MTTR sem incidente.
+5. **Processo — "quem aperta o botão".** Treinar o gate humano (aprovação
+   obrigatória de MR + environment protegido `quality-review`, ADR-0008) e o
+   rollback auditável (`ROLLBACK_SHA`) como ritual de release.
+
+### 4.2 Arquitetura e Processo + roadmap de produção
+
+**Recomendações JÁ REALIZADAS no protótipo (entregues nesta Sprint 5):**
+
+- **Canary health-check fail-closed (ADR-0012):** insere uma verificação de saúde
+  **entre o gate verde e a promoção** — se o canário não responde saudável, não
+  promove (fail-closed) e dispara rollback. Fecha o elo decisão→ação da malha.
+  *(Em entrega em paralelo; métrica de canary `[projetado]`.)*
+- **Push-digest do resultado a quem decide (ADR-0010 estendido):** o `notify` deixa
+  de ser só `on_failure` por e-mail nativo/webhook e passa a **empurrar um resumo
+  acionável** (projeto/pipeline/branch/commit/motivo/link) a quem decide — feedback
+  empurrado, não puxado.
+
+**Roadmap para produção real (ancorado nos ADRs; fora do escopo pedagógico atual):**
+
+| Passo de produção | Hoje (protótipo) | Alvo | Âncora (ADR) |
+|---|---|---|---|
+| **Container Registry** | artefato de CI por SHA, sem Registry | imagens imutáveis tagueadas por SHA/SemVer, assinadas | ADR-0006 (§Alternativas: Registry + Kaniko) |
+| **Runner com Docker/DinD** | runner id=100 sem socket | runner privilegiado p/ `docker build`/`trivy image` | ADR-0006 |
+| **Deploy em infra real** | promoção simulada por Environment | **k8s / OpenChoreo** com environment protegido | ADR-0006 (alvo real "trabalho futuro") |
+| **SAST/segredos 100% bloqueantes** | só Semgrep ERROR bloqueia; resto informativo | trufflehog/gitleaks/trivy bloqueantes c/ baseline | ADR-0007 (ratchet informativo→bloqueante) |
+| **Integridade do artefato** | imutável por SHA | **assinatura GPG + SBOM** (supply chain) | ADR-0004 (GPG em `main`) |
+| **Anomalia: apertar regras** | só VIBRATION SPIKE é CRITICAL | PWM/atitude → CRITICAL via ratchet, com baseline | ADR-0009 + ADR-0005 |
+| **Rastreabilidade externa** | issues GitLab + `Refs #N` | Notion → Jira (Smart Commits) → GitLab | `projeto.md` §5.4 |
+| **Validação de voo REAL** | `square_50m` (SITL pedagógico) | gate de vibração/defasagem sobre `.ulg` **de produção** da Jacto | ADR-0003 (`projeto.md` §8.1.2) |
+| **DORA contínuo** | snapshot reauditável | painel DORA nativo / Datadog ao vivo | `docs/dora-protocolo.md` |
+| **Multi-tenancy real** | `parallel:matrix` (PoC, pastas de missão) | repo/credencial/namespace por cliente | ADR-0011 (§Fronteira da PoC) |
+
+---
+
+## 5. Limites pedagógicos (honestidade de escopo)
+
+Para não confundir o avaliador, o que **NÃO** se afirma como resultado:
+
+- **Deploy é simulado** (`deploy_kind: "simulado"`, ADR-0006): os jobs registram a
+  promoção por Environment; **não há cluster real** (k8s/OpenChoreo é roadmap).
+- **Ambiente pedagógico/controlado**, não produção real da Jacto
+  (`evidence/README.md`, `docs/dora-protocolo.md`).
+- **Multi-cliente é PoC didática** (ADR-0011): pastas de missão no mesmo repo —
+  **não** há multi-tenancy, isolamento de credencial ou namespace por cliente.
+- **A redução de log 2–3 dias → minutos** é medida sobre `square_50m` (SITL); a
+  aplicação ao **`.ulg` de voo real** da Jacto é **`[projetado]`** (§8.1.2).
+- **MTTR, SLA 99,9%, sincronização de tokens, voo real:** todos **`[projetado]`** —
+  sem instrumentação/insumo no protótipo.
+- **Canary (ADR-0012) e push-digest (ADR-0010 estendido):** peças **em entrega**
+  nesta Sprint 5 (por frentes paralelas do grupo); referenciadas como malha em
+  fechamento, com métricas **`[projetado]`** até consolidação.
+- **Telemetria do dashboard** (`flight-telemetry.json` consumido pelo front fora do
+  cliente canônico) tem trilha sintética (`scripts/generate_telemetry.py`),
+  desacoplada do SITL (ADR-0011 §Fronteira); o `metrics.json` do gate é o do `.ulg`
+  **real**.
+
+> **Lastro final.** Toda afirmação quantitativa deste relatório tem fonte no
+> entorno imediato — pipeline (`#30535`, `#40688`, `#40692`), tag (`v0.6.0`),
+> artefato (`metrics.json`, `evidence/dora.json`, `pipeline-snapshot.json`) ou ADR
+> (`docs/decisoes/0001`–`0011`). Os números que não existem no protótipo estão
+> marcados **`[projetado]`**, nunca apresentados como obtidos.
