@@ -17,6 +17,7 @@ stages:
   - test       # missão + métricas + testes (ci/sitl-metrics.yml — @Calebe)
   - sast       # secrets + SAST (ci/sast.yml — @Lucca)
   - gate       # quality gates obrigatórios (ci/quality-gates.yml — @Fernando)
+  - canary     # canary deploy + health-check fail-closed (ci/deploy.yml — @Vitor; ADR-0012)
   - deploy     # promoção por ambiente + release (ci/deploy.yml — @Vitor)
   - notify     # notificação do resultado do pipeline (ci/notify.yml — @Kauan)
 
