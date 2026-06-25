@@ -251,3 +251,121 @@ sensor sobre `square_50m`; o gate de defasagem sobre voo **real** é `[projetado
 
 ---
 
+## 3. Esteira de CI/CD e Indicadores
+
+As 4 classes de indicadores exigidas pela rubrica, **só com números encontrados nos
+arquivos**, cada um com fonte. Onde há dois vintages de coleta (Sprint 3 ×
+Sprint 4), ambos aparecem.
+
+### 3.1 Indicadores de testes funcionais (dev/deploy)
+
+Missão SITL `square_50m` — cliente canônico `jacto_ref` (`ci/sitl-metrics.yml`).
+Valores **medidos** do `metrics.json` real do `.ulg` (corte Sprint 3, pipeline
+`#30535`, confirmados no snapshot `src/src/data/metrics.json`):
+
+| Indicador funcional | Valor medido | Gate | Fonte |
+|---|---|---|---|
+| Duração da missão | **78,83 s** | ≤ 180 s | `metrics.json` → `mission_duration_s`; pipeline `#30535` |
+| Altitude máx / média | **10,01 m** / 7,12 m | — | `metrics.json` → `max_altitude_m`/`mean_altitude_m` |
+| σ de altitude em cruzeiro | **0,688 m** | ≤ 1,0 m | `metrics.json` → `std_altitude_cruise_m` |
+| Aceleração máx | **11,01 m/s²** | ≤ 15 m/s² | `metrics.json` → `max_acceleration_m_s2` |
+| Queda de bateria na missão | **0,333 %** | — | `metrics.json` → `max_battery_drop_pct` |
+| Amostras do log simulado | **9.855** | > 0 (anti-degenerado) | `metrics.json` → `n_samples` |
+| Anomalias detectadas (último run) | **0** | 0 CRITICAL (bloqueante) | `src/src/data/anomalies.json` (real, recalibrado `2026-06-16`); ADR-0009 |
+| **Caminho crítico** build PX4 + missão | **183 s** | — | job `sitl-mission-metrics`, pipeline `#30535` |
+| **Pipeline CI/CD completo** | **~4–5 min** (vs. meta S2 < 15 min) | — | logs do pipeline `#30535` (`develop` @ `c967ad6`) |
+
+- **Cobertura de funcionalidade do deploy** (dev→deploy): a trilha funcional
+  cobre build SITL → missão → métricas → gate → staging → prod → release →
+  rollback, 8 integrações com contrato fechado (`docs/mapa-cobertura-deploy.md`
+  §1–§2).
+- **Multi-cliente (PoC)**: `parallel:matrix` roda **3 execuções** (`jacto_ref`
+  canônico + `cliente_a` + `cliente_b`), cada uma gerando `metrics-<cliente>.json`
+  real do seu `.ulg` (ADR-0011). Só `jacto_ref` alimenta o gate (é a missão
+  calibrada).
+
+### 3.2 Indicadores de produto (dev/deploy)
+
+Qualidade do artefato produzido e promovido.
+
+| Indicador de produto | Valor | Estado | Fonte |
+|---|---|---|---|
+| Cobertura de testes unitários (`libs/`) | **~98%** | gate ratchet ≥ 0,90, **BLOQUEANTE** | `pytest --cov`, pipeline `#30535`/`#40688`; `quality_gates.yaml` |
+| Quality gates aprovados | **5/5** (S3) → **4/4** (S4) | **BLOQUEANTE** | job `quality-gates`; corte S4 em `src/src/data/pipeline-snapshot.json` (gates 4/4 PASS) |
+| Anomalias CRITICAL no artefato | **0** | bloqueia se ≥ 1 | `ci/anomaly.yml`, ADR-0009 |
+| Achados SAST reais corrigidos | **2** (Dockerfile sem USER não-root; XML parse sem `defusedxml`) | Semgrep **BLOQUEANTE** (ERROR) | `src/src/data/pipeline-snapshot.json` (`sast`); `ci/sast.yml`, ADR-0007 |
+| Imutabilidade do artefato | por `$CI_COMMIT_SHA` (nunca `:latest`) | OPERACIONAL | ADR-0006; `docs/mapa-cobertura-deploy.md` §3 |
+| Último release de produto | **v0.6.0** (pipeline `#40692`, MR `!43`) | GitLab Release real | `src/src/data/pipeline-snapshot.json` (`audit_refs`) |
+
+> **Nota S3→S4 sobre o conjunto de gates.** No corte da Sprint 3 o veredito era
+> **5/5** (cobertura, aceleração, duração, σ-altitude, SAST-skip). No corte da
+> Sprint 4 o snapshot consolidado reporta **4/4 PASS** (cobertura, aceleração,
+> duração, σ-altitude) com o **SAST promovido a bloqueante no próprio stage `sast`**
+> (Semgrep ERROR) em vez de contar como check "skip" no gate — daí a contagem
+> 4/4. Ambos são pipelines verdes; a diferença é de **onde** o SAST é enforçado, não
+> de regressão (`ci/sast.yml`, `src/src/data/pipeline-snapshot.json`).
+
+### 3.3 Indicadores de processo (dev/deploy)
+
+Métricas DORA, **medidas via API GitLab** (`scripts/collect_gitlab_metrics.py`,
+projeto `10705`). Dois cortes versionados:
+
+| Indicador DORA | Corte Sprint 3 (`#30535`, `2026-05-29`) | Corte Sprint 4 (`evidence/`, `2026-06-13`) | Classificação | Fonte |
+|---|---|---|---|---|
+| **Lead Time for Changes** | mediana **0,4 h** / média 27,4 h (21 MRs) | mediana **0,2 h** / média 17,7 h (**33 MRs**) | `elite` | `src/src/data/dora.json` / `evidence/dora.json` |
+| **Deployment Frequency** | **10 deploys** staging | **20 deploys** staging (23 total) | `medium` (conservador) | idem; `evidence/process-metrics.json` |
+| **Change Failure Rate — `main` (produção)** | **0%** | **0%** (7 pipelines, 0 falhas) | `elite` | idem |
+| **Change Failure Rate — `develop` (de-risking)** | 45% | **21%** (24 total, 5 failed) | reportado à parte | idem |
+| **MTTR** | **não-medido** | **não-medido** | — | `main` 0 falhas (nada a recuperar) |
+
+- **Amostra de pipelines (corte S4):** 100 pipelines = **42 success / 26 failed /
+  23 skipped / 5 canceled** (`evidence/process-metrics.json`).
+- **Honestidade DORA** (`docs/dora-protocolo.md`, `evidence/README.md`): amostra
+  **pequena** e de **ambiente pedagógico**; o CFR alto de `develop` reflete
+  **iterações de de-risking** (spike SITL), **não** incidente de produção — por
+  isso `main` (0%) é o proxy de produção e `develop` é reportado só por
+  transparência. MTTR é declarado **não-medido** em vez de inventado.
+- **Reauditável sem credencial:** qualquer terceiro recomputa os 4 indicadores a
+  partir de `evidence/raw/*.json` com `collect_gitlab_metrics.py --from-evidence`
+  (sem token, sem rede) — fecha o feedback do avaliador S3 sobre "não conseguir
+  reexecutar a validação pela API" (`evidence/README.md`).
+
+**Rastreabilidade de processo (dev):** issues do GitLab `#2`–`#7` (uma por TG) +
+Conventional Commits + `Refs #N`, validados por commitlint (`projeto.md` §5.4). A
+extensão Notion → Jira → GitLab é `[projetado]`.
+
+### 3.4 Indicadores gerais
+
+| Indicador geral | Valor | Estado | Fonte |
+|---|---|---|---|
+| Time to feedback (pipeline completo) | **~4–5 min** | vs. meta provisória < 15 min (§4.4) | pipeline `#30535` |
+| Disponibilidade (SLA) | 99,9% (alvo) | **`[projetado]`** — não instrumentado | `projeto.md` §4.4 |
+| Tempo de análise de log `.ulg` de **voo real** | < 10 min (alvo; AS-IS 48–72 h) | **`[projetado]`** | `projeto.md` §8.1.2 |
+| Sincronização de tokens | < 30 s (alvo) | **`[projetado]`** — fluxo não instrumentado | `projeto.md` §8.1.2 |
+| Stages do pipeline | **7** (lint→build→test→sast→gate→deploy→notify) | OPERACIONAL | `.gitlab-ci.yml` |
+| Fragmentos por concern (`ci/*.yml`) | **7** (sitl-metrics, sast, quality-gates, anomaly, deploy, notify, mr-kpis) | OPERACIONAL | `ci/` |
+| ADRs registradas | **11** (0001–0011) + 0012 em entrega | OPERACIONAL | `docs/decisoes/` |
+| Última pipeline verde em `develop` | **`#40688`** (Sprint 4: matrix 3x + gate + anomalia + SAST) | success | `src/src/data/pipeline-snapshot.json` |
+
+### 3.5 Estado AVALIADO (~06-12) vs. estado ATUAL (v0.6.1+)
+
+Tabela que a rubrica pede: o que **entrou depois do corte do review**, e como cada
+item responde a um desconto da nota avaliada.
+
+> **Procedência da nota.** A nota **8,3/10** (Deploy **3,0**; QoS/QoP **3,6**;
+> Resultados **1,7**) é o **feedback da Sprint review** transmitido ao grupo. Ela
+> **não consta em arquivo versionado** do repositório — é a baseline qualitativa
+> contra a qual medimos o delta abaixo. *(Ver gap em §5: o card de rubrica
+> `cards-da-semana/semana_10.json` citado no escopo não está presente no repo.)*
+
+| Eixo (nota avaliada) | Estado AVALIADO (~06-12) | Estado ATUAL (v0.6.x) — o que entrou | Responde ao desconto? |
+|---|---|---|---|
+| **Resultados (1,7)** | Telemetria do dashboard era **mock**; métrica de missão pouco lastreada | Telemetria SITL **real** (`flight-telemetry.json` do `.ulg`); painéis QoS/QoP consomem KPI real, sem mock | **Sim** — o que era "fabricado" virou dado medido auditável (`dashboard-implementation-report.md`, `ci/sitl-metrics.yml`) |
+| **Resultados (1,7)** | Sem pacote reauditável; avaliador não reexecutou DORA sem token | `evidence/raw/` + `--from-evidence`: reauditoria **sem credencial** | **Sim** — fecha literalmente o feedback S3 (`evidence/README.md`) |
+| **QoS/QoP (3,6)** | SAST **informativo** (não reprovava) | Semgrep **bloqueante** (ERROR); **2 findings reais corrigidos** | **Sim** — segurança deixou de ser cosmética (`ci/sast.yml`, ADR-0007) |
+| **QoS/QoP (3,6)** | Anomalia só no dashboard (inspeção humana) | Anomalia **server-side no gate**; VIBRATION SPIKE bloqueia merge | **Sim** — sensor inevitável, não puxado (`ci/anomaly.yml`, ADR-0009) |
+| **Deploy (3,0)** | Deploy simulado, 1 perfil de missão | **Matrix multi-cliente** (mesmo firmware × N missões reais) | **Parcial** — amplia cobertura; ainda simulado (PoC, ADR-0011) |
+| **Deploy (3,0)** | Promoção sem laço final de saúde nem aviso push | **Canary health-check** (fail-closed) + **push-digest** do resultado a quem decide | **Em entrega (S5)** — fecha o laço sensor→ação→feedback (ADR-0012, ADR-0010 estendido) `[métrica projetada]` |
+
+---
+
