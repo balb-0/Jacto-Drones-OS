@@ -18,11 +18,102 @@
   variables:
     GIT_STRATEGY: fetch
 
-# STAGING — automático em develop/main. SEM needs: respeita a ordem de stages
-# (gate roda antes), herdando metrics.json dos stages anteriores por padrão.
+# ─────────────────────────────────────────────────────────────────────────
+# CANARY DEPLOY + HEALTH-CHECK FAIL-CLOSED (TG-C1 — @Vitor; ADR-0012)
+#
+# Fecha a lacuna "deploy simples, deploy descrito ≠ comprovado" (avaliador,
+# Serviços de Deploy 3,0/4,0) e atende o parceiro ("canary deploy faz sentido na
+# frota Jacto"). Em vez de promover direto a staging/prod, a esteira primeiro
+# promove a um CANÁRIO (subconjunto = cliente de referência jacto_ref) e SÓ
+# AVANÇA se o canário estiver comprovadamente saudável.
+#
+# Posição: stage `canary` ENTRE `gate` e `deploy` (.gitlab-ci.yml). Pela ordem de
+# stages, os jobs do canário herdam reports/metrics.json (job sitl-mission-metrics,
+# stage test) e reports/anomalies.json (job detect-anomalies, stage gate) — sem
+# `needs:`, sem DAG-bypass (mesma doutrina de ci/quality-gates.yml / ADR-0006):
+# canary roda DEPOIS de gate, nunca o antecipa.
+#
+# Fluxo: deploy_canary (promove ao canário) → canary_healthcheck (avalia). Se o
+# canário adoece, canary_healthcheck sai != 0 → pipeline VERMELHO → os jobs do
+# stage `deploy` (staging/prod) NÃO rodam = rollback automático do rollout (a
+# promoção a staging/prod nunca acontece). Mesmo princípio fail-closed do gate de
+# anomalias (ADR-0009), agora aplicado à PROMOÇÃO.
+# ─────────────────────────────────────────────────────────────────────────
+
+# CANÁRIO — promove o artefato imutável (por SHA) ao subconjunto jacto_ref.
+# Automático em develop/main. SEM needs: herda metrics.json/anomalies.json por
+# ordem de stage (gate → canary). Grava reports/deploy-canary.json (manifesto).
+deploy_canary:
+  extends: .deploy_base
+  stage: canary
+  environment:
+    name: canary
+    url: "https://canary.jacto-drones-os.local/$CI_COMMIT_SHORT_SHA"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "main"'
+  variables:
+    CANARY_SUBSET: "jacto_ref"   # subconjunto do rollout (cliente de referência)
+  script:
+    - python scripts/promote_artifact.py --env canary --sha "$CI_COMMIT_SHA"
+  artifacts:
+    paths: [reports/deploy-canary.json]
+    when: always
+    expire_in: 30 days
+
+# HEALTH-CHECK do canário — FAIL-CLOSED. Roda APÓS deploy_canary (mesmo stage;
+# needs: deploy_canary sequencia os dois e baixa o manifesto). Reusa a régua do
+# gate (quality_gates.yaml + quality_gates.py via scripts/canary_healthcheck.py):
+# 0 anomalia CRITICAL E invariantes-chave da missão dentro do limiar. Se DOENTE,
+# exit != 0 → pipeline vermelho → stage `deploy` não roda (auto-rollback).
+# metrics.json/anomalies.json vêm por ordem de stage; needs: deploy_canary não os
+# remove porque deploy_canary é irmão de stage (canary), então relistamos os
+# produtores de stages anteriores (sitl-mission-metrics, detect-anomalies) — não
+# é DAG-bypass: todos já antecedem o canário por stage. Artefato auditável:
+# reports/canary-health.json.
+canary_healthcheck:
+  stage: canary
+  image: python:3.12-slim
+  needs:
+    - job: deploy_canary           # sequencia após a promoção ao canário
+      artifacts: true              # reports/deploy-canary.json
+    - job: sitl-mission-metrics    # reports/metrics.json (stage test)
+      artifacts: true
+    - job: detect-anomalies        # reports/anomalies.json (stage gate)
+      artifacts: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "main"'
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip"
+  cache:
+    key: pip-canary-healthcheck
+    paths: [.pip/]
+  before_script:
+    - pip install --quiet pyyaml
+  script:
+    # exit != 0 aqui = canário DOENTE = fail-closed (stage deploy não roda).
+    - python scripts/canary_healthcheck.py
+        --gates quality_gates.yaml
+        --metrics reports/metrics.json
+        --anomalies reports/anomalies.json
+        --canary jacto_ref
+        --output reports/canary-health.json
+  artifacts:
+    when: always
+    paths:
+      - reports/canary-health.json
+    expire_in: 30 days
+
+# STAGING — automático em develop/main. needs: canary_healthcheck — staging SÓ
+# promove com o canário VERDE (se o health-check falhou, este job nem inicia =
+# auto-rollback do rollout). O script de staging não lê metrics.json (só promove
+# por SHA), então herdar apenas o resultado do canário via needs é suficiente; o
+# canário é stage intermediário entre gate e deploy, logo não há DAG-bypass.
 deploy_staging:
   extends: .deploy_base
   stage: deploy
+  needs:
+    - job: canary_healthcheck      # gate de promoção: só staging com canário verde
+      artifacts: true              # reports/canary-health.json (rastro)
   environment:
     name: staging
     url: "https://staging.jacto-drones-os.local/$CI_COMMIT_SHORT_SHA"

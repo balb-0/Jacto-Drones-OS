@@ -146,7 +146,14 @@ gitleaks:
 # como evolução natural.
 semgrep:
   stage: sast
-  tags: [sonar-00]            # runner dedicado id=133
+  # SEM tags: [sonar-00]. O runner dedicado sonar-00 PENDURA o pull da imagem
+  # oficial semgrep/semgrep:latest do Docker Hub (pipeline #48006 ficou >40min
+  # presa só no pull; um retry travou de novo >12min). Diagnóstico por eliminação:
+  # gitleaks (sonar-00 + ghcr.io) passa; trivy/trufflehog (compartilhado +
+  # Docker Hub) passam → só a combinação (sonar-00 × Docker Hub) trava. Movendo o
+  # semgrep para o runner COMPARTILHADO (id=100), que puxa Docker Hub normalmente,
+  # o pull deixa de pendurar. semgrep roda no stage sast (após build/missão), então
+  # a contenção com build/missão no id=100 é mínima. SAST segue efetivo/bloqueante.
   image:
     name: semgrep/semgrep:latest
     entrypoint: [""]
