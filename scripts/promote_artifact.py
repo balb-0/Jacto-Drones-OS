@@ -10,7 +10,14 @@ Adaptação ao nosso GitLab (ADR-0006): a instância CE não tem Container Regis
 um manifesto de deploy por ambiente. O alvo real (k8s/OpenChoreo) é simulado —
 mesma decisão do ADR-002 do demo ("OpenChoreo simulado").
 
+O ambiente `canary` (ADR-0012) é o PRIMEIRO destino do rollout: promove o
+artefato a um subconjunto da frota (o cliente de referência `jacto_ref`) ANTES de
+staging/prod. O health-check fail-closed (scripts/canary_healthcheck.py) decide se
+o rollout avança — se o canário adoece, o stage `deploy` não roda (auto-rollback).
+Grava o mesmo manifesto de deploy simulado, em reports/deploy-canary.json.
+
 Uso:
+    python scripts/promote_artifact.py --env canary --sha "$CI_COMMIT_SHA"
     python scripts/promote_artifact.py --env staging --sha "$CI_COMMIT_SHA"
     python scripts/promote_artifact.py --env prod --sha "$SHA" [--rollback]
     python scripts/promote_artifact.py --env release --sha "$SHA" --tag v0.3.0
@@ -26,7 +33,7 @@ from pathlib import Path
 
 
 def build_record(env: str, sha: str, tag: str | None, rollback: bool) -> dict:
-    return {
+    record = {
         "environment": env,
         "artifact_sha": sha,
         "artifact_ref": f"ci-artifact@{sha[:12]}",  # mesmo artefato, sem rebuild
@@ -40,6 +47,17 @@ def build_record(env: str, sha: str, tag: str | None, rollback: bool) -> dict:
             "artefato imutável = artefato de CI por SHA, promovido sem rebuild."
         ),
     }
+    # Canário (ADR-0012): registra o SUBCONJUNTO do rollout (cliente de
+    # referência jacto_ref) — só no manifesto canary, p/ não alterar os manifestos
+    # staging/prod/release existentes.
+    if env == "canary":
+        record["rollout_subset"] = os.getenv("CANARY_SUBSET", "jacto_ref")
+        record["note"] = (
+            "Canary deploy simulado (ADR-0012): promove o artefato imutável por "
+            "SHA a um subconjunto da frota (jacto_ref) ANTES de staging/prod; o "
+            "health-check fail-closed decide se o rollout avança."
+        )
+    return record
 
 
 def promote(env: str, sha: str, tag: str | None, rollback: bool) -> int:
@@ -59,7 +77,7 @@ def promote(env: str, sha: str, tag: str | None, rollback: bool) -> int:
 
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    p.add_argument("--env", required=True, choices=["staging", "prod", "release"])
+    p.add_argument("--env", required=True, choices=["canary", "staging", "prod", "release"])
     p.add_argument("--sha", default="")  # validado em promote() (testável sem argparse)
     p.add_argument("--tag", default=None)
     p.add_argument("--rollback", action="store_true")
