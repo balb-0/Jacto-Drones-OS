@@ -52,6 +52,11 @@ from pathlib import Path
 
 import yaml
 
+# O job de CI roda 'python scripts/canary_healthcheck.py' SEM PYTHONPATH=., então
+# sys.path[0] é scripts/ (não a raiz) e 'import scripts.*' falha (ModuleNotFoundError).
+# Garante a raiz do repo no path — no-op sob pytest, que já roda com PYTHONPATH=.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 # Reusa os checks JÁ versionados do gate (não reimplementa limiar nenhum): o
 # canário é avaliado pela MESMA régua que reprova o merge — par contratual com
 # ADR-0005/ADR-0009. Mudar o limiar no quality_gates.yaml move o gate E o canário
